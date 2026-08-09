@@ -4,18 +4,18 @@ return {
     [1] = {
       characters = {
         [1] = {
-          name = "Kelsier",
           description = "Survivor of Hathsin",
+          name = "Kelsier",
         },
       },
       locations = {
         [1] = {
-          name = "Luthadel",
           description = "Capital city",
+          name = "Luthadel",
         },
       },
     },
   },
-  cached_at = 1785608497,
+  cached_at = 1785612326,
   cache_version = "6.0",
 }

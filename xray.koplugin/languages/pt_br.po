@@ -329,6 +329,7 @@ msgstr "Chave de API Inválida"
 msgid "error_extract_text"
 msgstr "Erro: Não foi possível extrair o texto do livro."
 
+# en-hash: 6f19d0bda35aaa9b39c3adc080e31220
 msgid "no_new_text"
 msgstr "Não havia texto novo disponível na posição atual; o X-Ray já está atualizado aqui."
 

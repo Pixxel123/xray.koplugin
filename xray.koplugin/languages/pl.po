@@ -329,6 +329,7 @@ msgstr "Nieprawidłowy klucz API"
 msgid "error_extract_text"
 msgstr "Błąd: Nie można wyodrębnić tekstu książki."
 
+# en-hash: 6f19d0bda35aaa9b39c3adc080e31220
 msgid "no_new_text"
 msgstr "W bieżącej pozycji nie było nowego tekstu; X-Ray jest już tutaj aktualny."
 

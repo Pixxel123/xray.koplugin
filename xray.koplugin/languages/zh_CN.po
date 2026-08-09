@@ -329,6 +329,7 @@ msgstr "API Key 无效"
 msgid "error_extract_text"
 msgstr "错误：无法提取书籍文本。"
 
+# en-hash: 6f19d0bda35aaa9b39c3adc080e31220
 msgid "no_new_text"
 msgstr "当前位置没有可用的新文本；X-Ray 在这里已经是最新的。"
 

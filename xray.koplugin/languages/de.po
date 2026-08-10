@@ -369,6 +369,10 @@ msgstr "Ungültiger API Key"
 msgid "error_extract_text"
 msgstr "Fehler: Buchtext konnte nicht extrahiert werden."
 
+# en-hash: 6f19d0bda35aaa9b39c3adc080e31220
+msgid "no_new_text"
+msgstr "An deiner aktuellen Position war kein neuer Text verfügbar; X-Ray ist hier bereits aktuell."
+
 # en-hash: 0f09bc754e4c901533fa9bcdb6e41926
 msgid "error_model_access_desc"
 msgstr "Ihr API Key hat keinen Zugriff auf das ausgewählte Modell. Sie müssen möglicherweise ein anderes Modell oder einen anderen Anbieter verwenden."

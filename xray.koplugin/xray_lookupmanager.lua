@@ -204,6 +204,9 @@ end
 
 -- Handle the UI part of the lookup, with a disambiguation picker for multiple hits
 function LookupManager:handleLookup(text, pos0, pos1)
+    if type(text) == "table" then
+        text = text.text or text.word or text.selection_text or ""
+    end
     if type(text) ~= "string" or text == "" then return end
 
     -- Check for unit conversion first
@@ -291,7 +294,9 @@ function LookupManager:handleLookup(text, pos0, pos1)
             cancel_text = self.plugin.loc:t("close") or "Close",
             ok_callback = function()
                 UIManager:close(no_data_dialog)
-                self.plugin:fetchSingleWord(text, pos0, pos1)
+                if self.plugin and not self.plugin.destroyed then
+                    self.plugin:fetchSingleWord(text, pos0, pos1)
+                end
             end,
             cancel_callback = function()
                 UIManager:close(no_data_dialog)

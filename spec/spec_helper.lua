@@ -270,6 +270,12 @@ package.loaded["ui/trapper"] = {
 package.loaded["xray_logger"] = {
     log = function(...) end,
 }
+package.loaded["ui/network/manager"] = {
+    runWhenOnline = function(self, fn)
+        local callback = type(self) == "function" and self or fn
+        if callback then callback() end
+    end
+}
 package.loaded["socket.http"] = {}
 package.loaded["ssl.https"] = {}
 package.loaded["ltn12"] = {}

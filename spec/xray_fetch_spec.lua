@@ -344,4 +344,56 @@ describe("xray_fetch", function()
             assert.is_true(plugin.series_context_loaded)
         end)
     end)
+
+    describe("fetchSingleWord safety & edge cases", function()
+        it("returns safely when reader document is unavailable", function()
+            plugin.ui.document = nil
+            local ok, err = pcall(function()
+                plugin:fetchSingleWord("word", 1, 2)
+            end)
+            assert.is_true(ok)
+            assert.is_nil(err)
+        end)
+
+        it("unwraps table text arguments without crashing", function()
+            local called_text = nil
+            plugin.ai_helper = {
+                hasApiKey = function() return false end,
+            }
+            local ok, err = pcall(function()
+                plugin:fetchSingleWord({ text = "ExtractedWord" }, 1, 2)
+            end)
+            assert.is_true(ok)
+            assert.is_nil(err)
+        end)
+
+        it("cancels an active background fetch process before starting lookup", function()
+            local cancelled = false
+            plugin.ui.getCurrentPage = function() return 1 end
+            plugin.chapter_analyzer = {
+                getDetailedChapterSamples = function() return {}, {} end,
+                getEndPageForCurrentPage = function() return 1 end,
+                getTextFromPageRange = function() return "book text" end,
+            }
+            plugin.ai_helper = {
+                _async_child_pid = 999,
+                hasApiKey = function() return true end,
+                cancelAsyncChild = function() cancelled = true end,
+                lookupSingleWordAsync = function() return 1001 end,
+                checkAsyncResult = function() return false, "error_api", "cancelled" end,
+            }
+            
+            plugin:fetchSingleWord("TestTerm", 1, 2)
+            assert.is_true(cancelled)
+        end)
+
+        it("handles invalid or non-table result in _processSingleWordResult without crashing", function()
+            local ok, err = pcall(function()
+                plugin:_processSingleWordResult("invalid_json", "text", "book_text", 1)
+                plugin:_processSingleWordResult({ is_valid = true, item = nil }, "text", "book_text", 1)
+            end)
+            assert.is_true(ok)
+            assert.is_nil(err)
+        end)
+    end)
 end)

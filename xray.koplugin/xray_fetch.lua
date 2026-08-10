@@ -56,13 +56,32 @@ function M:updateFromAI()
 end
 
 function M:fetchSingleWord(text, pos0, pos1)
+    if type(text) == "table" then
+        text = text.text or text.word or text.selection_text or ""
+    end
+    text = tostring(text or "")
+
     require("ui/network/manager"):runWhenOnline(function()
+        if self.destroyed or not self.ui or not self.ui.document or not self.ui.getCurrentPage then return end
+        
         local current_page = self.ui:getCurrentPage()
-        local reading_percent = math.floor((current_page / (self.ui.document:getPageCount() or 1)) * 100)
-        local spoiler_setting = self.ai_helper.settings and self.ai_helper.settings.spoiler_setting or "spoiler_free"
+        local total_pages = (type(self.ui.document.getPageCount) == "function" and self.ui.document:getPageCount()) or 1
+        local reading_percent = math.floor((current_page / math.max(1, total_pages)) * 100)
+        local spoiler_setting = self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.spoiler_setting or "spoiler_free"
         
         local limit_percent = reading_percent
         if spoiler_setting == "full_book" then limit_percent = 100 end
+
+        if self.ai_helper and type(self.ai_helper.hasApiKey) == "function" and not self.ai_helper:hasApiKey() then
+            local ConfirmBox = require("ui/widget/confirmbox")
+            local title, text_msg = utils:getFriendlyError("error_api", "invalid api key", self.loc)
+            UIManager:show(ConfirmBox:new{
+                text = title .. "\n\n" .. text_msg,
+                ok_text = self.loc:t("ok") or "OK",
+                cancel_text = nil
+            })
+            return
+        end
 
         local ProgressBarDialog = require("ui/widget/progressbardialog")
         local progress_msg = ProgressBarDialog:new{
@@ -79,15 +98,20 @@ function M:fetchSingleWord(text, pos0, pos1)
         -- Second tick: start the actual work. This two-step approach ensures the progress
         -- bar borders are fully committed to screen before the CPU starts blocking.
         UIManager:scheduleIn(0.3, function()
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then
+                if progress_msg then UIManager:close(progress_msg) end
+                return
+            end
             UIManager:scheduleIn(0.3, function()
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then
+                if progress_msg then UIManager:close(progress_msg) end
+                return
+            end
             if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
             
             progress_msg:reportProgress(10)
             
             -- 1. Distributed chapter samples (Start/Mid/End of each chapter up to current)
-            -- Restored to 100, 60000 per user request
             local samples, chapter_titles = self.chapter_analyzer:getDetailedChapterSamples(self.ui, 100, 60000, limit_percent == 100)
             
             progress_msg:reportProgress(30)
@@ -102,7 +126,7 @@ function M:fetchSingleWord(text, pos0, pos1)
             book_text = context_prefix .. (book_text or "")
             
             -- Always inject a direct reference to ensure the AI validates the term
-            if book_text and text then
+            if book_text and text ~= "" then
                 book_text = book_text .. "\n\n[TERM HIGHLIGHTED BY READER — MUST DEFINE]: \"" .. text .. "\""
             end
             
@@ -134,13 +158,28 @@ function M:fetchSingleWord(text, pos0, pos1)
                 end
             end)
 
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then
+                if progress_msg then UIManager:close(progress_msg) end
+                return
+            end
+
+            -- Cancel any existing background fetch child before starting targeted inline fetch
+            if self.ai_helper and self.ai_helper._async_child_pid then
+                self.ai_helper:cancelAsyncChild()
+            end
 
             local result_file = settings_xray_dir .. "/sw_fetch_" .. tostring(os.time()) .. ".json"
             local request_pid = self.ai_helper:lookupSingleWordAsync(text, context, result_file)
             if not request_pid then
                 if progress_msg then UIManager:close(progress_msg) end
                 self:log("XRayPlugin: Failed to start async lookup")
+                local ConfirmBox = require("ui/widget/confirmbox")
+                local title, text_msg = utils:getFriendlyError("error_api", "Failed to start background process", self.loc)
+                UIManager:show(ConfirmBox:new{
+                    text = title .. "\n\n" .. text_msg,
+                    ok_text = self.loc:t("ok") or "OK",
+                    cancel_text = nil
+                })
                 return
             end
 
@@ -150,16 +189,13 @@ function M:fetchSingleWord(text, pos0, pos1)
             local max_polls = 150 -- 5 minutes at 2s intervals
             local current_progress = 50
             local function poll()
-                if self.destroyed then
+                if self.destroyed or not self.ui or not self.ui.document then
+                    if progress_msg then UIManager:close(progress_msg) end
                     if self.ai_helper and self.ai_helper.cancelAsyncChild then
                         self.ai_helper:cancelAsyncChild(request_pid)
                     end
                     pcall(function() os.remove(result_file) end)
-                    self:log("XRayPlugin: Single word lookup cancelled or plugin destroyed")
-                    return
-                end
-                if not self.ui or not self.ui.document then
-                    pcall(function() os.remove(result_file) end)
+                    self:log("XRayPlugin: Single word lookup cancelled or document/plugin unavailable")
                     return
                 end
                 
@@ -172,6 +208,10 @@ function M:fetchSingleWord(text, pos0, pos1)
                 end
                 
                 poll_count = poll_count + 1
+                if not self.ai_helper or not self.ai_helper.checkAsyncResult then
+                    if progress_msg then UIManager:close(progress_msg) end
+                    return
+                end
                 local data, p_err_code, p_err_msg = self.ai_helper:checkAsyncResult(result_file, request_pid)
                 if data == nil then
                     if poll_count < max_polls then
@@ -179,6 +219,7 @@ function M:fetchSingleWord(text, pos0, pos1)
                     else
                         if progress_msg then UIManager:close(progress_msg) end
                         self:log("XRayPlugin: Single word lookup timed out")
+                        local ConfirmBox = require("ui/widget/confirmbox")
                         local title, text_msg = utils:getFriendlyError("error_timeout", nil, self.loc)
                         UIManager:show(ConfirmBox:new{
                             text = title .. "\n\n" .. text_msg,
@@ -189,6 +230,7 @@ function M:fetchSingleWord(text, pos0, pos1)
                 elseif data == false then
                     if progress_msg then UIManager:close(progress_msg) end
                     self:log("XRayPlugin: Single word lookup failed: " .. tostring(p_err_msg))
+                    local ConfirmBox = require("ui/widget/confirmbox")
                     local title, text_msg = utils:getFriendlyError(p_err_code, p_err_msg, self.loc)
                     UIManager:show(ConfirmBox:new{
                         text = title .. "\n\n" .. text_msg,
@@ -214,9 +256,22 @@ function M:fetchSingleWord(text, pos0, pos1)
 end
 
 function M:_processSingleWordResult(result, text, book_text, current_page)
+    if self.destroyed or not self.ui or not self.ui.document then return end
+    local safe_text = type(text) == "string" and text or tostring(text or "")
+    if type(result) ~= "table" then
+        local err = self.loc:t("entity_not_found", safe_text:sub(1, 20))
+        UIManager:show(InfoMessage:new{ text = err, timeout = 5 })
+        return
+    end
+
     if result.is_valid then
         local item = result.item
         local item_type = result.type
+        if type(item) ~= "table" or not item.name then
+            local err = result.error_message or self.loc:t("entity_not_found", safe_text:sub(1, 20))
+            UIManager:show(InfoMessage:new{ text = err, timeout = 5 })
+            return
+        end
         
         -- Ensure tables exist before trying to merge
         self.characters = self.characters or {}
@@ -317,7 +372,7 @@ function M:_processSingleWordResult(result, text, book_text, current_page)
         -- Always show result if it's valid, even if it didn't merge into a target_list
         self.lookup_manager:showResult(item, item_type)
     else
-        local err = result.error_message or self.loc:t("entity_not_found", text:sub(1, 20))
+        local err = result.error_message or self.loc:t("entity_not_found", safe_text:sub(1, 20))
         UIManager:show(InfoMessage:new{ text = err, timeout = 5 })
     end
 end

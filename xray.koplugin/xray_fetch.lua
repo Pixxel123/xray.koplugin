@@ -112,7 +112,7 @@ function M:fetchSingleWord(text, pos0, pos1)
             progress_msg:reportProgress(10)
             
             -- 1. Distributed chapter samples (Start/Mid/End of each chapter up to current)
-            local samples, chapter_titles = self.chapter_analyzer:getDetailedChapterSamples(self.ui, 100, 60000, limit_percent == 100)
+            local samples, chapter_titles = self.chapter_analyzer:getDetailedChapterSamples(self.ui, 100, 60000, limit_percent == 100, nil, nil, current_page)
             
             progress_msg:reportProgress(30)
             

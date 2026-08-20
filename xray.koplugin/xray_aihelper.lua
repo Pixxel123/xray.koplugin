@@ -42,7 +42,7 @@ end
 
 -- Single source of truth for default AI models
 local DEFAULT_AI = {
-    primary   = { provider = "gemini", model = "gemini-3.6-flash" },
+    primary   = { provider = "gemini", model = "gemini-3.7-flash" },
     secondary = { provider = "gemini", model = "gemini-3.5-flash-lite" },
 }
 
@@ -1491,6 +1491,55 @@ function AIHelper:loadSettings()
     end
     migrate_deepseek_model("primary_ai")
     migrate_deepseek_model("secondary_ai")
+
+    -- Migrate legacy / shut down Gemini model names to modern active equivalents
+    local gemini_model_map = {
+        -- 2.0 shut down models (shut down June 1, 2026 / Dec 2025)
+        ["gemini-2.0-flash"]                    = "gemini-3.7-flash",
+        ["gemini-2.0-flash-001"]                = "gemini-3.7-flash",
+        ["gemini-2.0-flash-lite"]               = "gemini-3.5-flash-lite",
+        ["gemini-2.0-flash-lite-001"]           = "gemini-3.5-flash-lite",
+        ["gemini-2.0-flash-lite-preview"]       = "gemini-3.5-flash-lite",
+        ["gemini-2.0-flash-lite-preview-02-05"] = "gemini-3.5-flash-lite",
+        -- 3.x preview / deprecated models
+        ["gemini-3.1-flash-lite"]               = "gemini-3.5-flash-lite",
+        ["gemini-3.1-flash-lite-preview"]       = "gemini-3.5-flash-lite",
+        ["gemini-3-flash-preview"]              = "gemini-3.7-flash",
+        ["gemini-3-pro-preview"]                = "gemini-3.1-pro-preview",
+        -- 2.5 preview models
+        ["gemini-2.5-flash-preview-05-20"]      = "gemini-3.7-flash",
+        ["gemini-2.5-flash-preview-09-25"]      = "gemini-3.7-flash",
+        ["gemini-2.5-flash-lite-preview-09-2025"] = "gemini-3.5-flash-lite",
+        ["gemini-2.5-pro-preview-03-25"]        = "gemini-3.1-pro-preview",
+        ["gemini-2.5-pro-preview-05-06"]        = "gemini-3.1-pro-preview",
+        ["gemini-2.5-pro-preview-06-05"]        = "gemini-3.1-pro-preview",
+        -- Legacy 1.5/1.0 models
+        ["gemini-1.5-flash"]                    = "gemini-3.7-flash",
+        ["gemini-1.5-flash-latest"]             = "gemini-3.7-flash",
+        ["gemini-1.5-pro"]                      = "gemini-2.5-pro",
+        ["gemini-1.5-pro-latest"]               = "gemini-2.5-pro",
+        ["gemini-1.0-pro"]                      = "gemini-3.7-flash",
+    }
+    local function migrate_gemini_model(ai_slot)
+        if type(settings[ai_slot]) == "table" and settings[ai_slot].provider == "gemini" then
+            local old = settings[ai_slot].model
+            if old and gemini_model_map[old] then
+                self:log(string.format("AIHelper: Migrating Gemini model '%s' -> '%s' in %s", old, gemini_model_map[old], ai_slot))
+                settings[ai_slot].model = gemini_model_map[old]
+                migrated = true
+            end
+        end
+    end
+    migrate_gemini_model("primary_ai")
+    migrate_gemini_model("secondary_ai")
+    if settings.gemini_primary_model and gemini_model_map[settings.gemini_primary_model] then
+        settings.gemini_primary_model = gemini_model_map[settings.gemini_primary_model]
+        migrated = true
+    end
+    if settings.gemini_secondary_model and gemini_model_map[settings.gemini_secondary_model] then
+        settings.gemini_secondary_model = gemini_model_map[settings.gemini_secondary_model]
+        migrated = true
+    end
 
     -- One-time migration to set the new UI defaults: footnote style for in-text, classic style for menu
     if settings.ui_defaults_migrated_v2 == nil then

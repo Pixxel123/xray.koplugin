@@ -3883,10 +3883,11 @@ function M:getAIModelSelectionMenu(setting_type)
             id = "gemini",
             display_name = "Gemini",
             models = {
+                { id = "gemini-3.7-flash", cost = "free" },
                 { id = "gemini-3.6-flash", cost = "free" },
                 { id = "gemini-3.5-flash-lite", cost = "free" },
                 { id = "gemini-3.5-flash", cost = "free" },
-                { id = "gemini-3.1-flash-lite", cost = "free" },
+                { id = "gemini-3.1-pro-preview", cost = "paid" },
                 { id = "gemini-2.5-flash", cost = "free" },
                 { id = "gemini-2.5-flash-lite", cost = "free" },
                 { id = "gemini-2.5-pro", cost = "paid" },

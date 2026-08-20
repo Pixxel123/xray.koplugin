@@ -680,16 +680,80 @@ describe("AIHelper", function()
     end)
 
     describe("DEFAULT_AI configuration", function()
-        it("should have gemini-3.6-flash as default primary model", function()
-            local primary = AIHelper.settings.primary_ai or { provider = "gemini", model = "gemini-3.6-flash" }
+        it("should have gemini-3.7-flash as default primary model", function()
+            local primary = AIHelper.settings.primary_ai or { provider = "gemini", model = "gemini-3.7-flash" }
             assert.are.equal("gemini", primary.provider)
-            assert.are.equal("gemini-3.6-flash", primary.model)
+            assert.are.equal("gemini-3.7-flash", primary.model)
         end)
 
         it("should have gemini-3.5-flash-lite as default secondary model", function()
             local secondary = AIHelper.settings.secondary_ai or { provider = "gemini", model = "gemini-3.5-flash-lite" }
             assert.are.equal("gemini", secondary.provider)
             assert.are.equal("gemini-3.5-flash-lite", secondary.model)
+        end)
+    end)
+
+    describe("Gemini model migration", function()
+        it("should migrate deprecated and shut down Gemini models in primary and secondary slots", function()
+            local json = require("json")
+            local saved_settings = nil
+            AIHelper.saveSettings = function(self)
+                saved_settings = self.settings
+            end
+
+            -- Test with mock settings containing deprecated Gemini models
+            local mock_settings = {
+                primary_ai = { provider = "gemini", model = "gemini-2.0-flash" },
+                secondary_ai = { provider = "gemini", model = "gemini-3.1-flash-lite" },
+                gemini_primary_model = "gemini-1.5-flash",
+                gemini_secondary_model = "gemini-2.0-flash-lite",
+            }
+
+            -- Mock io.open to return our test settings
+            local old_open = io.open
+            io.open = function(path, mode)
+                if path:find("settings.json") and (mode == "r" or mode == nil) then
+                    return {
+                        read = function() return json.encode(mock_settings) end,
+                        close = function() end
+                    }
+                end
+                return old_open(path, mode)
+            end
+
+            AIHelper:loadSettings()
+            io.open = old_open
+
+            assert.is_not_nil(AIHelper.settings)
+            assert.are.equal("gemini-3.7-flash", AIHelper.settings.primary_ai.model)
+            assert.are.equal("gemini-3.5-flash-lite", AIHelper.settings.secondary_ai.model)
+            assert.are.equal("gemini-3.7-flash", AIHelper.settings.gemini_primary_model)
+            assert.are.equal("gemini-3.5-flash-lite", AIHelper.settings.gemini_secondary_model)
+        end)
+
+        it("should migrate legacy Gemini preview and 1.5/1.0 models", function()
+            local json = require("json")
+            local mock_settings = {
+                primary_ai = { provider = "gemini", model = "gemini-1.5-pro" },
+                secondary_ai = { provider = "gemini", model = "gemini-2.5-flash-preview-05-20" },
+            }
+
+            local old_open = io.open
+            io.open = function(path, mode)
+                if path:find("settings.json") and (mode == "r" or mode == nil) then
+                    return {
+                        read = function() return json.encode(mock_settings) end,
+                        close = function() end
+                    }
+                end
+                return old_open(path, mode)
+            end
+
+            AIHelper:loadSettings()
+            io.open = old_open
+
+            assert.are.equal("gemini-2.5-pro", AIHelper.settings.primary_ai.model)
+            assert.are.equal("gemini-3.7-flash", AIHelper.settings.secondary_ai.model)
         end)
     end)
 

@@ -944,6 +944,11 @@ function XRayPlugin:getSubMenuItems()
                                 text = self.loc:t("menu_fetch_series_context") or "Fetch / Refresh Series Context",
                                 keep_menu_open = true,
                                 callback = function() self:manualFetchSeriesContext() end,
+                            },
+                            {
+                                text = self.loc:t("menu_clear_series_cache") or "Clear Series Cache",
+                                keep_menu_open = true,
+                                callback = function() self:clearSeriesCache() end,
                             }
                         }
                     },

@@ -248,9 +248,6 @@ msgstr "Invalid API Key"
 msgid "error_extract_text"
 msgstr "Error: Could not extract book text."
 
-msgid "no_new_text"
-msgstr "No new text was available at your current position; X-Ray is already up to date here."
-
 msgid "error_model_access_desc"
 msgstr "Your API key does not have access to the selected model. You might need to use a different model or provider."
 
@@ -479,6 +476,9 @@ msgstr "Clear Cache"
 msgid "menu_clear_logs"
 msgstr "Clear Logs"
 
+msgid "menu_clear_series_cache"
+msgstr "Clear Series Cache"
+
 msgid "menu_content_fetch_settings"
 msgstr "Content & Fetch Settings"
 
@@ -662,6 +662,12 @@ msgstr "No location data yet. Please use 'Fetch X-Ray Data' first."
 msgid "no_merges_performed"
 msgstr "No merges performed."
 
+msgid "no_new_text"
+msgstr "No new text was available at your current position; X-Ray is already up to date here."
+
+msgid "no_series_to_clear"
+msgstr "No series detected for this book."
+
 msgid "no_terms_data"
 msgstr "No terms data yet. Please use 'Fetch X-Ray Data' first."
 
@@ -736,6 +742,9 @@ msgstr "Search Terms"
 
 msgid "series_ask_later_msg"
 msgstr "Series recap postponed. We will ask again when you open/resume this book."
+
+msgid "series_cache_cleared"
+msgstr "Series cache cleared for '%s'."
 
 msgid "series_context_enabled_toggle"
 msgstr "Enable Series Context"

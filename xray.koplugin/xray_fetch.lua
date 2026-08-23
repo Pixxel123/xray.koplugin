@@ -1044,6 +1044,21 @@ function M:finalizeXRayData(final_book_data, title, author, book_text, is_update
                         timeline = filterCurrentOnly(self.timeline),
                     }
                     self.series_manager:saveSeriesCache(slug, cache_data)
+
+                    local s_setting = self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.series_context_enabled
+                    if s_setting ~= false and index > 1 then
+                        local all_priors_cached = true
+                        for p_idx = 1, index - 1 do
+                            if not cache_data.books[p_idx] then
+                                all_priors_cached = false
+                                break
+                            end
+                        end
+                        if all_priors_cached then
+                            self:log("XRayPlugin: Series: Post-fetch auto-restoring cached series context for " .. tostring(slug))
+                            self:mergeSeriesContext(cache_data, series_info)
+                        end
+                    end
                 end
             end
         end)

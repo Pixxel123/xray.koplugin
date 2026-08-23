@@ -429,6 +429,106 @@ describe("xray_ui", function()
             assert.is_true(asyncSave_called)
             assert.is_true(plugin.book_data.series_context_dismissed)
         end)
+
+        it("should automatically merge series context offline if all prior books are cached", function()
+            -- Mock NetworkMgr as offline
+            package.loaded["ui/network/manager"] = {
+                isConnected = function() return false end,
+                isOnline = function() return false end
+            }
+            local merge_called = false
+            plugin.mergeSeriesContext = function(self_p, cache_data, series_info)
+                merge_called = true
+            end
+            plugin.series_manager = {
+                detectSeries = function()
+                    return { name = "Mistborn", index = 2, slug = "mistborn" }
+                end,
+                loadSeriesCache = function(self_sm, slug)
+                    return {
+                        books = {
+                            [1] = {
+                                title = "The Final Empire",
+                                timeline = { { chapter = "Ch 1", event = "Kelsier" } }
+                            }
+                        }
+                    }
+                end
+            }
+            plugin.ai_helper = {
+                settings = {
+                    series_context_enabled = true
+                }
+            }
+            plugin.book_data = {}
+
+            plugin:checkSeriesContext()
+
+            assert.is_true(merge_called)
+            -- Verify no popup prompt shown because it was merged automatically offline
+            local last = _G.ui_tracker.last_shown
+            assert.is_nil(last)
+        end)
+    end)
+
+    describe("clearCache and clearSeriesCache", function()
+        it("should reset all in-memory tables and flags on clearCache", function()
+            plugin.characters = { { name = "Vin" } }
+            plugin.locations = { { name = "Luthadel" } }
+            plugin.timeline = { { chapter = "Ch 1", event = "Event" } }
+            plugin.historical_figures = { { name = "Person" } }
+            plugin.terms = { { name = "Allomancy" } }
+            plugin.terms_fetched = true
+            plugin.author_info = { name = "Author" }
+            plugin.book_data = { series_context_loaded = true, series_slug = "mistborn" }
+            plugin.series_context_loaded = true
+            plugin.xray_mode_enabled = true
+
+            local clear_file_called = false
+            plugin.cache_manager = {
+                clearCache = function(self_cm, file)
+                    clear_file_called = true
+                    return true
+                end
+            }
+
+            plugin:clearCache()
+
+            assert.is_true(clear_file_called)
+            assert.are.equal(0, #plugin.characters)
+            assert.are.equal(0, #plugin.locations)
+            assert.are.equal(0, #plugin.timeline)
+            assert.are.equal(0, #plugin.historical_figures)
+            assert.are.equal(0, #plugin.terms)
+            assert.is_false(plugin.terms_fetched)
+            assert.is_nil(plugin.author_info)
+            assert.is_false(plugin.series_context_loaded)
+            assert.is_false(plugin.xray_mode_enabled)
+            assert.are.same({}, plugin.book_data)
+        end)
+
+        it("should clear series cache file and flags on clearSeriesCache", function()
+            plugin.series_manager = {
+                detectSeries = function()
+                    return { name = "Mistborn", index = 2, slug = "mistborn" }
+                end,
+                getSeriesCachePath = function(self_sm, slug)
+                    return "/tmp/koreader/settings/xray/series/mistborn.lua"
+                end
+            }
+            plugin.book_data = {
+                series_context_loaded = true,
+                series_context_dismissed = true,
+                series_slug = "mistborn"
+            }
+            plugin.series_context_loaded = true
+
+            plugin:clearSeriesCache()
+
+            assert.is_false(plugin.series_context_loaded)
+            assert.is_nil(plugin.book_data.series_context_loaded)
+            assert.is_nil(plugin.book_data.series_context_dismissed)
+        end)
     end)
 
     describe("scanBookForUnits", function()

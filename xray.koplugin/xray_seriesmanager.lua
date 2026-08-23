@@ -31,6 +31,77 @@ local function makeSlug(name)
     return SeriesManager:makeSlug(name)
 end
 
+local WORD_NUMBERS = {
+    one = 1, two = 2, three = 3, four = 4, five = 5,
+    six = 6, seven = 7, eight = 8, nine = 9, ten = 10,
+    eleven = 11, twelve = 12, thirteen = 13, fourteen = 14, fifteen = 15,
+    sixteen = 16, seventeen = 17, eighteen = 18, nineteen = 19, twenty = 20,
+    first = 1, second = 2, third = 3, fourth = 4, fifth = 5,
+    sixth = 6, seventh = 7, eighth = 8, ninth = 9, tenth = 10
+}
+
+local ROMAN_MAP = {
+    i = 1, ii = 2, iii = 3, iv = 4, v = 5,
+    vi = 6, vii = 7, viii = 8, ix = 9, x = 10,
+    xi = 11, xii = 12, xiii = 13, xiv = 14, xv = 15,
+    xvi = 16, xvii = 17, xviii = 18, xix = 19, xx = 20
+}
+
+-- Extract series book index from title string
+function SeriesManager:extractIndexFromTitle(title, series_name)
+    if not title or title == "" then return nil end
+    local lower_title = title:lower()
+
+    -- 1. Try matching series_name followed by index if series_name is known
+    if series_name and series_name ~= "" then
+        local s_clean = series_name:lower():gsub("[%-%^%$%(%)%%%.%[%]%*%+%?]", "%%%1")
+        local s_idx = lower_title:match(s_clean .. "%s*[,:%-]?%s*#?%s*0*(%d+)")
+        if s_idx and tonumber(s_idx) then
+            return tonumber(s_idx)
+        end
+    end
+
+    -- 2. Explicit numeric patterns
+    local patterns = {
+        "book%s*0*(%d+)",
+        "volume%s*0*(%d+)",
+        "vol%s*%.?%s*0*(%d+)",
+        "bk%s*%.?%s*0*(%d+)",
+        "part%s*0*(%d+)",
+        "no%s*%.?%s*0*(%d+)",
+        "nr%s*%.?%s*0*(%d+)",
+        "#%s*0*(%d+)",
+    }
+    for _, pat in ipairs(patterns) do
+        local match = lower_title:match(pat)
+        if match and tonumber(match) then
+            return tonumber(match)
+        end
+    end
+
+    -- 3. Word numbers and Roman numerals
+    local word_patterns = {
+        "book%s+([%a]+)",
+        "volume%s+([%a]+)",
+        "vol%s*%.?%s+([%a]+)",
+        "part%s+([%a]+)",
+        "bk%s*%.?%s+([%a]+)",
+    }
+    for _, pat in ipairs(word_patterns) do
+        local match = lower_title:match(pat)
+        if match then
+            if WORD_NUMBERS[match] then
+                return WORD_NUMBERS[match]
+            end
+            if ROMAN_MAP[match] then
+                return ROMAN_MAP[match]
+            end
+        end
+    end
+
+    return nil
+end
+
 -- Detect if book is part of a series
 function SeriesManager:detectSeries(props, title, author, ai_helper)
     props = props or {}
@@ -42,16 +113,46 @@ function SeriesManager:detectSeries(props, title, author, ai_helper)
 
     -- 1. Try metadata first
     if series_name and series_name ~= "" then
-        local index = tonumber(series_index) or 1
-        logger.info("XRayPlugin: Series: detectSeries: Metadata path taken. Name=" .. tostring(series_name) .. ", index=" .. tostring(index))
+        local index = tonumber(series_index)
+        local index_source = index and "metadata" or nil
+        if not index then
+            -- Fallback 1a: Try title parsing
+            index = self:extractIndexFromTitle(title, series_name)
+            if index then
+                index_source = "title_parse"
+                logger.info("XRayPlugin: Series: detectSeries: Metadata index missing, extracted from title. index=" .. tostring(index))
+            end
+        end
+
+        if not index and ai_helper then
+            -- Fallback 1b: Try AI detection for index
+            logger.info("XRayPlugin: Series: detectSeries: Metadata index missing and title parse yielded no index. Querying AI for book index.")
+            local prompt = ai_helper:createPrompt(title, author, nil, "series_detect")
+            local result, err_code, err_msg = ai_helper:executeUnifiedRequest(prompt)
+            if result and result.is_series and result.book_index then
+                index = tonumber(result.book_index)
+                if index then
+                    index_source = "ai_detect"
+                    logger.info("XRayPlugin: Series: detectSeries: AI resolved book index=" .. tostring(index))
+                end
+            else
+                logger.info("XRayPlugin: Series: detectSeries: AI call for index failed: err_code=" .. tostring(err_code) .. ", err_msg=" .. tostring(err_msg))
+            end
+        end
+
+        local has_explicit_index = (index_source ~= nil)
+        index = index or 1
+        index_source = index_source or "default"
+        logger.info("XRayPlugin: Series: detectSeries: Series detected (" .. index_source .. "). Name=" .. tostring(series_name) .. ", index=" .. tostring(index))
         return {
             name = series_name,
             index = index,
-            slug = makeSlug(series_name)
+            slug = makeSlug(series_name),
+            has_explicit_index = has_explicit_index
         }
     end
     
-    -- 2. Fallback to AI
+    -- 2. Fallback to AI (when series_name itself is missing from metadata)
     if not ai_helper then
         logger.info("XRayPlugin: Series: detectSeries: Metadata fallback to AI skipped because ai_helper is nil")
         return nil
@@ -62,7 +163,11 @@ function SeriesManager:detectSeries(props, title, author, ai_helper)
     local result, err_code, err_msg = ai_helper:executeUnifiedRequest(prompt)
     if result and result.is_series then
         local name = result.series_name
-        local index = tonumber(result.book_index) or 1
+        local index = tonumber(result.book_index)
+        if not index then
+            index = self:extractIndexFromTitle(title, name)
+        end
+        index = index or 1
         logger.info("XRayPlugin: Series: detectSeries: AI returned: is_series=" .. tostring(result.is_series) .. ", series_name=" .. tostring(name) .. ", book_index=" .. tostring(index))
         if name and name ~= "" then
             return {

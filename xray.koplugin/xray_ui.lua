@@ -4369,21 +4369,26 @@ function M:checkSeriesContext()
     end
 
     -- 1. Try metadata check first (without AI, passes nil for ai_helper)
-    local series_info = self.series_manager:detectSeries(props, title, author, nil)
+    local series_info = self.series_manager and self.series_manager.detectSeries and self.series_manager:detectSeries(props, title, author, nil)
+    local has_explicit_metadata_index = props and (props.series_index or props.seriesindex or props.SeriesIndex)
+    local has_title_index = series_info and self.series_manager and self.series_manager.extractIndexFromTitle and self.series_manager:extractIndexFromTitle(title, series_info.name)
+
     if series_info and series_info.name and series_info.index then
         if series_info.index > 1 then
-            self:log("XRayPlugin: Series: Metadata check found series: " .. series_info.name .. ", index=" .. tostring(series_info.index))
+            self:log("XRayPlugin: Series: Metadata/title check found series: " .. series_info.name .. ", index=" .. tostring(series_info.index))
             self:showSeriesContextPrompt(series_info)
             return
-        else
-            self:log("XRayPlugin: Series: Metadata check found series: " .. series_info.name .. ", index=" .. tostring(series_info.index) .. " (first book). Caching check outcome.")
+        elseif series_info.has_explicit_index or has_explicit_metadata_index or has_title_index or not (props and (props.series or props.Series)) then
+            self:log("XRayPlugin: Series: Metadata/title check confirmed first book in series: " .. series_info.name .. ", index=" .. tostring(series_info.index) .. ". Caching check outcome.")
             saveSeriesChecked()
             return
+        else
+            self:log("XRayPlugin: Series: Series name found in metadata (" .. series_info.name .. "), but index unknown. Falling through to async AI check.")
         end
     end
 
     -- 2. Fallback to AI (performed asynchronously to prevent UI freeze)
-    self:log("XRayPlugin: Series: Metadata check didn't find series. Initiating asynchronous AI check.")
+    self:log("XRayPlugin: Series: Metadata check didn't conclusively resolve series/index. Initiating asynchronous AI check.")
     local prompt = self.ai_helper:createPrompt(title, author, nil, "series_detect")
     local req_params = self.ai_helper:buildComprehensiveRequest(nil, nil, nil, prompt)
     if not req_params then
@@ -4425,13 +4430,16 @@ function M:checkSeriesContext()
             -- AI returned a valid result!
             self:log("XRayPlugin: Series: Async series check result received")
             if result.is_series then
-                local name = result.series_name
-                local index = tonumber(result.book_index) or 1
+                local name = result.series_name or (series_info and series_info.name) or (props and (props.series or props.Series))
+                local title_idx = self.series_manager and self.series_manager.extractIndexFromTitle and self.series_manager:extractIndexFromTitle(title, name)
+                local index = tonumber(result.book_index) or title_idx or 1
                 if name and name ~= "" then
+                    local make_slug_fn = self.series_manager and self.series_manager.makeSlug
+                    local slug = make_slug_fn and self.series_manager:makeSlug(name) or name:lower():gsub("[%s%p]+", "_"):gsub("^_+", ""):gsub("_+$", "")
                     local ai_series_info = {
                         name = name,
                         index = index,
-                        slug = self.series_manager:makeSlug(name)
+                        slug = slug
                     }
                     self:log("XRayPlugin: Series: Async check detected series=" .. tostring(name) .. ", index=" .. tostring(index))
                     if index > 1 then

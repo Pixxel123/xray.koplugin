@@ -4895,16 +4895,25 @@ function M:showValidateAllKeysDialog()
         }
 
         local dialog_width = math.floor(math.min(Screen:getWidth(), Screen:getHeight()) * 0.9)
-        local border_window = (Size.border and Size.border.window) or 1
-        local padding_button = (Size.padding and Size.padding.button) or 10
-        local padding_default = (Size.padding and Size.padding.default) or 10
-        local margin_default = (Size.margin and Size.margin.default) or 5
+        local border_window = 1
+        local padding_button = 10
+        local padding_default = 10
+        local margin_default = 5
+        pcall(function()
+            if Size and Size.border and Size.border.window then border_window = Size.border.window end
+            if Size and Size.padding and Size.padding.button then padding_button = Size.padding.button end
+            if Size and Size.padding and Size.padding.default then padding_default = Size.padding.default end
+            if Size and Size.margin and Size.margin.default then margin_default = Size.margin.default end
+        end)
         local buttontable_width = dialog_width - 2 * border_window - 2 * padding_button
         local content_width = buttontable_width - 2 * (padding_default + margin_default)
 
         local base_fs = 15
-        if Size and Size.font and Size.font.menu then
-            base_fs = math.max(14, math.floor(Size.font.menu * 0.85))
+        if G_reader_settings then
+            local fs = G_reader_settings:readSetting("cre_font_size")
+            if fs and type(fs) == "number" then
+                base_fs = math.max(14, math.min(fs, 20))
+            end
         end
 
         local vg_components = { align = "left" }

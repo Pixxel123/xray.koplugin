@@ -4308,7 +4308,7 @@ function M:showConfigFileGuide()
         span(),
     }
 
-    local wiki_url = "https://github.com/ultimatejimmy/koreader-xray-plugin/wiki/Advanced-Usage"
+    local wiki_url = "https://github.com/ultimatejimmy/xray.koplugin/wiki/2.-API-Key-Setup-Options"
     local qr_size = math.max(100, math.min(math.floor((dialog_w - sc(32)) * 0.35), 140))
     local ok_qr, QRWidget = pcall(require, "ui/widget/qrwidget")
     if ok_qr and QRWidget then
@@ -4330,7 +4330,7 @@ function M:showConfigFileGuide()
         })
         table.insert(content_vg, WidgetContainer:new{ dimen = Geom:new{ w = 1, h = sc(4) } })
         table.insert(content_vg, TextBoxWidget:new{
-            text = self.loc:t("welcome_file_guide_scan") or "Scan QR to view Advanced Usage wiki guide",
+            text = self.loc:t("welcome_file_guide_scan") or "Scan QR to view API Key Setup wiki guide",
             face = Font:getFace("cfont", math.max(11, ui_font_size - 3)),
             fgcolor = Blitbuffer.COLOR_BLACK,
             width = dialog_w - sc(32),

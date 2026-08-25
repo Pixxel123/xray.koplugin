@@ -472,7 +472,7 @@ function Localization:t(key, ...)
             welcome_action_dont_ask = "Don't Ask Again",
             welcome_file_guide_title = "Config & Text File Setup",
             welcome_file_guide_desc = "How to configure API keys via text file:\n\n1. Create a file named 'xray_key.txt' on your device or computer.\n2. Place it in your KOReader folder (e.g. koreader/ or koreader/settings/).\n3. Add your key inside on a single line:\n   • Gemini: gemini = YOUR_KEY (or simply paste raw key)\n   • OpenAI: openai = sk-...\n   • DeepSeek/Claude: deepseek = ..., claude = ...\n4. Tap 'Import Now' below to load your keys.\n\nManual Config: You can also edit koreader/plugins/xray.koplugin/xray_config.lua.",
-            welcome_file_guide_scan = "Scan QR to view Advanced Usage wiki guide",
+            welcome_file_guide_scan = "Scan QR to view API Key Setup wiki guide",
             welcome_btn_import_now = "Import Now",
             welcome_no_file_found = "No xray_key.txt found in KOReader directory.",
             menu_welcome_quick_setup = "Welcome & Quick Setup...",

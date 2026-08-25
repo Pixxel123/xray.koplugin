@@ -1506,7 +1506,9 @@ function AIHelper:loadSettings()
         ["gemini-3.1-flash-lite-preview"]       = "gemini-3.5-flash-lite",
         ["gemini-3-flash-preview"]              = "gemini-3.7-flash",
         ["gemini-3-pro-preview"]                = "gemini-3.1-pro-preview",
-        -- 2.5 preview models
+        -- 2.5 models / previews
+        ["gemini-2.5-flash"]                    = "gemini-3.7-flash",
+        ["gemini-2.5-flash-lite"]               = "gemini-3.5-flash-lite",
         ["gemini-2.5-flash-preview-05-20"]      = "gemini-3.7-flash",
         ["gemini-2.5-flash-preview-09-25"]      = "gemini-3.7-flash",
         ["gemini-2.5-flash-lite-preview-09-2025"] = "gemini-3.5-flash-lite",
@@ -2767,7 +2769,13 @@ function AIHelper:validateProviderKey(provider_id)
     local url, headers, request_body
 
     if provider_id == "gemini" then
-        local model = prov.primary_model or "gemini-2.5-flash"
+        local model = (self.settings and self.settings.gemini_primary_model)
+            or (self.settings and self.settings.primary_ai and self.settings.primary_ai.provider == "gemini" and self.settings.primary_ai.model)
+            or prov.primary_model
+            or DEFAULT_AI.primary.model
+        if model == "gemini-2.5-flash" or model == "gemini-2.5-flash-lite" then
+            model = "gemini-3.7-flash"
+        end
         url = "https://generativelanguage.googleapis.com/v1beta/models/" .. model .. ":generateContent"
         headers = { ["Content-Type"] = "application/json", ["x-goog-api-key"] = key }
         request_body = json.encode({

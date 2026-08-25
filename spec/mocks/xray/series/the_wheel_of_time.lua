@@ -2,20 +2,20 @@
 return {
   books = {
     [1] = {
-      locations = {
-        [1] = {
-          name = "Luthadel",
-          description = "Capital city",
-        },
-      },
       characters = {
         [1] = {
           name = "Kelsier",
           description = "Survivor of Hathsin",
         },
       },
+      locations = {
+        [1] = {
+          name = "Luthadel",
+          description = "Capital city",
+        },
+      },
     },
   },
-  cached_at = 1787681577,
   cache_version = "6.0",
+  cached_at = 1787684543,
 }

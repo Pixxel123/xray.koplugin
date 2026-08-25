@@ -17,8 +17,23 @@ function CacheManager:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
+    o._active_saves = {}
     return o
 end
+
+function CacheManager:cancelAsyncSaves()
+    if self._active_saves then
+        for _, entry in ipairs(self._active_saves) do
+            entry.cancelled = true
+            if entry.file then
+                pcall(function() entry.file:close() end)
+                entry.file = nil
+            end
+        end
+        self._active_saves = {}
+    end
+end
+
 
 -- Get cache file path for a book
 function CacheManager:getCachePath(book_path)
@@ -168,6 +183,21 @@ function CacheManager:asyncSaveCache(book_path, data, on_done_cb)
         f:write("-- Generated: " .. os.date("%Y-%m-%d %H:%M:%S") .. "\n\n")
         f:write("return ")
 
+        self._active_saves = self._active_saves or {}
+        local save_entry = { cancelled = false, file = f, path = cache_file }
+        table.insert(self._active_saves, save_entry)
+
+        local function cleanupSave()
+            if self._active_saves then
+                for idx, entry in ipairs(self._active_saves) do
+                    if entry == save_entry then
+                        table.remove(self._active_saves, idx)
+                        break
+                    end
+                end
+            end
+        end
+
         local write_count = 0
         local serializeCo
         serializeCo = function(obj, indent, seen)
@@ -220,21 +250,36 @@ function CacheManager:asyncSaveCache(book_path, data, on_done_cb)
         end)
 
         local function resumeCoroutine()
+            if save_entry.cancelled then
+                pcall(function() f:close() end)
+                cleanupSave()
+                if on_done_cb then on_done_cb(false) end
+                return
+            end
+
             local ok, err = coroutine.resume(co)
             if not ok then
                 logger.warn("CacheManager: Error during async serialization:", err or "unknown")
-                f:close()
+                pcall(function() f:close() end)
+                cleanupSave()
                 if on_done_cb then on_done_cb(false) end
                 return
             end
 
             if coroutine.status(co) == "dead" then
-                f:close()
+                pcall(function() f:close() end)
+                cleanupSave()
                 logger.info("CacheManager: Saved cache asynchronously (cooperative) to:", cache_file)
                 AIHelper:log("CacheManager: Saved cache asynchronously (cooperative) to: " .. tostring(cache_file))
                 if on_done_cb then on_done_cb(true) end
             else
-                UIManager:scheduleIn(0.02, resumeCoroutine)
+                if not save_entry.cancelled then
+                    UIManager:scheduleIn(0.02, resumeCoroutine)
+                else
+                    pcall(function() f:close() end)
+                    cleanupSave()
+                    if on_done_cb then on_done_cb(false) end
+                end
             end
         end
 

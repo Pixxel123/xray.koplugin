@@ -23,8 +23,10 @@ end
 
 function M:fetchFromAI()
     require("ui/network/manager"):runWhenOnline(function() 
+        if self.destroyed or not self.ui or not self.ui.document then return end
         local current_page = self.ui:getCurrentPage()
-        local reading_percent = math.floor((current_page / self.ui.document:getPageCount()) * 100)
+        local total_pages = (type(self.ui.document.getPageCount) == "function" and self.ui.document:getPageCount()) or 1
+        local reading_percent = math.floor((current_page / total_pages) * 100)
         local spoiler_setting = self.ai_helper.settings and self.ai_helper.settings.spoiler_setting or "spoiler_free"
         
         if spoiler_setting == "full_book" then
@@ -37,8 +39,10 @@ end
 
 function M:updateFromAI()
     require("ui/network/manager"):runWhenOnline(function() 
+        if self.destroyed or not self.ui or not self.ui.document then return end
         local current_page = self.ui:getCurrentPage()
-        local reading_percent = math.floor((current_page / self.ui.document:getPageCount()) * 100)
+        local total_pages = (type(self.ui.document.getPageCount) == "function" and self.ui.document:getPageCount()) or 1
+        local reading_percent = math.floor((current_page / total_pages) * 100)
         local spoiler_setting = self.ai_helper.settings and self.ai_helper.settings.spoiler_setting or "spoiler_free"
         
         local last_fetch_page = nil
@@ -378,6 +382,10 @@ function M:_processSingleWordResult(result, text, book_text, current_page)
 end
 
 function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_silent)
+    if self.destroyed or not self.ui or not self.ui.document then return end
+    local doc_file = self.ui.document.file
+    if not doc_file then return end
+
     self._fetch_generation = (self._fetch_generation or 0) + 1
     local fetch_generation = self._fetch_generation
     self._active_fetch_generation = fetch_generation
@@ -398,7 +406,7 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
 
     -- Invalidate timeline if the current timeline length setting is greater than what was cached
     if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
-    local cached = self.book_data or self.cache_manager:loadCache(self.ui.document.file)
+    local cached = self.book_data or self.cache_manager:loadCache(doc_file)
     if cached and cached.timeline and #cached.timeline > 0 then
         local s = self.ai_helper and self.ai_helper.settings or {}
         local current_len = s.timeline_event_len or 80
@@ -658,6 +666,7 @@ end
 
 
 function M:finalizeXRayData(final_book_data, title, author, book_text, is_update, is_silent, current_page)
+    if self.destroyed or not self.ui or not self.ui.document then return end
     final_book_data.book_title = title
     final_book_data.author = author
 
@@ -988,14 +997,16 @@ function M:finalizeXRayData(final_book_data, title, author, book_text, is_update
     -- If we don't have author info in memory, check if the cache already has it
     if not self.author_info then
         if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
-        local existing = self.book_data or self.cache_manager:loadCache(self.ui.document.file)
+        local doc_file = (self.ui and self.ui.document) and self.ui.document.file
+        local existing = (doc_file and self.cache_manager:loadCache(doc_file)) or self.book_data
         if existing and existing.author_info then
             self.author_info = existing.author_info
         end
     end
 
     if not self.book_data then
-        self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+        local doc_file = (self.ui and self.ui.document) and self.ui.document.file
+        self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
     end
     local updated_data = self.book_data
     updated_data.book_title = title
@@ -1015,7 +1026,8 @@ function M:finalizeXRayData(final_book_data, title, author, book_text, is_update
     self.book_data = updated_data
 
     if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
-    local cache_saved = self.cache_manager:asyncSaveCache(self.ui.document.file, updated_data)
+    local doc_file = (self.ui and self.ui.document) and self.ui.document.file
+    local cache_saved = doc_file and self.cache_manager:asyncSaveCache(doc_file, updated_data)
 
     -- If book is part of a series, update this book's entry in SeriesCache
     if self.series_manager and (updated_data.series_slug or (self.ui and self.ui.document)) then
@@ -1237,6 +1249,10 @@ end
 
 function M:fetchMoreCharacters()
     require("ui/network/manager"):runWhenOnline(function() 
+        if self.destroyed or not self.ui or not self.ui.document then return end
+        local doc_file = self.ui.document.file
+        if not doc_file then return end
+
         if not self.ai_helper then
             local AIHelper = require(plugin_path .. "xray_aihelper")
             self.ai_helper = AIHelper
@@ -1272,7 +1288,7 @@ function M:fetchMoreCharacters()
         UIManager:show(wait_msg)
         
         UIManager:scheduleIn(0.5, function()
-            if is_cancelled or self.destroyed then return end
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
             if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
             
             -- EVEN SAMPLING: Divide the readable range into equal segments
@@ -1323,7 +1339,7 @@ function M:fetchMoreCharacters()
             
             local context = { 
                 reading_percent = reading_percent, 
-                filename = self.ui.document.file:match("([^/\\]+)$"), 
+                filename = doc_file:match("([^/\\]+)$"), 
                 series = props.series or props.Series, 
                 book_text = book_text,
                 exclude_characters = table.concat(exclude_list, ", ")
@@ -1334,11 +1350,13 @@ function M:fetchMoreCharacters()
             self.ai_helper:resetTrapWidget()
             
             if wait_msg then UIManager:close(wait_msg) end
-            if is_cancelled or error_code == "USER_CANCELLED" then return end
+            if is_cancelled or error_code == "USER_CANCELLED" or self.destroyed or not self.ui or not self.ui.document then return end
             
             if not more_data or not more_data.characters then
+                local utils = require(plugin_path .. "xray_utils")
                 local title, text = utils:getFriendlyError(error_code, error_msg, self.loc)
-                UIManager:show(ConfirmBox:new{                    text = title .. "\n\n" .. text,
+                UIManager:show(ConfirmBox:new{
+                    text = title .. "\n\n" .. text,
                     ok_text = self.loc:t("ok") or "OK",
                     cancel_text = nil
                 })
@@ -1368,7 +1386,7 @@ function M:fetchMoreCharacters()
             -- Save to cache
             if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
             if not self.book_data then
-                self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                self.book_data = self.cache_manager:loadCache(doc_file) or {}
             end
             local updated_data = self.book_data
             updated_data.book_title = title
@@ -1381,7 +1399,7 @@ function M:fetchMoreCharacters()
             updated_data.timeline = self.timeline or updated_data.timeline
             updated_data.author_info = self.author_info or updated_data.author_info
             
-            self.cache_manager:asyncSaveCache(self.ui.document.file, updated_data)
+            self.cache_manager:asyncSaveCache(doc_file, updated_data)
 
             local current_page = self.ui and self.ui.getCurrentPage and self.ui:getCurrentPage() or 1
             local total_pages = self.ui and self.ui.document and self.ui.document.getPageCount and self.ui.document:getPageCount() or 1
@@ -1390,7 +1408,7 @@ function M:fetchMoreCharacters()
             if spoiler_setting == "full_book" then reading_percent = 100 end
 
             UIManager:scheduleIn(0.5, function()
-                if self.destroyed then return end
+                if self.destroyed or not self.ui or not self.ui.document then return end
                 self:runPostFetchDuplicateCheck(title, author, reading_percent, false)
             end)
             
@@ -1407,6 +1425,10 @@ end
 
 function M:fetchMoreTerms()
     require("ui/network/manager"):runWhenOnline(function()
+        if self.destroyed or not self.ui or not self.ui.document then return end
+        local doc_file = self.ui.document.file
+        if not doc_file then return end
+
         if not self.ai_helper then
             local AIHelper = require(plugin_path .. "xray_aihelper")
             self.ai_helper = AIHelper
@@ -1440,59 +1462,49 @@ function M:fetchMoreTerms()
         UIManager:show(wait_msg)
         
         UIManager:scheduleIn(0.5, function()
-            if is_cancelled or self.destroyed then return end
-            if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
             
-            local pages_per_sample = 20
-            local chars_per_sample = 10000
-            local num_samples = 6
-            
-            self.more_terms_call_count = (self.more_terms_call_count or 0) + 1
-            local call_num = self.more_terms_call_count
-            local offset = (call_num - 1) * pages_per_sample
-            
-            local readable_pages = math.max(1, current_page)
-            local segment_size = math.floor(readable_pages / num_samples)
-            if segment_size < pages_per_sample then segment_size = pages_per_sample end
-            
-            local text_parts = {}
-            for i = 0, num_samples - 1 do
-                local segment_start = i * segment_size
-                local sample_start = math.min(segment_start + offset, readable_pages - pages_per_sample)
-                sample_start = math.max(1, sample_start)
-                if sample_start <= current_page then
-                    local end_page = math.min(sample_start + pages_per_sample, current_page)
-                    local sample = self.chapter_analyzer:getTextFromPageRange(self.ui, sample_start, end_page, chars_per_sample)
-                    if sample and #sample > 100 then
-                        table.insert(text_parts, "[SECTION " .. (i + 1) .. "]\n" .. sample)
-                    end
-                end
+            if not self.chapter_analyzer then
+                local ChapterAnalyzer = require(plugin_path .. "xray_chapteranalyzer")
+                self.chapter_analyzer = ChapterAnalyzer:new()
             end
-            local book_text = table.concat(text_parts, "\n\n")
-
-            self.terms = self.terms or {}
-            local exclude_list = {}
-            for _, term in ipairs(self.terms) do
-                table.insert(exclude_list, term.name)
+            local book_text = self.chapter_analyzer:getTextForAnalysis(self.ui, 20000, nil, current_page)
+            local samples, chapter_titles = self.chapter_analyzer:getDetailedChapterSamples(self.ui, 200, 150000, reading_percent == 100, nil, nil, current_page)
+            local annots = self.chapter_analyzer:getAnnotationsForAnalysis(self.ui)
+            
+            if (not book_text or #book_text < 10) and not samples then
+                if wait_msg then UIManager:close(wait_msg) end
+                UIManager:show(InfoMessage:new{
+                    text = self.loc:t("error_extract_text") or "Error: Could not extract book text.",
+                    timeout = 5
+                })
+                return
             end
-            local exclude_str = #exclude_list > 0 and table.concat(exclude_list, ", ") or "None"
 
             local context = {
-                exclude_terms = exclude_str,
                 reading_percent = reading_percent,
-                book_text = book_text
+                spoiler_free = reading_percent < 100,
+                filename = doc_file:match("([^/\\]+)$"),
+                series = props.series or props.Series,
+                existing_terms = self.terms,
+                chapter_samples = samples,
+                chapter_titles = chapter_titles,
+                annotations = annots
             }
 
             self.ai_helper:setTrapWidget(wait_msg)
-            local more_data, error_code, error_msg = self.ai_helper:getMoreTerms(title, author, nil, context)
+            local result, error_code, error_msg = self.ai_helper:fetchMoreTerms(title, author, book_text, context)
             self.ai_helper:resetTrapWidget()
 
             if wait_msg then UIManager:close(wait_msg) end
-            if is_cancelled or error_code == "USER_CANCELLED" then return end
+
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
             
-            if not more_data or not more_data.terms then
+            if not result then
+                local utils = require(plugin_path .. "xray_utils")
                 local err_title, err_text = utils:getFriendlyError(error_code, error_msg, self.loc)
-                UIManager:show(ConfirmBox:new{                    text = err_title .. "\n\n" .. err_text,
+                UIManager:show(ConfirmBox:new{
+                    text = err_title .. "\n\n" .. err_text,
                     ok_text = self.loc:t("ok") or "OK",
                     cancel_text = nil
                 })
@@ -1500,7 +1512,7 @@ function M:fetchMoreTerms()
             end
             
             local new_count = 0
-            for _, new_term in ipairs(more_data.terms) do
+            for _, new_term in ipairs(result) do
                 local found = false
                 for _, existing in ipairs(self.terms) do
                     if existing.name:lower() == new_term.name:lower() then
@@ -1520,7 +1532,7 @@ function M:fetchMoreTerms()
             
             if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
             if not self.book_data then
-                self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                self.book_data = self.cache_manager:loadCache(doc_file) or {}
             end
             local updated_data = self.book_data
             updated_data.book_title = title
@@ -1533,7 +1545,7 @@ function M:fetchMoreTerms()
             updated_data.timeline = self.timeline or updated_data.timeline
             updated_data.author_info = self.author_info or updated_data.author_info
             
-            self.cache_manager:asyncSaveCache(self.ui.document.file, updated_data)
+            self.cache_manager:asyncSaveCache(doc_file, updated_data)
             
             local added_msg = self.loc:t("msg_added_terms", new_count)
             UIManager:show(InfoMessage:new{ text = added_msg, timeout = 3 })
@@ -1545,6 +1557,10 @@ function M:fetchMoreTerms()
 end
 
 function M:fetchAuthorInfo()
+    if self.destroyed or not self.ui or not self.ui.document then return end
+    local doc_file = self.ui.document.file
+    if not doc_file then return end
+
     if not self.ai_helper then
         local AIHelper = require(plugin_path .. "xray_aihelper")
         self.ai_helper = AIHelper
@@ -1568,7 +1584,7 @@ function M:fetchAuthorInfo()
     }
     UIManager:show(wait_msg)
     UIManager:scheduleIn(0.5, function()
-        if is_cancelled or self.destroyed then return end
+        if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
         
         if not self.chapter_analyzer then
             local ChapterAnalyzer = require(plugin_path .. "xray_chapteranalyzer")
@@ -1582,7 +1598,7 @@ function M:fetchAuthorInfo()
         self.ai_helper:resetTrapWidget()
         
         if wait_msg then UIManager:close(wait_msg) end
-        if is_cancelled or error_code == "USER_CANCELLED" then return end
+        if is_cancelled or error_code == "USER_CANCELLED" or self.destroyed or not self.ui or not self.ui.document then return end
 
         if not author_data then
             local title, text = utils:getFriendlyError(error_code, error_msg, self.loc)
@@ -1600,7 +1616,7 @@ function M:fetchAuthorInfo()
         }
         if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
         if not self.book_data then
-            self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+            self.book_data = self.cache_manager:loadCache(doc_file) or {}
         end
         local cache = self.book_data
         cache.author_info = self.author_info
@@ -1615,7 +1631,7 @@ function M:fetchAuthorInfo()
             self.book_type = author_data.book_type
         end
         
-        self.cache_manager:asyncSaveCache(self.ui.document.file, cache)
+        self.cache_manager:asyncSaveCache(doc_file, cache)
         self:showAuthorInfo()
     end)
 end

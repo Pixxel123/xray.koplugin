@@ -84,6 +84,7 @@ function M:mountUnderlineOverlay()
     local orig = view.paintTo
     view.paintTo = function(view_self, bb, x, y)
         orig(view_self, bb, x, y) -- draw reader page first
+        if plugin.destroyed or not plugin.ui or not plugin.ui.document then return end
         local ok, err = pcall(function() plugin:_drawUnitUnderlines(bb) end)
         if not ok then
             log("draw error: " .. tostring(err))
@@ -112,6 +113,11 @@ local function _getCacheSig(self)
 end
 
 function M:_resolveHighlightBoxes()
+    if self.destroyed or not self.ui or not self.ui.document then
+        self.unit_conversion_boxes = {}
+        return
+    end
+
     local sig = _getCacheSig(self)
     if self._box_cache_sig == sig and self.unit_conversion_boxes then
         return
@@ -123,6 +129,7 @@ function M:_resolveHighlightBoxes()
         self.unit_conversion_boxes = {}
         return
     end
+
     
     local resolved = {}
     for _, match in ipairs(self.unit_xp_matches) do
@@ -392,6 +399,7 @@ local function _checkSettingsChanged(self)
 end
 
 function M:_drawUnitUnderlines(bb)
+    if self.destroyed or not self.ui or not self.ui.document then return end
     local scan_needed, redraw_needed = _checkSettingsChanged(self)
     if scan_needed then
         log("Scanner settings changed, refreshing unit scan")
@@ -726,16 +734,20 @@ function M:scanBookForUnits(force)
         end
     end
 
+    self.active_unit_scan_dialog = progress_msg
     progress_msg:show()
     UIManager:forceRePaint()
 
     UIManager:scheduleIn(0.1, function()
-        if self.destroyed then
+        if self.destroyed or not self.ui or not self.ui.document then
             self._unit_scan_in_progress = false
+            self.active_unit_scan_dialog = nil
+            pcall(function() progress_msg:close() end)
             return
         end
 
         local ok_scan, err_scan = pcall(function()
+            if self.destroyed or not self.ui or not self.ui.document then return end
             log("scanBookForUnits: starting whole book scan")
             
             local direction = settings.unit_conversion_direction or "auto"
@@ -1214,7 +1226,7 @@ function M:scanBookForUnits(force)
             progress_msg:reportProgress(95)
             log("scanBookForUnits: checkpoint G — scheduling cache write")
             UIManager:scheduleIn(0.5, function()
-                if not self.destroyed then
+                if not self.destroyed and self.ui and self.ui.document then
                     log("scanBookForUnits: checkpoint H — writing cache file")
                     self:saveUnitCache(resolved_dir)
                 end
@@ -1222,8 +1234,11 @@ function M:scanBookForUnits(force)
         end)
         
         self._unit_scan_in_progress = false
-        progress_msg:reportProgress(100)
-        progress_msg:close()
+        self.active_unit_scan_dialog = nil
+        pcall(function()
+            progress_msg:reportProgress(100)
+            progress_msg:close()
+        end)
         
         if not ok_scan then
             log("scanBookForUnits async error: " .. tostring(err_scan))

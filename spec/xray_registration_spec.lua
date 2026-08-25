@@ -102,3 +102,49 @@ describe("X-Ray Dictionary Registration Logic", function()
         assert.is_nil(btn_spec.callback())
     end)
 end)
+
+describe("X-Ray Lifecycle Hooks", function()
+    local plugin
+
+    before_each(function()
+        plugin = createMockPlugin()
+        plugin.destroyed = false
+        plugin.bg_fetch_active = true
+        plugin.bg_fetch_pending = true
+        plugin._unit_scan_in_progress = true
+
+        local destroyed_called = false
+        plugin.destroy = function(self)
+            if self.destroyed then return end
+            self.destroyed = true
+            self.bg_fetch_active = false
+            self.bg_fetch_pending = false
+            self._unit_scan_in_progress = false
+            if self.cache_manager and self.cache_manager.cancelAsyncSaves then
+                self.cache_manager:cancelAsyncSaves()
+            end
+        end
+
+        plugin.onCloseDocument = function(self) self:destroy() end
+        plugin.onReaderClose = function(self) self:destroy() end
+        plugin.onExit = function(self) self:destroy() end
+    end)
+
+    it("should destroy plugin and cancel background tasks on onCloseDocument", function()
+        plugin:onCloseDocument()
+        assert.is_true(plugin.destroyed)
+        assert.is_false(plugin.bg_fetch_active)
+        assert.is_false(plugin.bg_fetch_pending)
+        assert.is_false(plugin._unit_scan_in_progress)
+    end)
+
+    it("should destroy plugin on onReaderClose", function()
+        plugin:onReaderClose()
+        assert.is_true(plugin.destroyed)
+    end)
+
+    it("should destroy plugin on onExit", function()
+        plugin:onExit()
+        assert.is_true(plugin.destroyed)
+    end)
+end)

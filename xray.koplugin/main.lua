@@ -234,6 +234,7 @@ end
 
 
 function XRayPlugin:destroy()
+    if self.destroyed then return end
     self:log("XRayPlugin: destroy called, marking as destroyed")
     self.destroyed = true
     
@@ -246,12 +247,47 @@ function XRayPlugin:destroy()
         self.active_mention_scan = nil
     end
 
+    if self.cache_manager and self.cache_manager.cancelAsyncSaves then
+        self.cache_manager:cancelAsyncSaves()
+    end
+
+    if self.active_unit_scan_dialog then
+        pcall(function() self.active_unit_scan_dialog:close() end)
+        self.active_unit_scan_dialog = nil
+    end
+
+    self.bg_fetch_active = false
+    self.bg_fetch_pending = false
+    self._unit_scan_in_progress = false
+
     self:closeAllMenus()
+    if self.clearHighlightOverlay then
+        pcall(function() self:clearHighlightOverlay() end)
+    end
+    if self.clearUnitUnderlines then
+        pcall(function() self:clearUnitUnderlines() end)
+    end
     
     if WidgetContainer.destroy then
         WidgetContainer.destroy(self)
     end
 end
+
+function XRayPlugin:onCloseDocument()
+    self:log("XRayPlugin: onCloseDocument called")
+    self:destroy()
+end
+
+function XRayPlugin:onReaderClose()
+    self:log("XRayPlugin: onReaderClose called")
+    self:destroy()
+end
+
+function XRayPlugin:onExit()
+    self:log("XRayPlugin: onExit called")
+    self:destroy()
+end
+
 
 
 
@@ -331,7 +367,7 @@ function XRayPlugin:onReaderReady()
 
     -- Initial unit scanner run
     UIManager:scheduleIn(1.5, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         if self.mountUnderlineOverlay then self:mountUnderlineOverlay() end
         if self.mountTapHandler then self:mountTapHandler() end
         
@@ -361,19 +397,19 @@ function XRayPlugin:onReaderReady()
     
     -- Suggest switching to book language if appropriate
     UIManager:scheduleIn(5, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         self:checkBookLanguageMatch()
     end)
     
     -- Weekly silent update check
     UIManager:scheduleIn(10, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         self:checkWeeklyUpdate()
     end)
 
     -- Check series context prompt after ~15 seconds
     UIManager:scheduleIn(15, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         self:checkSeriesContext()
     end)
 
@@ -400,19 +436,20 @@ end
 function XRayPlugin:onNetworkConnected()
     self:log("XRayPlugin: onNetworkConnected fired. Scheduling series context check in 2 seconds.")
     UIManager:scheduleIn(2, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         self:checkSeriesContext()
     end)
 end
 
 function XRayPlugin:onPageUpdate(pageno)
+    if self.destroyed or not self.ui or not self.ui.document then return end
     self.last_pageno = pageno
 
     if self.pending_return_banner then
         local p = self.pending_return_banner
         self.pending_return_banner = nil
         UIManager:scheduleIn(0.3, function()
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then return end
             self:showReturnBanner(p.return_page, p.entity, p.mentions, self.last_pageno)
         end)
     elseif not self.is_programmatic_navigation then
@@ -454,7 +491,7 @@ function XRayPlugin:onPageUpdate(pageno)
                 if not (self.bg_fetch_pending or self.bg_fetch_active) then
                     self.bg_fetch_pending = true
                     UIManager:scheduleIn(2, function()
-                        if self.destroyed then return end
+                        if self.destroyed or not self.ui or not self.ui.document then return end
                         self.bg_fetch_pending = false
                         self:triggerBackgroundMergeFetch(chapter_title)
                     end)
@@ -497,7 +534,7 @@ function XRayPlugin:onPageUpdate(pageno)
         chapter_title = chapter_title or ("Page " .. tostring(pageno))
 
         UIManager:scheduleIn(2, function()
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then return end
             self.bg_fetch_pending = false
             self:triggerBackgroundMergeFetch(chapter_title)
         end)
@@ -588,23 +625,25 @@ function XRayPlugin:onPageUpdate(pageno)
 
     -- Wait 2s for the reader to settle on the new chapter before fetching
     UIManager:scheduleIn(2, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         self.bg_fetch_pending = false
         self:triggerBackgroundMergeFetch(chapter_title)
     end)
 end
 
 function XRayPlugin:triggerBackgroundMergeFetch(chapter_title)
+    if self.destroyed or not self.ui or not self.ui.document then return end
     if self._unit_scan_in_progress then
         self:log("XRayPlugin: Deferring background AI fetch because unit scan is in progress")
         UIManager:scheduleIn(5, function()
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then return end
             self:triggerBackgroundMergeFetch(chapter_title)
         end)
         return
     end
     if self.bg_fetch_active then return end
     if not self.ui or not self.ui.document then return end
+
 
     -- SILENT NETWORK CHECK: use isOnline() instead of runWhenOnline to avoid "white box" connecting dialogs
     local NetworkMgr = require("ui/network/manager")
@@ -726,9 +765,8 @@ function XRayPlugin:autoLoadCache()
         if #self.characters > 0 then self.xray_mode_enabled = true end
 
         -- Stage 2: Restore Sort Order (Deferred 500ms)
-        UIManager:scheduleIn(500, function()
-            if self.destroyed then return end
-            if not self.ui or not self.ui.document then return end
+        UIManager:scheduleIn(0.5, function()
+            if self.destroyed or not self.ui or not self.ui.document then return end
             self:log("XRayPlugin: Stage 2 - Restoring sort order")
             local function restoreOrder(list)
                 table.sort(list, function(a, b)
@@ -740,6 +778,7 @@ function XRayPlugin:autoLoadCache()
             
             -- Wait a tick for the dictionary popup to close gracefully, then trigger X-Ray
             UIManager:scheduleIn(0.1, function()
+                if self.destroyed or not self.ui or not self.ui.document then return end
                 if self.ui and self.ui.dictionary and self.ui.dictionary.dict_window then
                     -- Trigger dictionary close safely
                     pcall(function()
@@ -763,21 +802,21 @@ function XRayPlugin:autoLoadCache()
 
                 self:log("XRayPlugin: Chunked post-load complete")
             end)
-        UIManager:scheduleIn(200, function()
-            if self.destroyed then return end
-            pcall(function()
-                local ok_order, reader_menu_order = pcall(require, "ui/elements/reader_menu_order")
-                if not ok_order then
-                    ok_order, reader_menu_order = pcall(require, "apps/reader/modules/readermenuorder")
-                end
-                if ok_order and reader_menu_order and reader_menu_order.tools then
-                    for i, v in ipairs(reader_menu_order.tools) do
-                        if v == "xray" then table.remove(reader_menu_order.tools, i); break end
+            UIManager:scheduleIn(0.2, function()
+                if self.destroyed then return end
+                pcall(function()
+                    local ok_order, reader_menu_order = pcall(require, "ui/elements/reader_menu_order")
+                    if not ok_order then
+                        ok_order, reader_menu_order = pcall(require, "apps/reader/modules/readermenuorder")
                     end
-                    table.insert(reader_menu_order.tools, 1, "xray")
-                end
+                    if ok_order and reader_menu_order and reader_menu_order.tools then
+                        for i, v in ipairs(reader_menu_order.tools) do
+                            if v == "xray" then table.remove(reader_menu_order.tools, i); break end
+                        end
+                        table.insert(reader_menu_order.tools, 1, "xray")
+                    end
+                end)
             end)
-        end)
         end)
     end
 end

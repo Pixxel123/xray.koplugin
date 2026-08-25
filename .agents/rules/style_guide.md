@@ -222,16 +222,31 @@ The classic display uses KOReader's fullscreen / large menu dialog format (`Butt
 
 ---
 
-## 6. Promotion / New Feature Announcement Cards
+## 6. Welcome & Feature Announcement Cards
 
-Promotion or new feature announcement cards overlay the screen on first plugin load to inform the user about key updates. They follow these general design principles:
-- **Size & Aspect**: Use a wider layout than standard settings cards to accommodate visual mockups and text descriptions without excessive vertical scroll. Standard width: `math.min(sw - sc(20), sc(460))`.
+Welcome cards (for onboarding users without configured keys) and feature announcement cards overlay the screen to guide users. They follow these general design principles:
+- **Size & Aspect**: Use a wider layout than standard settings cards to accommodate visual mockups, subtext, and descriptions without excessive vertical scroll. Standard width: `math.min(sw - sc(20), sc(460))`.
 - **Double Borders**: Package the card inside a double-border nesting container (outer `bordersize = sc(1)`, inner `bordersize = sc(2)`).
-- **Structure**:
-  1. **Category Label**: Small uppercase faded text at the top (e.g. `NEW FEATURE` in `fs - 5` font size).
-  2. **Headline**: Large bold text with descriptive emoji (e.g. `📏 Unit Converter` in `fs + 2` font size).
-  3. **Description**: Concise paragraph describing the feature and its interaction model using a `TextBoxWidget`.
-  4. **Visual Preview Panel**: A dedicated preview panel (`bordersize = xray_theme.border_preview`) showing a live high-fidelity demo of the feature (e.g., sample text with custom underlines and a pointing tooltip bubble).
-  5. **Choices (Actions)**: Clear vertical option group (standard horizontal button style list) mapping to logical settings (e.g., Enable/Configure, Keep Default, Disable).
-  6. **Bottom Button Row**: Layout action buttons horizontally (e.g., `Later` and `Confirm`), sharing the width equally as `(dialog_w - sc(40)) / 2` with a `sc(8)` horizontal separator.
+- **Icons & Typography**:
+  - **No raw emojis**: Never use Unicode emoji characters in headers or buttons (they render inconsistently on e-ink). Use standard KOReader icons / Feather Icons (e.g. https://feathericons.com/) or clean textual labels.
+  - **Category Label**: Small uppercase faded text at the top (e.g. `WELCOME TO X-RAY` or `NEW FEATURE` in `fs - 5` font size, using `xray_theme.color_label_dim`).
+  - **Headline**: Large bold text (e.g. `Set Up AI Provider` or `Unit Converter` in `fs + 2` font size).
+  - **Description**: Concise paragraph describing the purpose using a `TextBoxWidget` with alignment honoring RTL/LTR.
+- **Choices (Action Selector Group)**:
+  - Vertical list of selectable radio pill options.
+  - Selected: `●` bullet, solid border `border_btn`, dark color `color_border`.
+  - Unselected: `○` circle, thin border `sc(1)`, muted color `color_section_rule`.
+  - Title and optional subtext inside a `TextBoxWidget` with width `dialog_w - sc(72)`.
+  - Full-width `GestureRange` tap hit-testing spanning `dialog_w - sc(32)`.
+- **Bottom Button Row**:
+  - Action buttons laid out horizontally (e.g., `Continue` and `Skip for Now`), sharing the width equally as `(dialog_w - sc(40)) / 2` with a `sc(8)` horizontal separator.
+
+---
+
+## 7. Typography & Copywriting Rules
+
+- **No spaces around slashes (`/`)**: Never place spaces around forward slashes in UI text, labels, menu items, dialog headers, or button titles. Write `Phone/PC`, `and/or`, `DeepSeek/Claude`, `Scan/Rescan`, `Fetch/Refresh`, `Unknown/Other`, NOT `Phone / PC`, `DeepSeek / Claude`, or `Fetch / Refresh`.
+- **No default/theme icons on ConfirmBox**: Always explicitly specify `icon = false` when instantiating `ConfirmBox:new{ ... }` to prevent KOReader default icons or third-party theme icon packs (such as ZenUI) from injecting unwanted icons into confirmation dialogs.
+
+
 

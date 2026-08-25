@@ -73,13 +73,16 @@ function M:fetchSingleWord(text, pos0, pos1)
         if spoiler_setting == "full_book" then limit_percent = 100 end
 
         if self.ai_helper and type(self.ai_helper.hasApiKey) == "function" and not self.ai_helper:hasApiKey() then
-            local ConfirmBox = require("ui/widget/confirmbox")
-            local title, text_msg = utils:getFriendlyError("error_api", "invalid api key", self.loc)
-            UIManager:show(ConfirmBox:new{
-                text = title .. "\n\n" .. text_msg,
-                ok_text = self.loc:t("ok") or "OK",
-                cancel_text = nil
-            })
+            if self.showWelcomeCard then
+                self:showWelcomeCard()
+            else
+                local ConfirmBox = require("ui/widget/confirmbox")
+                local title, text_msg = utils:getFriendlyError("error_api", "invalid api key", self.loc)
+                UIManager:show(ConfirmBox:new{                    text = title .. "\n\n" .. text_msg,
+                    ok_text = self.loc:t("ok") or "OK",
+                    cancel_text = nil
+                })
+            end
             return
         end
 
@@ -175,8 +178,7 @@ function M:fetchSingleWord(text, pos0, pos1)
                 self:log("XRayPlugin: Failed to start async lookup")
                 local ConfirmBox = require("ui/widget/confirmbox")
                 local title, text_msg = utils:getFriendlyError("error_api", "Failed to start background process", self.loc)
-                UIManager:show(ConfirmBox:new{
-                    text = title .. "\n\n" .. text_msg,
+                UIManager:show(ConfirmBox:new{                    text = title .. "\n\n" .. text_msg,
                     ok_text = self.loc:t("ok") or "OK",
                     cancel_text = nil
                 })
@@ -221,8 +223,7 @@ function M:fetchSingleWord(text, pos0, pos1)
                         self:log("XRayPlugin: Single word lookup timed out")
                         local ConfirmBox = require("ui/widget/confirmbox")
                         local title, text_msg = utils:getFriendlyError("error_timeout", nil, self.loc)
-                        UIManager:show(ConfirmBox:new{
-                            text = title .. "\n\n" .. text_msg,
+                        UIManager:show(ConfirmBox:new{                            text = title .. "\n\n" .. text_msg,
                             ok_text = self.loc:t("ok") or "OK",
                             cancel_text = nil
                         })
@@ -232,8 +233,7 @@ function M:fetchSingleWord(text, pos0, pos1)
                     self:log("XRayPlugin: Single word lookup failed: " .. tostring(p_err_msg))
                     local ConfirmBox = require("ui/widget/confirmbox")
                     local title, text_msg = utils:getFriendlyError(p_err_code, p_err_msg, self.loc)
-                    UIManager:show(ConfirmBox:new{
-                        text = title .. "\n\n" .. text_msg,
+                    UIManager:show(ConfirmBox:new{                        text = title .. "\n\n" .. text_msg,
                         ok_text = self.loc:t("ok") or "OK",
                         cancel_text = nil
                     })
@@ -564,12 +564,15 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                 self:log("XRayPlugin: Failed to build request: " .. tostring(err_msg))
                 clearFetchState()
                 if not is_silent then
-                    local title, text = utils:getFriendlyError(err_code, err_msg, self.loc)
-                    UIManager:show(ConfirmBox:new{
-                        text = title .. "\n\n" .. text,
-                        ok_text = self.loc:t("ok") or "OK",
-                        cancel_text = nil
-                    })
+                    if not self.ai_helper:hasApiKey() and self.showWelcomeCard then
+                        self:showWelcomeCard()
+                    else
+                        local title, text = utils:getFriendlyError(err_code, err_msg, self.loc)
+                        UIManager:show(ConfirmBox:new{                            text = title .. "\n\n" .. text,
+                            ok_text = self.loc:t("ok") or "OK",
+                            cancel_text = nil
+                        })
+                    end
                 end
                 return
             end
@@ -625,8 +628,7 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                         cancelActiveRequest("Fetch timed out")
                         if not is_silent then
                             local title, text = utils:getFriendlyError("error_timeout", nil, self.loc)
-                            UIManager:show(ConfirmBox:new{
-                                text = title .. "\n\n" .. text,
+                            UIManager:show(ConfirmBox:new{                                text = title .. "\n\n" .. text,
                                 ok_text = self.loc:t("ok") or "OK",
                                 cancel_text = nil
                             })
@@ -638,8 +640,7 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                     self:log("XRayPlugin: Fetch failed: " .. tostring(p_err_msg))
                     if not is_silent then
                         local title, text = utils:getFriendlyError(p_err_code, p_err_msg, self.loc)
-                        UIManager:show(ConfirmBox:new{
-                            text = title .. "\n\n" .. text,
+                        UIManager:show(ConfirmBox:new{                            text = title .. "\n\n" .. text,
                             ok_text = self.loc:t("ok") or "OK",
                             cancel_text = nil
                         })
@@ -1337,8 +1338,7 @@ function M:fetchMoreCharacters()
             
             if not more_data or not more_data.characters then
                 local title, text = utils:getFriendlyError(error_code, error_msg, self.loc)
-                UIManager:show(ConfirmBox:new{
-                    text = title .. "\n\n" .. text,
+                UIManager:show(ConfirmBox:new{                    text = title .. "\n\n" .. text,
                     ok_text = self.loc:t("ok") or "OK",
                     cancel_text = nil
                 })
@@ -1492,8 +1492,7 @@ function M:fetchMoreTerms()
             
             if not more_data or not more_data.terms then
                 local err_title, err_text = utils:getFriendlyError(error_code, error_msg, self.loc)
-                UIManager:show(ConfirmBox:new{
-                    text = err_title .. "\n\n" .. err_text,
+                UIManager:show(ConfirmBox:new{                    text = err_title .. "\n\n" .. err_text,
                     ok_text = self.loc:t("ok") or "OK",
                     cancel_text = nil
                 })
@@ -1587,8 +1586,7 @@ function M:fetchAuthorInfo()
 
         if not author_data then
             local title, text = utils:getFriendlyError(error_code, error_msg, self.loc)
-            UIManager:show(ConfirmBox:new{
-                text = title .. "\n\n" .. text,
+            UIManager:show(ConfirmBox:new{                text = title .. "\n\n" .. text,
                 ok_text = self.loc:t("ok") or "OK",
                 cancel_text = nil
             })
@@ -2005,8 +2003,7 @@ function M:fetchSeriesContext(is_silent, init_wait_dialog, cancel_ref)
                     if wait_msg then UIManager:close(wait_msg) end
                     if not is_silent then
                         local err_title, err_text = utils:getFriendlyError(err_code, err_msg, self.loc)
-                        UIManager:show(ConfirmBox:new{
-                            text = err_title .. "\n\n" .. err_text,
+                        UIManager:show(ConfirmBox:new{                            text = err_title .. "\n\n" .. err_text,
                             ok_text = self.loc:t("ok") or "OK",
                             cancel_text = nil
                         })

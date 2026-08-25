@@ -110,6 +110,16 @@ function XRayPlugin:init()
     local AIHelper = require(plugin_path .. "xray_aihelper")
     self.ai_helper = AIHelper
     self.ai_helper:init(self.path)
+    
+    -- Check if xray_key.txt exists to auto-import keys if none are set
+    if not self.ai_helper:hasApiKey() then
+        local ok, count, path = self.ai_helper:importFromTextFile(false)
+        if ok and count > 0 then
+            self:log(string.format("XRayPlugin: Auto-imported %d API key(s) from %s", count, tostring(path)))
+            self.ai_helper:init(self.path)
+        end
+    end
+
     self.ai_provider = self.ai_helper.default_provider or "gemini"
     
     self.xray_mode_enabled = true
@@ -327,7 +337,10 @@ function XRayPlugin:onReaderReady()
         
 
         local settings = self.ai_helper and self.ai_helper.settings or {}
-        if settings.unit_new_feature_prompt_seen ~= true then
+        local has_key = self.ai_helper and type(self.ai_helper.hasApiKey) == "function" and self.ai_helper:hasApiKey()
+        if not has_key and settings.welcome_wizard_dont_ask ~= true then
+            self:showWelcomeCard()
+        elseif settings.unit_new_feature_prompt_seen ~= true then
             self:showUnitConverterNewFeatureCard()
         else
             if self.scanBookForUnits and settings.unit_converter_enabled ~= false then
@@ -1119,6 +1132,7 @@ function XRayPlugin:getSubMenuItems()
                         separator = true,
                     },
                     {
+                        is_api_keys = true,
                         text = self.loc:t("menu_api_keys") or "API Keys & Providers", 
                         keep_menu_open = true,
                         sub_item_table_func = function() return self:getAPIKeysMenu() end,
@@ -1649,8 +1663,8 @@ function XRayPlugin:showUnitScanWrittenNumbersCard()
     })
 end
 
--- Resolves the exact touch menu path (e.g. "4.1.8.6") to the Unit Converter submenu
-findUnitConverterMenuPath = function(self)
+-- Resolves the exact touch menu path (e.g. "4.1.8.6") to an X-Ray submenu
+local function findXRayMenuPath(self, target_key)
     if not self.ui or not self.ui.menu then return nil end
     local reader_menu = self.ui.menu
     if not reader_menu.tab_item_table then
@@ -1662,7 +1676,9 @@ findUnitConverterMenuPath = function(self)
     local function searchMenu(items, current_path)
         for idx, item in ipairs(items) do
             local path = current_path == "" and tostring(idx) or (current_path .. "." .. idx)
-            if item.is_unit_converter then
+            if target_key == "unit_converter" and item.is_unit_converter then
+                return path
+            elseif target_key == "api_keys" and (item.is_api_keys or (item.text and item.text:find("API Keys"))) then
                 return path
             end
             local submenu = item.sub_item_table
@@ -1681,8 +1697,6 @@ findUnitConverterMenuPath = function(self)
 
     for tab_idx, tab_items in ipairs(tab_item_table) do
         for item_idx, item in ipairs(tab_items) do
-            self:log(string.format("XRayPlugin: findUnitConverterMenuPath checking tab=%d item=%d id=%s text=%s", tab_idx, item_idx, tostring(item.id), tostring(item.text)))
-            -- Find the main "X-Ray" menu item by its sorted ID
             if item.id == "xray" then
                 local submenu = item.sub_item_table
                 if not submenu and type(item.sub_item_table_func) == "function" then
@@ -1692,15 +1706,37 @@ findUnitConverterMenuPath = function(self)
                     local sub_path = searchMenu(submenu, "")
                     if sub_path then
                         local path = string.format("%d.%d.%s", tab_idx, item_idx, sub_path)
-                        self:log("XRayPlugin: findUnitConverterMenuPath resolved path: " .. tostring(path))
+                        self:log("XRayPlugin: findXRayMenuPath resolved path: " .. tostring(path))
                         return path
                     end
                 end
             end
         end
     end
-    self:log("XRayPlugin: findUnitConverterMenuPath failed to resolve path")
+    self:log("XRayPlugin: findXRayMenuPath failed to resolve path for " .. tostring(target_key))
     return nil
+end
+
+function XRayPlugin:openReaderMenuToPath(target_key)
+    local UIManager = require("ui/uimanager")
+    UIManager:scheduleIn(0.1, function()
+        if self.ui and self.ui.menu then
+            if not self.ui.menu.menu_container then
+                self.ui.menu:onShowMenu()
+            end
+            local touch_menu = self.ui.menu.menu_container and self.ui.menu.menu_container[1]
+            if touch_menu then
+                local path = findXRayMenuPath(self, target_key)
+                if path then
+                    touch_menu:openMenu(path, false)
+                end
+            end
+        end
+    end)
+end
+
+findUnitConverterMenuPath = function(self)
+    return findXRayMenuPath(self, "unit_converter")
 end
 
 -- Shows the "New Feature" promotion card for the Unit Converter

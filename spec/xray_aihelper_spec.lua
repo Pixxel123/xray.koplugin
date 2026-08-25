@@ -763,6 +763,11 @@ describe("AIHelper", function()
             local config_file_written = nil
             local json = require("json")
 
+            local orig_getStoredConfigPath = AIHelper.getStoredConfigPath
+            local orig_loadStoredConfig = AIHelper.loadStoredConfig
+            local orig_saveStoredConfig = AIHelper.saveStoredConfig
+            local orig_writeConfigToFile = AIHelper.writeConfigToFile
+
             AIHelper.getStoredConfigPath = function()
                 return "/fake/path/config_backup.json"
             end
@@ -806,6 +811,82 @@ describe("AIHelper", function()
             assert.is_true(restored)
             assert.are.equal("test_gemini_key_123", mock_empty_config.gemini_api_key)
             assert.are.equal("test_gemini_key_123", config_file_written.gemini_api_key)
+
+            AIHelper.getStoredConfigPath = orig_getStoredConfigPath
+            AIHelper.loadStoredConfig = orig_loadStoredConfig
+            AIHelper.saveStoredConfig = orig_saveStoredConfig
+            AIHelper.writeConfigToFile = orig_writeConfigToFile
+        end)
+
+        it("imports keys from plain text file xray_key.txt", function()
+            local test_file = AIHelper.path .. "/xray_key.txt"
+            local f = io.open(test_file, "w")
+            if f then
+                f:write([[
+# My X-Ray Keys
+gemini = AQ.TEST_GEMINI_MOCK_KEY_1234567890abcdef
+openai = sk-proj-1234567890abcdef
+custom1_endpoint = https://openrouter.ai/api/v1/chat/completions
+custom1_model = google/gemini-2.5-flash
+]])
+                f:close()
+            end
+
+            local ok, count, path = AIHelper:importFromTextFile(true)
+            assert.is_true(ok)
+            assert.is_true(count >= 2)
+            assert.are.equal("AQ.TEST_GEMINI_MOCK_KEY_1234567890abcdef", AIHelper.providers.gemini.api_key)
+            assert.are.equal("sk-proj-1234567890abcdef", AIHelper.providers.chatgpt.api_key)
+
+            -- Clean up test files
+            os.remove(test_file)
+            os.remove(test_file .. ".imported")
+        end)
+
+        it("clears all API keys correctly across all 3 stores", function()
+            AIHelper:setAPIKey("gemini", "my_gemini_key")
+            AIHelper:setAPIKey("chatgpt", "my_chatgpt_key")
+            AIHelper:saveStoredConfig({ gemini_api_key = "backup_gemini", chatgpt_api_key = "backup_chatgpt" })
+            AIHelper:writeConfigToFile({ gemini_api_key = "config_gemini", chatgpt_api_key = "config_chatgpt" })
+            
+            AIHelper:clearAllAPIKeys()
+            
+            -- Store 1: UI settings
+            assert.are.equal("", AIHelper.settings.gemini_api_key or "")
+            assert.are.equal("", AIHelper.settings.chatgpt_api_key or "")
+            assert.is_false(AIHelper.settings.gemini_use_ui_key)
+            assert.is_false(AIHelper.settings.chatgpt_use_ui_key)
+
+            -- Store 2: Persistent backup store
+            local stored = AIHelper:loadStoredConfig()
+            assert.are.equal("", stored.gemini_api_key or "")
+            assert.are.equal("", stored.chatgpt_api_key or "")
+
+            -- Store 3: xray_config.lua
+            local ok, cfg = pcall(dofile, AIHelper.path .. "/xray_config.lua")
+            assert.is_true(ok)
+            assert.are.equal("", cfg.gemini_api_key or "")
+            assert.are.equal("", cfg.chatgpt_api_key or "")
+        end)
+
+        it("clears a single provider key correctly across all 3 stores", function()
+            AIHelper:setAPIKey("gemini", "keep_this")
+            AIHelper:setAPIKey("deepseek", "delete_this")
+            AIHelper:saveStoredConfig({ gemini_api_key = "keep_this", deepseek_api_key = "delete_this" })
+            AIHelper:writeConfigToFile({ gemini_api_key = "keep_this", deepseek_api_key = "delete_this" })
+
+            AIHelper:clearProviderKey("deepseek")
+
+            assert.are.equal("", AIHelper.settings.deepseek_api_key or "")
+            assert.is_false(AIHelper.settings.deepseek_use_ui_key)
+
+            local stored = AIHelper:loadStoredConfig()
+            assert.are.equal("", stored.deepseek_api_key or "")
+
+            local ok, cfg = pcall(dofile, AIHelper.path .. "/xray_config.lua")
+            assert.is_true(ok)
+            assert.are.equal("", cfg.deepseek_api_key or "")
+            assert.are.equal("keep_this", cfg.gemini_api_key or "")
         end)
     end)
 end)

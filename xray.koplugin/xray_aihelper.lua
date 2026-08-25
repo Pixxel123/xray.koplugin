@@ -1337,7 +1337,7 @@ function AIHelper:loadConfig()
         "gemini_primary_model", "gemini_secondary_model", "chatgpt_model", "default_provider"
     }
 
-    -- 1. Restore missing / empty keys in config file if present in persistent stored config
+    -- 1. Restore missing / empty keys in config file if present in persistent stored config (e.g. after plugin update)
     for _, k in ipairs(tracked_keys) do
         local stored_val = stored_config[k]
         local current_val = config[k]
@@ -2639,6 +2639,300 @@ function AIHelper:detectBookTypeAsync(title, author, series, description, result
 
     local pid = self:makeRequestAsync(requests, result_file)
     return pid
+end
+
+-- Import API keys from a plain text file (e.g. xray_key.txt at storage root or settings dir)
+function AIHelper:importFromTextFile(interactive)
+    local ok_ds, DataStorage = pcall(require, "datastorage")
+    local Utils = require(plugin_path .. "xray_utils")
+    
+    local candidate_paths = {
+        "/mnt/onboard/xray_key.txt",
+        "/mnt/us/xray_key.txt",
+        "/sdcard/xray_key.txt",
+    }
+    if ok_ds and DataStorage and DataStorage.getDataDir then
+        table.insert(candidate_paths, DataStorage:getDataDir() .. "/xray_key.txt")
+    end
+    if ok_ds and DataStorage and DataStorage.getSettingsDir then
+        table.insert(candidate_paths, DataStorage:getSettingsDir() .. "/xray_key.txt")
+        table.insert(candidate_paths, DataStorage:getSettingsDir() .. "/xray/xray_key.txt")
+    end
+    table.insert(candidate_paths, self.path .. "/xray_key.txt")
+    
+    local found_file = nil
+    local file_content = nil
+    for _, p in ipairs(candidate_paths) do
+        local f = io.open(p, "r")
+        if f then
+            file_content = f:read("*a")
+            f:close()
+            if file_content and #file_content > 0 then
+                found_file = p
+                break
+            end
+        end
+    end
+
+    if not found_file or not file_content or #file_content == 0 then
+        return false, 0, nil
+    end
+
+    local imported_keys = {}
+    local custom_params = {}
+    
+    for line in file_content:gmatch("[^\r\n]+") do
+        local clean = line:match("^%s*(.-)%s*$")
+        if #clean > 0 and not clean:match("^[#%-%/]") then
+            local k, v = clean:match("^([%w_]+)%s*[:=]%s*(.+)$")
+            if k and v then
+                k = k:lower():match("^%s*(.-)%s*$")
+                v = v:match("^%s*(.-)%s*$")
+                v = v:match('^["\']?(.-)["\']?$')
+                if #v > 0 then
+                    if k == "gemini" or k == "gemini_api_key" or k == "google" then
+                        imported_keys.gemini = v
+                    elseif k == "chatgpt" or k == "chatgpt_api_key" or k == "openai" then
+                        imported_keys.chatgpt = v
+                    elseif k == "deepseek" or k == "deepseek_api_key" then
+                        imported_keys.deepseek = v
+                    elseif k == "claude" or k == "claude_api_key" or k == "anthropic" then
+                        imported_keys.claude = v
+                    elseif k == "custom1" or k == "custom1_api_key" or k == "openrouter" then
+                        imported_keys.custom1 = v
+                    elseif k == "custom1_endpoint" then
+                        custom_params.custom1_endpoint = v
+                    elseif k == "custom1_model" then
+                        custom_params.custom1_model = v
+                    elseif k == "custom2" or k == "custom2_api_key" then
+                        imported_keys.custom2 = v
+                    elseif k == "custom2_endpoint" then
+                        custom_params.custom2_endpoint = v
+                    elseif k == "custom2_model" then
+                        custom_params.custom2_model = v
+                    end
+                end
+            else
+                local provider, key = Utils:detectProviderFromKey(clean)
+                if provider and key then
+                    imported_keys[provider] = key
+                elseif #clean >= 15 then
+                    local fallback_p = self.default_provider or "gemini"
+                    imported_keys[fallback_p] = clean:match('^["\']?(.-)["\']?$')
+                end
+            end
+        end
+    end
+
+    local count = 0
+    for prov, key in pairs(imported_keys) do
+        self:setAPIKey(prov, key)
+        self:updateConfigKey(prov .. "_api_key", key)
+        count = count + 1
+    end
+    for param, val in pairs(custom_params) do
+        local slot = param:match("^(custom%d)")
+        if slot and self.providers[slot] then
+            if param:find("endpoint") then
+                self.providers[slot].endpoint = val
+                self:updateConfigKey(param, val)
+            elseif param:find("model") then
+                self.providers[slot].model = val
+                self:updateConfigKey(param, val)
+            end
+        end
+    end
+
+    if count > 0 then
+        pcall(os.rename, found_file, found_file .. ".imported")
+        return true, count, found_file
+    end
+
+    return false, 0, found_file
+end
+
+-- Validate a single provider key with a lightweight ping
+function AIHelper:validateProviderKey(provider_id)
+    if not self.providers or not self.providers[provider_id] then
+        return { ok = false, error = "Provider not found" }
+    end
+    local prov = self.providers[provider_id]
+    local key = prov.api_key or ""
+    if #key == 0 then
+        return { ok = false, not_configured = true, error = "No key configured" }
+    end
+
+    local start_time = os.time()
+    local socket_time = socket and socket.gettime and socket.gettime()
+    local url, headers, request_body
+
+    if provider_id == "gemini" then
+        local model = prov.primary_model or "gemini-2.5-flash"
+        url = "https://generativelanguage.googleapis.com/v1beta/models/" .. model .. ":generateContent"
+        headers = { ["Content-Type"] = "application/json", ["x-goog-api-key"] = key }
+        request_body = json.encode({
+            contents = {{ parts = {{ text = "ping" }} }},
+            generationConfig = { maxOutputTokens = 5 }
+        })
+    elseif provider_id == "claude" then
+        url = prov.endpoint or "https://api.anthropic.com/v1/messages"
+        headers = {
+            ["Content-Type"] = "application/json",
+            ["x-api-key"] = key,
+            ["anthropic-version"] = "2023-06-01"
+        }
+        request_body = json.encode({
+            model = "claude-3-5-haiku-20241022",
+            max_tokens = 5,
+            messages = {{ role = "user", content = "ping" }}
+        })
+    else
+        -- OpenAI, DeepSeek, Custom slots
+        url = prov.endpoint or "https://api.openai.com/v1/chat/completions"
+        headers = {
+            ["Content-Type"] = "application/json",
+            ["Authorization"] = "Bearer " .. key
+        }
+        if (url:find("openrouter.ai")) then
+            headers["HTTP-Referer"] = "https://github.com/koreader/koreader-xray-plugin"
+            headers["X-Title"] = "KOReader X-Ray"
+        end
+        local model = prov.model or (provider_id == "deepseek" and "deepseek-chat" or "gpt-4o-mini")
+        request_body = json.encode({
+            model = model,
+            max_tokens = 5,
+            messages = {{ role = "user", content = "ping" }}
+        })
+    end
+
+    local ok, code, response_text, status = self:makeRequest(url, headers, request_body, 10, 15)
+    local end_time = socket and socket.gettime and socket.gettime()
+    local latency_ms = socket_time and math.floor((end_time - socket_time) * 1000) or 0
+
+    local code_num = tonumber(code)
+    if code_num and code_num >= 200 and code_num < 300 then
+        return { ok = true, latency_ms = latency_ms }
+    else
+        local err_msg = "HTTP " .. tostring(code or "Error")
+        if response_text then
+            local s, err_data = pcall(json.decode, response_text)
+            if s and err_data then
+                if err_data.error and type(err_data.error) == "table" and err_data.error.message then
+                    err_msg = err_data.error.message
+                elseif err_data.error and type(err_data.error) == "string" then
+                    err_msg = err_data.error
+                end
+            end
+        end
+        return { ok = false, error = err_msg, code = code_num }
+    end
+end
+
+-- Validate all configured provider keys and return summary
+function AIHelper:validateAllConfiguredKeys()
+    local results = {}
+    local provider_ids = { "gemini", "chatgpt", "deepseek", "claude", "custom1", "custom2" }
+    for _, id in ipairs(provider_ids) do
+        local prov = self.providers and self.providers[id]
+        if prov and prov.api_key and #prov.api_key > 0 then
+            results[id] = self:validateProviderKey(id)
+        else
+            results[id] = { not_configured = true }
+        end
+    end
+    return results
+end
+
+function AIHelper:clearAllAPIKeys()
+    local updates = {
+        gemini_api_key = "",
+        gemini_use_ui_key = false,
+        chatgpt_api_key = "",
+        chatgpt_use_ui_key = false,
+        deepseek_api_key = "",
+        deepseek_use_ui_key = false,
+        claude_api_key = "",
+        claude_use_ui_key = false,
+        custom1_api_key = "",
+        custom1_use_ui_key = false,
+        custom1_endpoint = "",
+        custom1_model = "",
+        custom1_is_reasoning = false,
+        custom2_api_key = "",
+        custom2_use_ui_key = false,
+        custom2_endpoint = "",
+        custom2_model = "",
+        custom2_is_reasoning = false,
+        welcome_wizard_dismissed = false,
+    }
+    -- 1. Wipe UI settings
+    self:saveSettings(updates)
+
+    -- 2. Wipe persistent config backup store
+    self:saveStoredConfig({})
+
+    -- 3. Wipe xray_config.lua file
+    local empty_config = {
+        gemini_api_key = "",
+        chatgpt_api_key = "",
+        deepseek_api_key = "",
+        claude_api_key = "",
+        custom1_api_key = "",
+        custom1_endpoint = "",
+        custom1_model = "",
+        custom1_format = "",
+        custom2_api_key = "",
+        custom2_endpoint = "",
+        custom2_model = "",
+        custom2_format = "",
+    }
+    self:writeConfigToFile(empty_config)
+
+    -- 4. Reinitialize in-memory state
+    self:init(self.path)
+    return true
+end
+
+function AIHelper:clearProviderKey(provider_id)
+    if not provider_id then return false end
+    local updates = {
+        [provider_id .. "_api_key"] = "",
+        [provider_id .. "_use_ui_key"] = false,
+    }
+    if provider_id:find("custom") then
+        updates[provider_id .. "_endpoint"] = ""
+        updates[provider_id .. "_model"] = ""
+        updates[provider_id .. "_is_reasoning"] = false
+    end
+    -- 1. Wipe UI settings for provider
+    self:saveSettings(updates)
+
+    -- 2. Wipe provider key from persistent stored config backup
+    local stored = self:loadStoredConfig()
+    stored[provider_id .. "_api_key"] = ""
+    if provider_id:find("custom") then
+        stored[provider_id .. "_endpoint"] = ""
+        stored[provider_id .. "_model"] = ""
+        stored[provider_id .. "_format"] = ""
+    end
+    self:saveStoredConfig(stored)
+
+    -- 3. Wipe provider key from xray_config.lua
+    local config_file = self.path .. "/xray_config.lua"
+    local ok, config = pcall(dofile, config_file)
+    if ok and type(config) == "table" then
+        config[provider_id .. "_api_key"] = ""
+        if provider_id:find("custom") then
+            config[provider_id .. "_endpoint"] = ""
+            config[provider_id .. "_model"] = ""
+            config[provider_id .. "_format"] = ""
+        end
+        self:writeConfigToFile(config)
+    end
+
+    -- 4. Reinitialize in-memory state
+    self:init(self.path)
+    return true
 end
 
 return AIHelper

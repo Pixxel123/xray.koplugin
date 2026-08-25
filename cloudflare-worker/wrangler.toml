@@ -1,0 +1,8 @@
+name = "koreader-xray-setup"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# Optional: Bind a Cloudflare KV namespace for distributed session persistence across edge nodes
+[[kv_namespaces]]
+binding = "XRAY_SESSIONS"
+id = "9a49c0d492094902ba8e4f90d10da332"

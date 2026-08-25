@@ -22,7 +22,9 @@ function Logger:init(path)
 end
 
 function Logger:log(message)
-    if not self.path then return end
+    if not self.path then
+        self.path = "plugins/xray.koplugin"
+    end
     local log_path = self.path .. "/xray.log"
     
     pcall(function()
@@ -48,6 +50,10 @@ function Logger:log(message)
         end
     end)
 end
+
+function Logger.info(msg) Logger:log("[INFO] " .. tostring(msg)) end
+function Logger.warn(msg) Logger:log("[WARN] " .. tostring(msg)) end
+function Logger.err(msg) Logger:log("[ERR] " .. tostring(msg)) end
 
 function Logger:clear()
     if not self.path then return end

@@ -161,6 +161,10 @@ msgstr "Kurgu"
 msgid "book_type_nonfiction"
 msgstr "Kurgu Dışı"
 
+# en-hash: 36bb6559696dc9124986ae120515984f
+msgid "btn_paste"
+msgstr "Yapıştır"
+
 # en-hash: cd00fdfb57dccc660b305e787262e649
 msgid "cache_cleared"
 msgstr "Önbellek temizlendi!\n\nŞimdi yeni verileri çekebilirsiniz:\nMenü → X-Ray → AI Verilerini Çek"
@@ -437,6 +441,26 @@ msgstr "Bahsedilenleri Bul"
 msgid "full_book_option"
 msgstr "Tam Kitap Modu"
 
+# en-hash: 57519cae872270f11151178ce007fd53
+msgid "import_file_not_found"
+msgstr "Depolama kök dizininde veya ayarlar klasöründe xray_key.txt dosyası bulunamadı."
+
+# en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
+msgid "import_file_success"
+msgstr "%2$s dosyasından %1$d API anahtarı başarıyla içe aktarıldı!"
+
+# en-hash: 46d812c9b950c3de4557b539f7c32634
+msgid "key_status_err"
+msgstr "[ERR] Başarısız: %s"
+
+# en-hash: 0314635e45812438980e1ef245848537
+msgid "key_status_not_set"
+msgstr "[--] Yapılandırılmadı"
+
+# en-hash: 36fb433675bfba1852e2bc20f946afb9
+msgid "key_status_ok"
+msgstr "[OK] Bağlandı (%d ms)"
+
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
 msgstr "TAKMA ADLAR"
@@ -673,7 +697,7 @@ msgstr "Daha Fazla Karakter Getir"
 msgid "menu_fetch_more_terms"
 msgstr "Daha Fazla Terim Getir"
 
-# en-hash: f0d29ae92c638538610d26014bda7269
+# en-hash: 6230c4dd24ba41dff51eb292727348fe
 msgid "menu_fetch_series_context"
 msgstr "Seri Bağlamını Getir / Yenile"
 
@@ -684,6 +708,10 @@ msgstr "Sıklık"
 # en-hash: 60b01aa51c38e7a952d2760bf1584915
 msgid "menu_historical_figures"
 msgstr "Tarihi Kişiler"
+
+# en-hash: 31a20a82ddb0aada27aab20c1352115f
+msgid "menu_import_file"
+msgstr "xray_key.txt dosyasından anahtarları içe aktar"
 
 # en-hash: 4994a8ffeba4ac3140beb89e8d41f174
 msgid "menu_language"
@@ -704,6 +732,10 @@ msgstr "Bakım"
 # en-hash: 2c126ee6ce85ef471a3a0e096c78b724
 msgid "menu_mentions_settings"
 msgstr "Bahsedilenler Ayarları"
+
+# en-hash: ed2a15d3eeee0693f0274e6b772fd466
+msgid "menu_paste_clipboard"
+msgstr "Panodan %s anahtarını yapıştır"
 
 # en-hash: f0e87a49b3cb82e4faabd5fc3729e8e8
 msgid "menu_primary_ai_model"
@@ -729,6 +761,10 @@ msgstr "Ayarlar"
 msgid "menu_terms"
 msgstr "Sözlük"
 
+# en-hash: 6310faa148f6d077593bdad673760e0d
+msgid "menu_test_key"
+msgstr "Bağlantıyı Test Et"
+
 # en-hash: 3d1f92a565d3b1a61880236e33c49bf3
 msgid "menu_timeline"
 msgstr "Zaman Çizelgesi"
@@ -753,6 +789,10 @@ msgstr "Birim Dönüştürücü"
 msgid "menu_update_xray"
 msgstr "X-Ray Verilerini Güncelle (Birleştir)"
 
+# en-hash: 5f67980bfad5601276847f8b2f74cd19
+msgid "menu_validate_all_keys"
+msgstr "Tüm API Anahtarlarını Test Et ve Doğrula"
+
 # en-hash: 02c89382dc0b7f202b7d455bf88ab785
 msgid "menu_view_config"
 msgstr "Yapılandırmayı Görüntüle"
@@ -760,6 +800,10 @@ msgstr "Yapılandırmayı Görüntüle"
 # en-hash: 8f96241822e718c6be629d036f586ca6
 msgid "menu_view_log"
 msgstr "Günlüğü Görüntüle"
+
+# en-hash: 464b65f46044b81b6b95485f1d38ccfa
+msgid "menu_web_setup"
+msgstr "Telefondan / PC'den API Anahtarı Ayarla (QR Kod)"
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -904,6 +948,10 @@ msgstr "Tamam"
 # en-hash: 386b384e3eec6bf9bf55d32b5018de15
 msgid "pair_rejected"
 msgstr "Pair marked as not a duplicate."
+
+# en-hash: b8d4677ac13de48defd22ae1a3fe2479
+msgid "paste_clipboard_confirm"
+msgstr "Panodaki API anahtarı %s için kullanılsın mı?"
 
 # en-hash: 607481fc96e754b33650eb171aac9447
 msgid "path"
@@ -1056,6 +1104,10 @@ msgstr "Stop"
 # en-hash: d725036d492c380f06f4eb32f5704bc9
 msgid "term_not_found"
 msgstr "'%s' ile eşleşen terim bulunamadı"
+
+# en-hash: 1ecbe04157c9f7433d24d17cf5e70564
+msgid "testing_api_keys"
+msgstr "API anahtarı bağlantıları test ediliyor..."
 
 # en-hash: 5d5b473a14bed6f67fdbe6c745b045a7
 msgid "this_chapter"
@@ -1385,6 +1437,26 @@ msgstr "X-Ray verileri güncelleniyor..."
 msgid "val"
 msgstr "???"
 
+# en-hash: 1739e3ae6d734407aef8af879665b8ee
+msgid "validate_keys_title"
+msgstr "API Anahtarı Durumu ve Doğrulama"
+
+# en-hash: 94eeb39559330226a1d0c942718547ea
+msgid "web_setup_msg"
+msgstr "1. Telefonunuzu/PC'nizi aynı Wi-Fi ağına bağlayın.\n2. Bu QR kodunu tarayın veya şu adrese gidin:\n\n%s\n\n3. API anahtarınızı yapıştırıp Kaydet'e dokunun."
+
+# en-hash: d845f459e17a314cfc7949ba6a1659cb
+msgid "web_setup_no_wifi"
+msgstr "Wi-Fi bağlantısı kesildi. Web kurulumunu kullanmak için lütfen Wi-Fi'ye bağlanın."
+
+# en-hash: 81daae83c93d7822f5bfc4779f5a7c2c
+msgid "web_setup_success"
+msgstr "%s için API anahtarı alındı ve kaydedildi!"
+
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "web_setup_title"
+msgstr "Telefon / PC ile Bağlan"
+
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
 msgstr "Devre Dışı"
@@ -1401,3 +1473,156 @@ msgstr "Anında arama yapmak için sözlük ve seçim menülerine bir 'X-Ray' d�
 msgid "yes"
 msgstr "Evet"
 
+
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "Set API Key from Phone/PC"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "Cloud Relay (Recommended — works anywhere)"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "Local Wi-Fi (Offline LAN)"
+
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "Connect via Phone/PC"
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "Connect via Local Wi-Fi"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "X-RAY'E HOŞ GELDİNİZ"
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "Yapay Zeka Sağlayıcısını Ayarla"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "Başlamak için API anahtarınızı nasıl bağlamak istediğinizi seçin:"
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "Telefondan / PC'den Ayarla (Önerilen)"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "Cloud Relay veya yerel Wi-Fi ile anahtarınızı girmek için bir QR kodu tarayın."
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "Anahtarı E-Okuyucuda Girin"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "Ekran klavyesini kullanarak API anahtarınızı yazın veya yapıştırın."
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "Metin Dosyası (xray_key.txt) veya Yapılandırma ile İçe Aktar"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "xray_key.txt dosyasından otomatik içe aktarın veya wiki rehberini görüntüleyin."
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "Tüm Sağlayıcı Ayarlarını Aç"
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "Özel uç noktaları, OpenAI, DeepSeek, Claude veya OpenRouter'ı yapılandırın."
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "Devam Et"
+
+# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
+msgid "welcome_action_skip"
+msgstr "Şimdilik Atla"
+
+# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
+msgid "welcome_file_guide_title"
+msgstr "Yapılandırma ve Metin Dosyası Kurulumu"
+
+# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
+msgid "welcome_file_guide_desc"
+msgstr "Cihazınıza bir metin dosyası yerleştirerek yazmadan API anahtarlarını yapılandırabilirsiniz:\n\n1. KOReader dizininde 'xray_key.txt' adlı bir dosya oluşturun.\n2. Anahtarınızı içine yerleştirin (ör. 'gemini: AQ...' veya doğrudan anahtar).\n3. Yüklemek için aşağıdaki 'Şimdi İçe Aktar' düğmesine dokunun."
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "Şimdi İçe Aktar"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "KOReader dizininde xray_key.txt bulunamadı."
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "Hoş Geldiniz ve Hızlı Kurulum..."
+
+# en-hash: 3845eb0df76becd72ddfa51233992d18
+msgid "menu_gemini_key"
+msgstr "Google Gemini API Anahtarı"
+
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "Google AI Studio'dan ücretsiz Gemini anahtarınızı girin (AQ. veya AIzaSy... ile başlar):"
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "API anahtarı kaydedildi!"
+
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "Tüm API Anahtarlarını Temizle..."
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "Yapılandırılmış tüm API anahtarlarını ve özel uç noktaları temizlemek istediğinizden emin misiniz?\n\nBu işlem, kayıtlı tüm anahtarları bu cihazdan kaldıracaktır."
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "Tüm Anahtarları Temizle"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "Tüm API anahtarları temizlendi."
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "%s Anahtarını Temizle..."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "%s için yapılandırılmış API anahtarı temizlensin mi?"
+
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "Anahtarı Temizle"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "%s API anahtarı temizlendi."
+
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "Daha Sonra Sor"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "Bir Daha Sorma"
+
+# en-hash: 47df1620e012b20c174af13225cc4a36
+msgid "welcome_file_guide_scan"
+msgstr "Gelişmiş Kullanım wiki kılavuzunu görüntülemek için QR kodunu tarayın"
+
+
+
+msgid "welcome_select_provider"
+msgstr "Yapay Zekâ Sağlayıcısını Seçin"

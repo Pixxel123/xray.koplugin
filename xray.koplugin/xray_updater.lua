@@ -469,8 +469,7 @@ local function _applyUpdate(download_url, new_version)
         end
         _clearCache(true)
         _clearCache(false)
-        UIManager:show(ConfirmBox:new{
-            text = t("updater_success_restart", new_version),
+        UIManager:show(ConfirmBox:new{            text = t("updater_success_restart", new_version),
             ok_text     = t("updater_btn_restart"),
             cancel_text = t("updater_btn_later"),
             ok_callback = function() UIManager:restartKOReader() end,
@@ -521,8 +520,7 @@ local function _showUpdateDialog(release, current)
         or  ""
 
     if not download_url then
-        UIManager:show(ConfirmBox:new{
-            text        = header .. notes_block .. "\n\n" .. t("updater_no_asset"),
+        UIManager:show(ConfirmBox:new{            text        = header .. notes_block .. "\n\n" .. t("updater_no_asset"),
             ok_text     = t("updater_btn_open_browser"),
             cancel_text = t("updater_btn_cancel"),
             ok_callback = function()
@@ -538,8 +536,7 @@ local function _showUpdateDialog(release, current)
         return
     end
 
-    UIManager:show(ConfirmBox:new{
-        text        = header .. notes_block .. footer,
+    UIManager:show(ConfirmBox:new{        text        = header .. notes_block .. footer,
         ok_text     = t("updater_btn_download"),
         cancel_text = t("updater_btn_cancel"),
         ok_callback = function() _applyUpdate(download_url, latest) end,

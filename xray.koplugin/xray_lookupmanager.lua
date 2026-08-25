@@ -288,8 +288,7 @@ function LookupManager:handleLookup(text, pos0, pos1)
             prompt_text = string.format("No X-Ray data found for '%s'. Would you like to look it up?", text_to_show)
         end
         
-        no_data_dialog = ConfirmBox:new{
-            text       = prompt_text,
+        no_data_dialog = ConfirmBox:new{            text       = prompt_text,
             ok_text    = self.plugin.loc:t("fetch_button") or "Fetch",
             cancel_text = self.plugin.loc:t("close") or "Close",
             ok_callback = function()

@@ -137,6 +137,87 @@ function M:flattenTOC(nodes, flat_list)
     return flat_list
 end
 
+-- Detect AI provider from key format (supports modern AQ.*, AIza*, sk-ant-*, sk-or-*, sk-proj-*, sk-*)
+function M:detectProviderFromKey(raw_key)
+    if type(raw_key) ~= "string" then return nil, nil end
+    local key = raw_key:match("^%s*(.-)%s*$")
+    if not key or #key < 8 then return nil, nil end
+    -- Strip optional surrounding quotes
+    key = key:match('^["\']?(.-)["\']?$')
+    if key:match("^AQ%.") or key:match("^AIza") or key:match("^gm%-") then
+        return "gemini", key
+    elseif key:match("^sk%-ant") then
+        return "claude", key
+    elseif key:match("^sk%-or") then
+        return "custom1", key
+    elseif key:match("^sk%-proj") or key:match("^sk%-[%w%-_]+") then
+        return "chatgpt", key
+    end
+    return nil, key
+end
+
+-- Get current clipboard text and detect if it looks like an API key
+function M:getClipboardKey()
+    if not Device.hasClipboard or not Device:hasClipboard() then return nil, nil end
+    local ok, text = pcall(function() return Device:getClipboardText() end)
+    if not ok or type(text) ~= "string" or #text == 0 then return nil, nil end
+    local provider, key = self:detectProviderFromKey(text)
+    return provider, key or text:match("^%s*(.-)%s*$")
+end
+
+-- Get local network IP address of the e-reader
+function M:getLocalIP()
+    local sock_ip = nil
+
+    -- 1. Try UDP socket trick (native Linux, Android, Kindle, Kobo, PocketBook)
+    local ok_sock, socket = pcall(require, "socket")
+    if ok_sock and socket and socket.udp then
+        local s = socket.udp()
+        if s then
+            s:settimeout(0.5)
+            pcall(function() s:setpeername("8.8.8.8", 80) end)
+            local ip = s:getsockname()
+            s:close()
+            if ip and ip ~= "0.0.0.0" and ip ~= "127.0.0.1" then
+                if not ip:match("^172%.") then
+                    return ip
+                end
+                sock_ip = ip
+            end
+        end
+    end
+
+    -- 2. Try KOReader NetworkMgr
+    local ok_net, NetworkMgr = pcall(require, "ui/network/manager")
+    if ok_net and NetworkMgr and NetworkMgr.getIP then
+        local ok, ip = pcall(function() return NetworkMgr:getIP() end)
+        if ok and ip and ip ~= "" and ip ~= "127.0.0.1" then
+            if not ip:match("^172%.") then
+                return ip
+            end
+            if not sock_ip then sock_ip = ip end
+        end
+    end
+
+    -- 3. If running inside WSL / VM (detected virtual 172.x IP), check host Windows Wi-Fi IP
+    if sock_ip and sock_ip:match("^172%.") then
+        local f = io.popen("/mnt/c/Windows/System32/ipconfig.exe 2>/dev/null")
+        if f then
+            local content = f:read("*a")
+            f:close()
+            if content then
+                for ip in content:gmatch("IPv4 Address[%. ]*:%s*([%d%.]+)") do
+                    if ip and not ip:match("^127%.") and not ip:match("^172%.") and not ip:match("^169%.254") then
+                        return ip
+                    end
+                end
+            end
+        end
+    end
+
+    return sock_ip or "127.0.0.1"
+end
+
 return M
 
 

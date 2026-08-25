@@ -152,7 +152,9 @@ local specs = {
     "spec/xray_aihelper_spec.lua",
     "spec/xray_terms_spec.lua",
     "spec/xray_seriesmanager_spec.lua",
-    "spec/xray_units_spec.lua"
+    "spec/xray_units_spec.lua",
+    "spec/xray_crypto_spec.lua",
+    "spec/xray_websetup_spec.lua"
 }
 
 print("=== Running KOReader X-Ray Unit Tests ===")

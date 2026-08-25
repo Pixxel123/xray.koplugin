@@ -1135,5 +1135,136 @@ describe("xray_ui", function()
             assert.is_not_nil(claude_menu[1].text:find("claude%-sonnet%-5"))
         end)
     end)
+
+    describe("Welcome Screen & Onboarding Flow", function()
+        it("should route showQuickXRayMenu to showWelcomeCard when no API key is set and cache is empty", function()
+            plugin.ai_helper.hasApiKey = function() return false end
+            plugin.book_data = nil
+            plugin:showQuickXRayMenu()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("InputContainer", last.type)
+        end)
+
+        it("should route showQuickXRayMenu to showFullXRayMenu when key is present", function()
+            plugin.ai_helper.hasApiKey = function() return true end
+            plugin:showQuickXRayMenu()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("Menu", last.type)
+        end)
+
+        it("should render showConfigFileGuide dialog with import and wiki options", function()
+            plugin:showConfigFileGuide()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("InputContainer", last.type)
+        end)
+
+        it("should handle welcome actions appropriately", function()
+            plugin:handleWelcomeAction("phone_pc")
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+
+            plugin:handleWelcomeAction("ereader")
+            local last_ereader = _G.ui_tracker.last_shown
+            assert.is_not_nil(last_ereader)
+            assert.are.equal("ButtonDialog", last_ereader.type)
+
+            -- Test clicking a provider from the picker
+            local gemini_btn = last_ereader.args.buttons[1][1]
+            assert.is_not_nil(gemini_btn)
+            gemini_btn.callback()
+            local input_dlg = _G.ui_tracker.last_shown
+            assert.is_not_nil(input_dlg)
+            assert.are.equal("InputDialog", input_dlg.type)
+        end)
+    end)
+
+    describe("Clear API Keys Menu", function()
+        it("should validate all menu items in getAPIKeysMenu have valid non-nil text and working callbacks", function()
+            local items = plugin:getAPIKeysMenu()
+            assert.is_not_nil(items)
+            
+            for idx, item in ipairs(items) do
+                assert.is_not_nil(item.text, "Item " .. idx .. " is missing a required text string")
+                assert.are.equal("string", type(item.text), "Item " .. idx .. " text is not a string")
+                assert.is_true(#item.text > 0, "Item " .. idx .. " has an empty text string")
+                if item.text_func then
+                    assert.are.equal("function", type(item.text_func))
+                    local dynamic_text = item.text_func()
+                    assert.is_not_nil(dynamic_text)
+                    assert.are.equal("string", type(dynamic_text))
+                    assert.is_true(#dynamic_text > 0)
+                end
+            end
+
+            local clear_item = nil
+            for _, item in ipairs(items) do
+                if item.text:find("menu_clear_all_keys") or item.text:find("Clear All API Keys") then
+                    clear_item = item
+                    break
+                end
+            end
+            assert.is_not_nil(clear_item)
+            
+            -- Trigger callback and check ButtonDialog is shown
+            clear_item.callback()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("ButtonDialog", last.type)
+            local buttons = last.args.buttons[1]
+            assert.is_not_nil(buttons)
+            local clear_btn = buttons[2]
+            assert.is_not_nil(clear_btn)
+            assert.are.equal("function", type(clear_btn.callback))
+
+            -- Execute clear button callback to ensure no crashes during clearing
+            local ok, err = pcall(clear_btn.callback)
+            assert.is_true(ok, "clear_all_keys callback failed: " .. tostring(err))
+        end)
+
+        it("should validate all menu items in getProviderKeySubMenu have valid non-nil text and working clear callback", function()
+            local items = plugin:getProviderKeySubMenu("gemini", "Google Gemini")
+            assert.is_not_nil(items)
+
+            for idx, item in ipairs(items) do
+                assert.is_not_nil(item.text, "Provider sub-item " .. idx .. " is missing a required text string")
+                assert.are.equal("string", type(item.text), "Provider sub-item " .. idx .. " text is not a string")
+                assert.is_true(#item.text > 0, "Provider sub-item " .. idx .. " has an empty text string")
+                if item.text_func then
+                    assert.are.equal("function", type(item.text_func))
+                    local dynamic_text = item.text_func()
+                    assert.is_not_nil(dynamic_text)
+                    assert.are.equal("string", type(dynamic_text))
+                    assert.is_true(#dynamic_text > 0)
+                end
+            end
+
+            local clear_item = nil
+            for _, item in ipairs(items) do
+                if item.text:find("Clear") or item.text:find("menu_clear_single_key") then
+                    clear_item = item
+                    break
+                end
+            end
+            assert.is_not_nil(clear_item)
+
+            -- Trigger callback and check ButtonDialog is shown
+            clear_item.callback()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("ButtonDialog", last.type)
+            local buttons = last.args.buttons[1]
+            assert.is_not_nil(buttons)
+            local clear_btn = buttons[2]
+            assert.is_not_nil(clear_btn)
+            assert.are.equal("function", type(clear_btn.callback))
+
+            -- Execute clear button callback to ensure no crashes during clearing
+            local ok, err = pcall(clear_btn.callback)
+            assert.is_true(ok, "clear_single_key callback failed: " .. tostring(err))
+        end)
+    end)
 end)
 

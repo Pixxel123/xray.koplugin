@@ -161,6 +161,10 @@ msgstr "フィクション"
 msgid "book_type_nonfiction"
 msgstr "ノンフィクション"
 
+# en-hash: 36bb6559696dc9124986ae120515984f
+msgid "btn_paste"
+msgstr "貼り付け"
+
 # en-hash: cd00fdfb57dccc660b305e787262e649
 msgid "cache_cleared"
 msgstr "キャッシュをクリアしました！\n\n新しくデータを取得するには以下を実行してください:\nメニュー → X-Ray → AIデータを取得"
@@ -437,6 +441,26 @@ msgstr "言及を検索"
 msgid "full_book_option"
 msgstr "全編モード"
 
+# en-hash: 57519cae872270f11151178ce007fd53
+msgid "import_file_not_found"
+msgstr "ストレージルートまたは設定ディレクトリに xray_key.txt が見つかりません。"
+
+# en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
+msgid "import_file_success"
+msgstr "%2$s から %1$d 個のAPIキーを正常にインポートしました！"
+
+# en-hash: 46d812c9b950c3de4557b539f7c32634
+msgid "key_status_err"
+msgstr "[ERR] 失敗: %s"
+
+# en-hash: 0314635e45812438980e1ef245848537
+msgid "key_status_not_set"
+msgstr "[--] 未設定"
+
+# en-hash: 36fb433675bfba1852e2bc20f946afb9
+msgid "key_status_ok"
+msgstr "[OK] 接続完了 (%d ms)"
+
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
 msgstr "別名"
@@ -673,7 +697,7 @@ msgstr "登場人物を追加取得"
 msgid "menu_fetch_more_terms"
 msgstr "用語を追加取得"
 
-# en-hash: f0d29ae92c638538610d26014bda7269
+# en-hash: 6230c4dd24ba41dff51eb292727348fe
 msgid "menu_fetch_series_context"
 msgstr "シリーズ情報を取得/更新"
 
@@ -684,6 +708,10 @@ msgstr "頻度"
 # en-hash: 60b01aa51c38e7a952d2760bf1584915
 msgid "menu_historical_figures"
 msgstr "歴史上の人物"
+
+# en-hash: 31a20a82ddb0aada27aab20c1352115f
+msgid "menu_import_file"
+msgstr "xray_key.txt からキーをインポート"
 
 # en-hash: 4994a8ffeba4ac3140beb89e8d41f174
 msgid "menu_language"
@@ -704,6 +732,10 @@ msgstr "メンテナンス"
 # en-hash: 2c126ee6ce85ef471a3a0e096c78b724
 msgid "menu_mentions_settings"
 msgstr "言及設定"
+
+# en-hash: ed2a15d3eeee0693f0274e6b772fd466
+msgid "menu_paste_clipboard"
+msgstr "クリップボードから %s キーを貼り付け"
 
 # en-hash: f0e87a49b3cb82e4faabd5fc3729e8e8
 msgid "menu_primary_ai_model"
@@ -729,6 +761,10 @@ msgstr "設定"
 msgid "menu_terms"
 msgstr "用語集"
 
+# en-hash: 6310faa148f6d077593bdad673760e0d
+msgid "menu_test_key"
+msgstr "接続テスト"
+
 # en-hash: 3d1f92a565d3b1a61880236e33c49bf3
 msgid "menu_timeline"
 msgstr "出来事"
@@ -753,6 +789,10 @@ msgstr "単位変換"
 msgid "menu_update_xray"
 msgstr "X-Rayデータを更新 (結合)"
 
+# en-hash: 5f67980bfad5601276847f8b2f74cd19
+msgid "menu_validate_all_keys"
+msgstr "すべてのAPIキーをテスト＆検証"
+
 # en-hash: 02c89382dc0b7f202b7d455bf88ab785
 msgid "menu_view_config"
 msgstr "すべての設定値を表示"
@@ -760,6 +800,10 @@ msgstr "すべての設定値を表示"
 # en-hash: 8f96241822e718c6be629d036f586ca6
 msgid "menu_view_log"
 msgstr "ログを表示"
+
+# en-hash: 464b65f46044b81b6b95485f1d38ccfa
+msgid "menu_web_setup"
+msgstr "スマホ / PC からAPIキーを設定 (QRコード)"
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -904,6 +948,10 @@ msgstr "OK"
 # en-hash: 386b384e3eec6bf9bf55d32b5018de15
 msgid "pair_rejected"
 msgstr "ペアは重複なしとマークされました。"
+
+# en-hash: b8d4677ac13de48defd22ae1a3fe2479
+msgid "paste_clipboard_confirm"
+msgstr "クリップボードのAPIキーを %s に使用しますか？"
 
 # en-hash: 607481fc96e754b33650eb171aac9447
 msgid "path"
@@ -1056,6 +1104,10 @@ msgstr "停止"
 # en-hash: d725036d492c380f06f4eb32f5704bc9
 msgid "term_not_found"
 msgstr "用語が見つかりません。"
+
+# en-hash: 1ecbe04157c9f7433d24d17cf5e70564
+msgid "testing_api_keys"
+msgstr "APIキー接続をテスト中..."
 
 # en-hash: 5d5b473a14bed6f67fdbe6c745b045a7
 msgid "this_chapter"
@@ -1385,6 +1437,26 @@ msgstr "X-Rayを更新中..."
 msgid "val"
 msgstr "???"
 
+# en-hash: 1739e3ae6d734407aef8af879665b8ee
+msgid "validate_keys_title"
+msgstr "APIキーの状態と検証"
+
+# en-hash: 94eeb39559330226a1d0c942718547ea
+msgid "web_setup_msg"
+msgstr "1. スマホ/PCを同じWi-Fiに接続してください。\n2. このQRコードをスキャンするか以下にアクセスしてください:\n\n%s\n\n3. APIキーを貼り付けて「保存」をタップします。"
+
+# en-hash: d845f459e17a314cfc7949ba6a1659cb
+msgid "web_setup_no_wifi"
+msgstr "Wi-Fiが切断されています。Web設定を使用するにはWi-Fiに接続してください。"
+
+# en-hash: 81daae83c93d7822f5bfc4779f5a7c2c
+msgid "web_setup_success"
+msgstr "%s のAPIキーを受信して保存しました！"
+
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "web_setup_title"
+msgstr "スマホ / PC から接続"
+
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
 msgstr "無効"
@@ -1401,3 +1473,156 @@ msgstr "辞書および選択メニューに「X-Ray」ボタンを追加し、�
 msgid "yes"
 msgstr "はい"
 
+
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "スマホ / PC からAPIキーを設定"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "クラウド中継（推奨 — どこでも動作）"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "ローカル Wi-Fi（オフラインLAN）"
+
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "スマホ / PC から接続"
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "ローカル Wi-Fi から接続"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "X-RAYへようこそ"
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "AIプロバイダーの設定"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "開始するには、APIキーの設定方法を選択してください："
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "スマホ / PCから設定 (推奨)"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "QRコードをスキャンして、クラウドまたはローカルWi-Fi経由で簡単に入力。"
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "リーダー画面でキーを入力"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "画面上のキーボードを使用してAPIキーを直接入力または貼り付け。"
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "テキストファイル (xray_key.txt) または設定ファイルからインポート"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "xray_key.txtからキーを自動インポート、またはWikiの手順を確認。"
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "すべてのプロバイダー設定を開く"
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "カスタムエンドポイント、OpenAI、DeepSeek、Claude、OpenRouterなどを設定。"
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "次へ"
+
+# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
+msgid "welcome_action_skip"
+msgstr "今はスキップ"
+
+# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
+msgid "welcome_file_guide_title"
+msgstr "設定ファイルおよびテキストファイルの設定"
+
+# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
+msgid "welcome_file_guide_desc"
+msgstr "端末にテキストファイルを配置することで、文字入力なしでAPIキーを設定できます:\n\n1. KOReaderディレクトリに 'xray_key.txt' という名前のファイルを作成。\n2. キーを記述 (例: 'gemini: AQ...' またはキーのみ)。\n3. 下の「今すぐインポート」をタップして読み込み。"
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "今すぐインポート"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "KOReaderディレクトリにxray_key.txtが見つかりません。"
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "ようこそ＆クイック設定..."
+
+# en-hash: 3845eb0df76becd72ddfa51233992d18
+msgid "menu_gemini_key"
+msgstr "Google Gemini APIキー"
+
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "Google AI Studioの無料Geminiキーを入力 (AQ. または AIzaSy... で始まります):"
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "APIキーを保存しました！"
+
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "すべてのAPIキーをクリア..."
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "設定されているすべてのAPIキーおよびカスタムエンドポイントをクリアしてもよろしいですか？\n\nこれにより、この端末に保存されているすべてのキーが削除されます。"
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "すべてのキーを削除"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "すべてのAPIキーがクリアされました。"
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "%sのキーをクリア..."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "%s の設定済みAPIキーを削除しますか？"
+
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "キーを削除"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "%sのAPIキーがクリアされました。"
+
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "後で確認"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "今後は表示しない"
+
+# en-hash: 47df1620e012b20c174af13225cc4a36
+msgid "welcome_file_guide_scan"
+msgstr "QRコードをスキャンして詳細設定ガイドを表示"
+
+
+
+msgid "welcome_select_provider"
+msgstr "AIプロバイダーを選択"

@@ -56,14 +56,26 @@ local WebSetup = {
 -- Simple HTTPS/HTTP Request Helper
 local function httpRequest(url, method, headers, request_body, timeout)
     timeout = timeout or 10
-    local is_https = url:match("^https://")
-    local http_req = require("socket.http")
-    local https_req = is_https and require("ssl.https") or nil
-    local ltn12_req = require("ltn12")
-    local socketutil = require("socketutil")
+    local is_https = url:match("^https://") ~= nil
+    local ok_http, http_req = pcall(require, "socket.http")
+    local ok_https, https_req = false, nil
+    if is_https then
+        ok_https, https_req = pcall(require, "ssl.https")
+    end
+    local ok_ltn12, ltn12_req = pcall(require, "ltn12")
+    local ok_util, socketutil = pcall(require, "socketutil")
+
+    if not ok_http or not http_req then
+        return nil, "error_require", "socket.http module unavailable"
+    end
+    if is_https and (not ok_https or not https_req) then
+        return nil, "error_require", "ssl.https module unavailable"
+    end
 
     if https_req then https_req.cert_verify = false end
-    socketutil:set_timeout(timeout, timeout * 2)
+    if ok_util and socketutil and socketutil.set_timeout then
+        pcall(function() socketutil:set_timeout(timeout, timeout * 2) end)
+    end
 
     local req_headers = headers or {}
     if not req_headers["User-Agent"] and not req_headers["user-agent"] then
@@ -71,15 +83,29 @@ local function httpRequest(url, method, headers, request_body, timeout)
     end
 
     local response_body = {}
+    local sink = nil
+    if ok_util and socketutil and socketutil.table_sink then
+        sink = socketutil.table_sink(response_body)
+    elseif ok_ltn12 and ltn12_req and ltn12_req.sink and ltn12_req.sink.table then
+        sink = ltn12_req.sink.table(response_body)
+    else
+        sink = function(chunk)
+            if chunk then table.insert(response_body, chunk) end
+            return 1
+        end
+    end
+
     local req_table = {
         url = url,
         method = method or "GET",
         headers = req_headers,
-        sink = socketutil.table_sink(response_body),
+        sink = sink,
     }
 
     if request_body and #request_body > 0 then
-        req_table.source = ltn12_req.source.string(request_body)
+        if ok_ltn12 and ltn12_req and ltn12_req.source and ltn12_req.source.string then
+            req_table.source = ltn12_req.source.string(request_body)
+        end
         if not req_table.headers["content-length"] then
             req_table.headers["content-length"] = tostring(#request_body)
         end
@@ -94,7 +120,9 @@ local function httpRequest(url, method, headers, request_body, timeout)
         end
     end)
 
-    socketutil:reset_timeout()
+    if ok_util and socketutil and socketutil.reset_timeout then
+        pcall(function() socketutil:reset_timeout() end)
+    end
 
     if not pcall_ok then
         return nil, "error_crash", tostring(pcall_err)
@@ -744,7 +772,7 @@ function WebSetup:startLocalServer(ai_helper, loc, ui_callback)
     self.is_running = true
 
     local url = string.format("http://%s:%d", ip, active_port)
-    logger.info("XRayPlugin WebSetup: Local server running at " .. url)
+    logInfo("XRayPlugin WebSetup: Local server running at " .. url)
 
     local Device = require("device")
     local Screen = Device.screen

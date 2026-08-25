@@ -24,48 +24,60 @@ describe("xray_crypto", function()
         assert.are.equal("Hello World", decoded)
     end)
 
-    it("decrypts valid AES-256-GCM payloads with valid secret", function()
+    it("computes pure Lua SHA-256 and HMAC-SHA256 hashes accurately", function()
+        local hash = Crypto:sha256("test")
+        assert.is_string(hash)
+        assert.are.equal(32, #hash)
+        assert.are.equal("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", Crypto:bytesToHex(hash))
+
+        local hmac = Crypto:hmac_sha256("key", "The quick brown fox jumps over the lazy dog")
+        assert.is_string(hmac)
+        assert.are.equal(32, #hmac)
+        assert.are.equal("f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8", Crypto:bytesToHex(hmac))
+    end)
+
+    it("encrypts and decrypts pure Lua HMAC stream payloads", function()
         local hex_secret = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        local ciphertext_b64 = "GBEztvpiw5zbGEOh0A1WpzrpE/0ZQbt+Qk6JJBgpIl15g1UDSAwtclUd+qWiwX7M3fddrHfiOsgnT3MeMZNomBwfABdY8Hdrvxqfe6ej/HR6tnM="
-
-        local plaintext, err = Crypto:decryptPayload(ciphertext_b64, hex_secret)
-        assert.is_nil(err)
-        assert.is_string(plaintext)
-        assert.is_true(plaintext:find("AQ.Ab8RN6J4TestKey123") ~= nil)
-    end)
-
-    it("fails decryption with wrong secret when no session_id", function()
-        local wrong_secret = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-        local ciphertext_b64 = "GBEztvpiw5zbGEOh0A1WpzrpE/0ZQbt+Qk6JJBgpIl15g1UDSAwtclUd+qWiwX7M3fddrHfiOsgnT3MeMZNomBwfABdY8Hdrvxqfe6ej/HR6tnM="
-
-        local plaintext, err = Crypto:decryptPayload(ciphertext_b64, wrong_secret)
-        assert.is_nil(plaintext)
-        assert.is_string(err)
-    end)
-
-    it("decrypts payload encrypted with session_id even when random hex_secret is passed", function()
-        local session_id = "K9X2B4"
-        local random_hex_secret = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        local key_bytes = Crypto:hexToBytes(hex_secret)
+        local iv = "1234567890123456"
+        local plaintext = '{"provider":"gemini","api_key":"AQ.TestKey123"}'
         
-        -- Generate ciphertext using SHA256(session_id)
-        local key_bytes = Crypto:sha256(session_id)
-        local iv = "123456789012"
-        local plaintext = '{"provider":"gemini","api_key":"AQ.TestManualCode123"}'
-        
-        local ffi = require("ffi")
-        local lib = ffi.load("/usr/lib/koreader/libs/libcrypto.so.57")
-        local ctx = lib.EVP_CIPHER_CTX_new()
-        lib.EVP_EncryptInit_ex(ctx, lib.EVP_aes_256_gcm(), nil, key_bytes, iv)
-        local out_buf = ffi.new("unsigned char[128]")
-        local outl = ffi.new("int[1]")
-        local finall = ffi.new("int[1]")
-        lib.EVP_EncryptUpdate(ctx, out_buf, outl, plaintext, #plaintext)
-        lib.EVP_EncryptFinal_ex(ctx, out_buf + outl[0], finall)
-        local tag = ffi.new("unsigned char[16]")
-        lib.EVP_CIPHER_CTX_ctrl(ctx, 0x10, 16, tag)
-        lib.EVP_CIPHER_CTX_free(ctx)
-        
-        local raw = iv .. ffi.string(out_buf, outl[0] + finall[0]) .. ffi.string(tag, 16)
+        -- Build keystream
+        local keystream = ""
+        local counter = 0
+        while #keystream < #plaintext do
+            local c_bytes = string.char(
+                math.floor(counter / 16777216) % 256,
+                math.floor(counter / 65536) % 256,
+                math.floor(counter / 256) % 256,
+                counter % 256
+            )
+            local block = Crypto:hmac_sha256(key_bytes, iv .. c_bytes)
+            keystream = keystream .. block
+            counter = counter + 1
+        end
+
+        local ciphertext = ""
+        for i = 1, #plaintext do
+            local b1 = plaintext:byte(i)
+            local b2 = keystream:byte(i)
+            local res = 0
+            local p = 1
+            for bit = 0, 7 do
+                local bit1 = b1 % 2
+                local bit2 = b2 % 2
+                if bit1 ~= bit2 then res = res + p end
+                b1 = math.floor(b1 / 2)
+                b2 = math.floor(b2 / 2)
+                p = p * 2
+            end
+            ciphertext = ciphertext .. string.char(res)
+        end
+
+        local tag = Crypto:hmac_sha256(key_bytes, "AUTH" .. iv .. ciphertext):sub(1, 16)
+        local raw = iv .. tag .. ciphertext
+
+        -- Manual base64 encode
         local b64_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
         local b64 = ""
         for i = 1, #raw, 3 do
@@ -78,9 +90,17 @@ describe("xray_crypto", function()
             b64 = b64 .. b64_chars:sub(c1, c1) .. b64_chars:sub(c2, c2) .. (b2 and b64_chars:sub(c3, c3) or '=') .. (b3 and b64_chars:sub(c4, c4) or '=')
         end
 
-        local decrypted, err = Crypto:decryptPayload(b64, random_hex_secret, session_id)
+        local decrypted, err = Crypto:decryptPayload("HMAC:" .. b64, hex_secret)
         assert.is_nil(err)
-        assert.is_string(decrypted)
-        assert.is_true(decrypted:find("AQ.TestManualCode123") ~= nil)
+        assert.are.equal(plaintext, decrypted)
+    end)
+
+    it("fails decryption with wrong secret when no session_id", function()
+        local wrong_secret = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        local ciphertext_b64 = "HMAC:GBEztvpiw5zbGEOh0A1WpzrpE/0ZQbt+Qk6JJBgpIl15g1UDSAwtclUd+qWiwX7M3fddrHfiOsgnT3MeMZNomBwfABdY8Hdrvxqfe6ej/HR6tnM="
+
+        local plaintext, err = Crypto:decryptPayload(ciphertext_b64, wrong_secret)
+        assert.is_nil(plaintext)
+        assert.is_string(err)
     end)
 end)

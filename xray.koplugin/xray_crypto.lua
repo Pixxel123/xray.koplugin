@@ -1,49 +1,62 @@
 -- xray_crypto.lua
--- Cryptographic helper module for KOReader X-Ray Plugin (AES-256-GCM / SHA-256)
-local ffi = require("ffi")
-
-ffi.cdef[[
-typedef struct evp_cipher_ctx_st EVP_CIPHER_CTX;
-typedef struct evp_cipher_st EVP_CIPHER;
-
-EVP_CIPHER_CTX *EVP_CIPHER_CTX_new(void);
-void EVP_CIPHER_CTX_free(EVP_CIPHER_CTX *c);
-const EVP_CIPHER *EVP_aes_256_gcm(void);
-int EVP_EncryptInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher, void *impl, const unsigned char *key, const unsigned char *iv);
-int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl, const unsigned char *in, int inl);
-int EVP_EncryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
-int EVP_DecryptInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher, void *impl, const unsigned char *key, const unsigned char *iv);
-int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl, const unsigned char *in, int inl);
-int EVP_DecryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
-int EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
-
-unsigned char *SHA256(const unsigned char *d, size_t n, unsigned char *md);
-int RAND_bytes(unsigned char *buf, int num);
-]]
+-- Pure-Lua & Optional OpenSSL Cryptographic Helper for KOReader X-Ray Plugin
 
 local M = {}
-local libcrypto = nil
 
-local function getLibCrypto()
-    if libcrypto then return libcrypto end
-    local candidates = {
-        "/usr/lib/koreader/libs/libcrypto.so.57",
-        "/usr/lib/koreader/libs/libcrypto.so",
-        "libcrypto.so.3",
-        "libcrypto.so.1.1",
-        "libcrypto.so",
-        "crypto"
+-- Safe bitwise operations (supports LuaJIT bit, Lua 5.2+ bit32, or pure Lua fallback)
+local bit = bit or bit32
+if not bit then
+    pcall(function() bit = require("bit") end)
+end
+if not bit then
+    pcall(function() bit = require("bit32") end)
+end
+
+-- Fallback pure-Lua bit operations if no C bit library is available
+if not bit then
+    bit = {
+        band = function(a, b)
+            local res, p = 0, 1
+            for i = 0, 31 do
+                if (a % 2 == 1) and (b % 2 == 1) then res = res + p end
+                a, b, p = math.floor(a / 2), math.floor(b / 2), p * 2
+            end
+            return res
+        end,
+        bor = function(a, b)
+            local res, p = 0, 1
+            for i = 0, 31 do
+                if (a % 2 == 1) or (b % 2 == 1) then res = res + p end
+                a, b, p = math.floor(a / 2), math.floor(b / 2), p * 2
+            end
+            return res
+        end,
+        bxor = function(a, b)
+            local res, p = 0, 1
+            for i = 0, 31 do
+                local ba, bb = a % 2, b % 2
+                if (ba + bb == 1) then res = res + p end
+                a, b, p = math.floor(a / 2), math.floor(b / 2), p * 2
+            end
+            return res
+        end,
+        bnot = function(a)
+            return 0xffffffff - (a % 4294967296)
+        end,
+        lshift = function(a, n)
+            return (a * (2 ^ n)) % 4294967296
+        end,
+        rshift = function(a, n)
+            return math.floor((a % 4294967296) / (2 ^ n))
+        end,
     }
-    for _, path in ipairs(candidates) do
-        local ok, lib = pcall(ffi.load, path)
-        if ok and lib then
-            libcrypto = lib
-            return libcrypto
-        end
-    end
-    -- Fallback to global C namespace
-    pcall(function() libcrypto = ffi.C end)
-    return libcrypto
+end
+
+local band, bor, bxor, bnot = bit.band, bit.bor, bit.bxor, bit.bnot
+local rshift, lshift = bit.rshift, bit.lshift
+
+local function ror(x, n)
+    return bor(rshift(x, n), lshift(x, 32 - n))
 end
 
 -- Base64 Decoding
@@ -100,29 +113,35 @@ end
 
 -- Generate cryptographically random 32-byte (256-bit) Hex Secret
 function M:generateSecretHex()
-    local lib = getLibCrypto()
-    local buf = ffi.new("unsigned char[32]")
-    local ok = false
-    if lib and lib.RAND_bytes then
-        local ret = pcall(function() return lib.RAND_bytes(buf, 32) end)
-        if ret then ok = true end
-    end
-    if not ok then
-        -- Fallback pseudo-random generation
-        for i = 0, 31 do
-            buf[i] = math.random(0, 255)
+    local random_bytes = ""
+    
+    -- 1. Try reading /dev/urandom (Android, Linux, macOS, e-readers)
+    local ok_f, f = pcall(io.open, "/dev/urandom", "rb")
+    if ok_f and f then
+        local ok_read, raw = pcall(function() return f:read(32) end)
+        pcall(function() f:close() end)
+        if ok_read and raw and #raw == 32 then
+            random_bytes = raw
         end
     end
-    local str = ffi.string(buf, 32)
-    return self:bytesToHex(str)
-end
 
-local bit = bit or bit32 or require("bit")
-local band, bor, bxor, bnot = bit.band, bit.bor, bit.bxor, bit.bnot
-local rshift, lshift = bit.rshift, bit.lshift
+    -- 2. Fallback to math.random with multi-source entropy seeding
+    if #random_bytes < 32 then
+        local seed = os.time()
+        local ok_sock, socket = pcall(require, "socket")
+        if ok_sock and socket and socket.gettime then
+            local sec, frac = socket.gettime(), os.clock()
+            seed = math.floor((sec * 1000000 + frac * 100000)) % 2147483647
+        end
+        math.randomseed(seed)
+        local t = {}
+        for i = 1, 32 do
+            table.insert(t, string.char(math.random(0, 255)))
+        end
+        random_bytes = table.concat(t)
+    end
 
-local function ror(x, n)
-    return bor(rshift(x, n), lshift(x, 32 - n))
+    return self:bytesToHex(random_bytes)
 end
 
 -- SHA-256 round constants
@@ -224,20 +243,11 @@ end
 
 -- SHA-256 Hash of string -> 32 binary bytes
 function M:sha256(data)
-    local lib = getLibCrypto()
-    if lib and lib.SHA256 then
-        local ok, res = pcall(function()
-            local md = ffi.new("unsigned char[32]")
-            lib.SHA256(data, #data, md)
-            return ffi.string(md, 32)
-        end)
-        if ok and res then return res end
-    end
-    return sha256_pure(data)
+    return sha256_pure(data or "")
 end
 
 function M:hmac_sha256(key, data)
-    return hmac_sha256_pure(key, data)
+    return hmac_sha256_pure(key or "", data or "")
 end
 
 -- Pure Lua HMAC-SHA256 Stream Cipher Decryption
@@ -270,13 +280,12 @@ function M:decryptHMACStream(raw, key_bytes)
     return plaintext
 end
 
--- Decrypt Base64 Encrypted Payload (Dual: Pure Lua HMAC Stream + OpenSSL AES-256-GCM)
+-- Decrypt Base64 Encrypted Payload
 function M:decryptPayload(b64_payload, hex_secret, session_id)
     if not b64_payload or b64_payload == "" then
         return nil, "Empty payload"
     end
 
-    local is_hmac_stream = b64_payload:match("^HMAC:") ~= nil
     local clean_b64 = b64_payload:gsub("^HMAC:", "")
     local raw = self:base64_decode(clean_b64)
     if not raw or #raw < 20 then
@@ -298,56 +307,11 @@ function M:decryptPayload(b64_payload, hex_secret, session_id)
     end
     table.insert(candidate_keys, self:sha256("XRAY-DEFAULT"))
 
-    -- 1. Try HMAC Stream Decryption (zero external dependencies)
-    if is_hmac_stream or #raw >= 33 then
-        for _, key_bytes in ipairs(candidate_keys) do
-            local plain, err = self:decryptHMACStream(raw, key_bytes)
-            if plain then
-                return plain
-            end
-        end
-    end
-
-    -- 2. Try AES-256-GCM via OpenSSL (12 bytes IV + ciphertext + 16 bytes Tag)
-    if #raw >= 29 then
-        local iv = raw:sub(1, 12)
-        local tag = raw:sub(-16)
-        local ciphertext = raw:sub(13, -17)
-
-        local lib = getLibCrypto()
-        if lib and lib.EVP_CIPHER_CTX_new and lib.EVP_aes_256_gcm then
-            for _, key_bytes in ipairs(candidate_keys) do
-                local ctx = lib.EVP_CIPHER_CTX_new()
-                if ctx ~= nil then
-                    local out_buf = ffi.new("unsigned char[?]", #ciphertext + 32)
-                    local outl = ffi.new("int[1]")
-                    local final_l = ffi.new("int[1]")
-                    local success = false
-                    local result_text = nil
-
-                    local ok_run = pcall(function()
-                        local cipher = lib.EVP_aes_256_gcm()
-                        if lib.EVP_DecryptInit_ex(ctx, cipher, nil, key_bytes, iv) ~= 1 then return end
-                        if lib.EVP_DecryptUpdate(ctx, out_buf, outl, ciphertext, #ciphertext) ~= 1 then return end
-                        
-                        -- Set Expected Auth Tag (0x11 = EVP_CTRL_GCM_SET_TAG, 16 bytes)
-                        local tag_buf = ffi.new("unsigned char[16]", tag)
-                        if lib.EVP_CIPHER_CTX_ctrl(ctx, 0x11, 16, tag_buf) ~= 1 then return end
-                        
-                        if lib.EVP_DecryptFinal_ex(ctx, out_buf + outl[0], final_l) == 1 then
-                            local total_len = outl[0] + final_l[0]
-                            result_text = ffi.string(out_buf, total_len)
-                            success = true
-                        end
-                    end)
-
-                    lib.EVP_CIPHER_CTX_free(ctx)
-
-                    if ok_run and success and result_text then
-                        return result_text
-                    end
-                end
-            end
+    -- 1. Try HMAC Stream Decryption (100% pure Lua, zero external C dependencies)
+    for _, key_bytes in ipairs(candidate_keys) do
+        local plain, err = self:decryptHMACStream(raw, key_bytes)
+        if plain then
+            return plain
         end
     end
 

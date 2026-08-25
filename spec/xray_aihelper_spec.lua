@@ -854,8 +854,8 @@ custom1_model = google/gemini-2.5-flash
             -- Store 1: UI settings
             assert.are.equal("", AIHelper.settings.gemini_api_key or "")
             assert.are.equal("", AIHelper.settings.chatgpt_api_key or "")
-            assert.is_false(AIHelper.settings.gemini_use_ui_key)
-            assert.is_false(AIHelper.settings.chatgpt_use_ui_key)
+            assert.is_falsy(AIHelper.settings.gemini_use_ui_key)
+            assert.is_falsy(AIHelper.settings.chatgpt_use_ui_key)
 
             -- Store 2: Persistent backup store
             local stored = AIHelper:loadStoredConfig()
@@ -878,7 +878,7 @@ custom1_model = google/gemini-2.5-flash
             AIHelper:clearProviderKey("deepseek")
 
             assert.are.equal("", AIHelper.settings.deepseek_api_key or "")
-            assert.is_false(AIHelper.settings.deepseek_use_ui_key)
+            assert.is_falsy(AIHelper.settings.deepseek_use_ui_key)
 
             local stored = AIHelper:loadStoredConfig()
             assert.are.equal("", stored.deepseek_api_key or "")

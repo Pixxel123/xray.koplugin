@@ -9,6 +9,7 @@ end
 local socket = require("socket")
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
+local ButtonDialog = require("ui/widget/buttondialog")
 local logger = nil
 pcall(function() logger = require(plugin_path .. "xray_logger") end)
 if not logger then pcall(function() logger = require("logger") end) end
@@ -209,7 +210,7 @@ function WebSetup:startCloudRelay(ai_helper, loc, ui_callback)
         end
         worker_url = worker_url:gsub("/+$", "")
 
-        -- 1. Generate client secret
+        -- 1. Generate client secret (pure Lua)
         local secret_hex = Crypto:generateSecretHex()
         self.session_secret = secret_hex
 
@@ -244,59 +245,46 @@ function WebSetup:startCloudRelay(ai_helper, loc, ui_callback)
         local full_url = string.format("%s/?s=%s#%s", worker_url, session_id, secret_hex)
         local short_domain = worker_url:gsub("^https?://", "")
 
-        -- 3. Render Modal Dialog using native robust KOReader widgets
+        -- 3. Render Modal Dialog using KOReader ButtonDialog
         local Device = require("device")
         local Screen = Device.screen
+        local Size = require("ui/size")
         local Font = require("ui/font")
         local Geom = require("ui/geometry")
-        local Blitbuffer = require("ffi/blitbuffer")
-        local FrameContainer = require("ui/widget/container/framecontainer")
-        local InputContainer = require("ui/widget/container/inputcontainer")
-        local CenterContainer = require("ui/widget/container/centercontainer")
-        local MovableContainer = require("ui/widget/container/movablecontainer")
         local VerticalGroup = require("ui/widget/verticalgroup")
-        local HorizontalGroup = require("ui/widget/horizontalgroup")
-        local TextWidget = require("ui/widget/textwidget")
         local TextBoxWidget = require("ui/widget/textboxwidget")
-        local Button = require("ui/widget/button")
         local VerticalSpan = require("ui/widget/verticalspan")
-        local WidgetContainer = require("ui/widget/container/widgetcontainer")
-        local xray_theme = require(plugin_path .. "xray_theme")
+        local CenterContainer = require("ui/widget/container/centercontainer")
+        local FrameContainer = require("ui/widget/container/framecontainer")
+        local Blitbuffer = require("ffi/blitbuffer")
 
-        local function sc(val) return Screen:scaleBySize(val) end
-        local sw = Screen:getWidth()
-        local sh = Screen:getHeight()
-        local dialog_w = math.min(sw - sc(20), sc(460))
+        local dialog_width = math.floor(math.min(Screen:getWidth(), Screen:getHeight()) * 0.9)
+        local border_window = (Size.border and Size.border.window) or 1
+        local padding_button = (Size.padding and Size.padding.button) or 10
+        local padding_default = (Size.padding and Size.padding.default) or 10
+        local margin_default = (Size.margin and Size.margin.default) or 5
+        local buttontable_width = dialog_width - 2 * border_window - 2 * padding_button
+        local content_width = buttontable_width - 2 * (padding_default + margin_default)
 
-        local fs = 20
-        if G_reader_settings then
-            fs = G_reader_settings:readSetting("cre_font_size") or 20
+        local qr_size = math.max(120, math.min(math.floor(content_width * 0.42), 160))
+        local base_fs = 16
+        if Size and Size.font and Size.font.menu then
+            base_fs = math.max(15, math.floor(Size.font.menu * 0.9))
         end
-        local ui_font_size = math.max(14, math.min(fs, 20))
-        local title_font_size = math.max(10, math.min(fs - 5, 14))
 
-        local content_vg = VerticalGroup:new{ align = "center" }
+        local vg_components = { align = "center" }
 
-        -- Tag
-        table.insert(content_vg, TextWidget:new{
-            text = (loc and loc:t("welcome_tag") or "WELCOME TO X-RAY"):upper(),
-            face = Font:getFace("cfont", title_font_size),
-            bold = true,
-            fgcolor = Blitbuffer.COLOR_BLACK,
-        })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(4) })
-
-        -- Headline
-        table.insert(content_vg, TextWidget:new{
+        -- Title
+        table.insert(vg_components, TextBoxWidget:new{
             text = (loc and loc:t("cloud_setup_title")) or "Connect via Phone/PC",
-            face = Font:getFace("cfont", ui_font_size + 2),
+            face = Font:getFace("cfont", base_fs + 4),
             bold = true,
-            fgcolor = Blitbuffer.COLOR_BLACK,
+            width = content_width,
+            alignment = "center",
         })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+        table.insert(vg_components, VerticalSpan:new{ width = 8 })
 
         -- QR Code
-        local qr_size = math.max(100, math.min(math.floor((dialog_w - sc(32)) * 0.40), 150))
         local ok_qr, QRWidget = pcall(require, "ui/widget/qrwidget")
         if ok_qr and QRWidget then
             local ok_inst, qr_widget = pcall(function()
@@ -309,101 +297,64 @@ function WebSetup:startCloudRelay(ai_helper, loc, ui_callback)
             if ok_inst and qr_widget then
                 local qr_frame = FrameContainer:new{
                     background = Blitbuffer.COLOR_WHITE,
-                    padding = sc(4),
+                    padding = 6,
                     bordersize = 1,
                     margin = 0,
                     qr_widget,
                 }
-                table.insert(content_vg, CenterContainer:new{
-                    dimen = Geom:new{ w = dialog_w - sc(32), h = qr_size + sc(12) },
+                local centered_qr = CenterContainer:new{
+                    dimen = Geom:new{ w = content_width, h = qr_size + 14 },
                     qr_frame,
-                })
-                table.insert(content_vg, VerticalSpan:new{ width = sc(6) })
+                }
+                table.insert(vg_components, centered_qr)
+                table.insert(vg_components, VerticalSpan:new{ width = 8 })
             end
         end
 
-        -- Pairing code badge
-        table.insert(content_vg, TextWidget:new{
+        -- URL and Pairing Code
+        table.insert(vg_components, TextBoxWidget:new{
             text = short_domain .. "  •  Code: " .. session_id,
-            face = Font:getFace("cfont", ui_font_size),
+            face = Font:getFace("cfont", base_fs + 1),
             bold = true,
-            fgcolor = Blitbuffer.COLOR_BLACK,
+            width = content_width,
+            alignment = "center",
         })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+        table.insert(vg_components, VerticalSpan:new{ width = 10 })
 
         -- Instructions
-        table.insert(content_vg, TextBoxWidget:new{
-            text = "1. Scan QR code or visit the link on your phone/PC.\n2. Paste your API key on the web page and tap Save.",
-            face = Font:getFace("cfont", math.max(12, ui_font_size - 2)),
-            width = dialog_w - sc(32),
+        local step_instructions = "1. Scan the QR code or visit the link on your phone/PC.\n2. Paste your API key on the web page and tap Save."
+        table.insert(vg_components, TextBoxWidget:new{
+            text = step_instructions,
+            face = Font:getFace("cfont", base_fs),
+            width = content_width,
             alignment = "left",
         })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(12) })
 
-        -- Action Buttons
-        local local_btn = Button:new{
-            text = (loc and loc:t("menu_setup_local")) or "Local Wi-Fi",
-            face = Font:getFace("cfont", ui_font_size - 1),
-            bordersize = sc(1),
-            radius = xray_theme.radius_button,
-            padding = sc(8),
-            callback = function()
-                self:stop()
-                self:startLocalServer(ai_helper, loc, ui_callback)
-            end,
-        }
-        local cancel_btn = Button:new{
-            text = (loc and loc:t("cancel")) or "Cancel",
-            face = Font:getFace("cfont", ui_font_size - 1),
-            bordersize = sc(1),
-            radius = xray_theme.radius_button,
-            padding = sc(8),
-            callback = function()
-                self:stop()
-            end,
-        }
+        local vg = VerticalGroup:new(vg_components)
 
-        local btn_row = HorizontalGroup:new{
-            align = "center",
-            local_btn,
-            WidgetContainer:new{ dimen = Geom:new{ w = sc(8), h = 1 } },
-            cancel_btn,
-        }
-        table.insert(content_vg, btn_row)
-
-        local inner_card = FrameContainer:new{
-            padding = sc(12),
-            radius = xray_theme.radius_window,
-            bordersize = sc(2),
-            color = Blitbuffer.COLOR_BLACK,
-            background = xray_theme.color_bg,
-            width = dialog_w - sc(2),
-            content_vg,
-        }
-
-        local outer_card = FrameContainer:new{
-            bordersize = sc(1),
-            color = Blitbuffer.Color8(180),
-            padding = 0,
-            background = xray_theme.color_bg,
-            radius = xray_theme.radius_window,
-            width = dialog_w,
-            inner_card,
-        }
-
-        local movable = MovableContainer:new{
-            CenterContainer:new{
-                dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-                outer_card,
+        self.dialog = ButtonDialog:new{
+            _added_widgets = { vg },
+            buttons = {
+                {
+                    {
+                        text = (loc and loc:t("menu_setup_local")) or "Local Wi-Fi (Offline LAN)",
+                        callback = function()
+                            self:stop()
+                            self:startLocalServer(ai_helper, loc, ui_callback)
+                        end,
+                    },
+                    {
+                        text = (loc and loc:t("cancel")) or "Cancel",
+                        is_enter_default = true,
+                        callback = function()
+                            self:stop()
+                        end,
+                    }
+                }
             }
         }
 
-        self.dialog = InputContainer:new{
-            dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-            movable,
-        }
-
-        UIManager:show(self.dialog, "ui")
+        UIManager:show(self.dialog)
 
         -- 4. Start Polling Loop
         self:pollCloudRelay(worker_url, session_id, secret_hex)
@@ -837,56 +788,43 @@ function WebSetup:startLocalServer(ai_helper, loc, ui_callback)
 
         local Device = require("device")
         local Screen = Device.screen
+        local Size = require("ui/size")
         local Font = require("ui/font")
         local Geom = require("ui/geometry")
-        local Blitbuffer = require("ffi/blitbuffer")
-        local FrameContainer = require("ui/widget/container/framecontainer")
-        local InputContainer = require("ui/widget/container/inputcontainer")
-        local CenterContainer = require("ui/widget/container/centercontainer")
-        local MovableContainer = require("ui/widget/container/movablecontainer")
         local VerticalGroup = require("ui/widget/verticalgroup")
-        local HorizontalGroup = require("ui/widget/horizontalgroup")
-        local TextWidget = require("ui/widget/textwidget")
         local TextBoxWidget = require("ui/widget/textboxwidget")
-        local Button = require("ui/widget/button")
         local VerticalSpan = require("ui/widget/verticalspan")
-        local WidgetContainer = require("ui/widget/container/widgetcontainer")
-        local xray_theme = require(plugin_path .. "xray_theme")
+        local CenterContainer = require("ui/widget/container/centercontainer")
+        local FrameContainer = require("ui/widget/container/framecontainer")
+        local Blitbuffer = require("ffi/blitbuffer")
 
-        local function sc(val) return Screen:scaleBySize(val) end
-        local sw = Screen:getWidth()
-        local sh = Screen:getHeight()
-        local dialog_w = math.min(sw - sc(20), sc(460))
+        local dialog_width = math.floor(math.min(Screen:getWidth(), Screen:getHeight()) * 0.9)
+        local border_window = (Size.border and Size.border.window) or 1
+        local padding_button = (Size.padding and Size.padding.button) or 10
+        local padding_default = (Size.padding and Size.padding.default) or 10
+        local margin_default = (Size.margin and Size.margin.default) or 5
+        local buttontable_width = dialog_width - 2 * border_window - 2 * padding_button
+        local content_width = buttontable_width - 2 * (padding_default + margin_default)
 
-        local fs = 20
-        if G_reader_settings then
-            fs = G_reader_settings:readSetting("cre_font_size") or 20
+        local qr_size = math.max(120, math.min(math.floor(content_width * 0.42), 160))
+        local base_fs = 16
+        if Size and Size.font and Size.font.menu then
+            base_fs = math.max(15, math.floor(Size.font.menu * 0.9))
         end
-        local ui_font_size = math.max(14, math.min(fs, 20))
-        local title_font_size = math.max(10, math.min(fs - 5, 14))
 
-        local content_vg = VerticalGroup:new{ align = "center" }
+        local vg_components = { align = "center" }
 
-        -- Tag
-        table.insert(content_vg, TextWidget:new{
-            text = (loc and loc:t("welcome_tag") or "WELCOME TO X-RAY"):upper(),
-            face = Font:getFace("cfont", title_font_size),
-            bold = true,
-            fgcolor = Blitbuffer.COLOR_BLACK,
-        })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(4) })
-
-        -- Headline
-        table.insert(content_vg, TextWidget:new{
+        -- Title
+        table.insert(vg_components, TextBoxWidget:new{
             text = (loc and loc:t("local_setup_title")) or "Connect via Local Wi-Fi",
-            face = Font:getFace("cfont", ui_font_size + 2),
+            face = Font:getFace("cfont", base_fs + 4),
             bold = true,
-            fgcolor = Blitbuffer.COLOR_BLACK,
+            width = content_width,
+            alignment = "center",
         })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+        table.insert(vg_components, VerticalSpan:new{ width = 8 })
 
         -- QR Code Widget
-        local qr_size = math.max(100, math.min(math.floor((dialog_w - sc(32)) * 0.40), 150))
         local ok_qr, QRWidget = pcall(require, "ui/widget/qrwidget")
         if ok_qr and QRWidget then
             local ok_inst, qr_widget = pcall(function()
@@ -899,101 +837,65 @@ function WebSetup:startLocalServer(ai_helper, loc, ui_callback)
             if ok_inst and qr_widget then
                 local qr_frame = FrameContainer:new{
                     background = Blitbuffer.COLOR_WHITE,
-                    padding = sc(4),
+                    padding = 6,
                     bordersize = 1,
                     margin = 0,
                     qr_widget,
                 }
-                table.insert(content_vg, CenterContainer:new{
-                    dimen = Geom:new{ w = dialog_w - sc(32), h = qr_size + sc(12) },
+                local centered_qr = CenterContainer:new{
+                    dimen = Geom:new{ w = content_width, h = qr_size + 14 },
                     qr_frame,
-                })
-                table.insert(content_vg, VerticalSpan:new{ width = sc(6) })
+                }
+                table.insert(vg_components, centered_qr)
+                table.insert(vg_components, VerticalSpan:new{ width = 8 })
             end
         end
 
-        -- URL text
-        table.insert(content_vg, TextWidget:new{
+        -- URL
+        table.insert(vg_components, TextBoxWidget:new{
             text = url,
-            face = Font:getFace("cfont", ui_font_size),
+            face = Font:getFace("cfont", base_fs + 2),
             bold = true,
-            fgcolor = Blitbuffer.COLOR_BLACK,
+            width = content_width,
+            alignment = "center",
         })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+        table.insert(vg_components, VerticalSpan:new{ width = 10 })
 
         -- Instructions
-        table.insert(content_vg, TextBoxWidget:new{
-            text = "1. Connect phone/PC to the same Wi-Fi network.\n2. Scan QR code or open URL in browser.\n3. Paste API key on web page and tap Save.",
-            face = Font:getFace("cfont", math.max(12, ui_font_size - 2)),
-            width = dialog_w - sc(32),
+        local step_instructions = "1. Connect phone/PC to the same Wi-Fi.\n2. Scan the QR code above or open the URL in your browser.\n3. Paste your API key on the web page and tap Save."
+
+        table.insert(vg_components, TextBoxWidget:new{
+            text = step_instructions,
+            face = Font:getFace("cfont", base_fs),
+            width = content_width,
             alignment = "left",
         })
-        table.insert(content_vg, VerticalSpan:new{ width = sc(12) })
 
-        -- Action Buttons
-        local cloud_btn = Button:new{
-            text = (loc and loc:t("menu_setup_cloud")) or "Cloud Relay",
-            face = Font:getFace("cfont", ui_font_size - 1),
-            bordersize = sc(1),
-            radius = xray_theme.radius_button,
-            padding = sc(8),
-            callback = function()
-                self:stop()
-                self:startCloudRelay(ai_helper, loc, ui_callback)
-            end,
-        }
-        local cancel_btn = Button:new{
-            text = (loc and loc:t("cancel")) or "Cancel",
-            face = Font:getFace("cfont", ui_font_size - 1),
-            bordersize = sc(1),
-            radius = xray_theme.radius_button,
-            padding = sc(8),
-            callback = function()
-                self:stop()
-            end,
-        }
+        local vg = VerticalGroup:new(vg_components)
 
-        local btn_row = HorizontalGroup:new{
-            align = "center",
-            cloud_btn,
-            WidgetContainer:new{ dimen = Geom:new{ w = sc(8), h = 1 } },
-            cancel_btn,
-        }
-        table.insert(content_vg, btn_row)
-
-        local inner_card = FrameContainer:new{
-            padding = sc(12),
-            radius = xray_theme.radius_window,
-            bordersize = sc(2),
-            color = Blitbuffer.COLOR_BLACK,
-            background = xray_theme.color_bg,
-            width = dialog_w - sc(2),
-            content_vg,
-        }
-
-        local outer_card = FrameContainer:new{
-            bordersize = sc(1),
-            color = Blitbuffer.Color8(180),
-            padding = 0,
-            background = xray_theme.color_bg,
-            radius = xray_theme.radius_window,
-            width = dialog_w,
-            inner_card,
-        }
-
-        local movable = MovableContainer:new{
-            CenterContainer:new{
-                dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-                outer_card,
+        self.dialog = ButtonDialog:new{
+            _added_widgets = { vg },
+            buttons = {
+                {
+                    {
+                        text = (loc and loc:t("menu_setup_cloud")) or "Cloud Relay (Recommended)",
+                        callback = function()
+                            self:stop()
+                            self:startCloudRelay(ai_helper, loc, ui_callback)
+                        end,
+                    },
+                    {
+                        text = (loc and loc:t("cancel")) or "Cancel",
+                        is_enter_default = true,
+                        callback = function()
+                            self:stop()
+                        end,
+                    }
+                }
             }
         }
 
-        self.dialog = InputContainer:new{
-            dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-            movable,
-        }
-
-        UIManager:show(self.dialog, "ui")
+        UIManager:show(self.dialog)
         self:pollLocalServer()
         return true
     end)

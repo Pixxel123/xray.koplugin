@@ -9,7 +9,6 @@ end
 local socket = require("socket")
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
-local ButtonDialog = require("ui/widget/buttondialog")
 local logger = nil
 pcall(function() logger = require(plugin_path .. "xray_logger") end)
 if not logger then pcall(function() logger = require("logger") end) end
@@ -51,6 +50,7 @@ local WebSetup = {
     session_id = nil,
     session_secret = nil,
     poll_start_time = nil,
+    poll_count = 0,
 }
 
 -- Simple HTTPS/HTTP Request Helper
@@ -183,180 +183,242 @@ end
 -- =========================================================================
 
 function WebSetup:startCloudRelay(ai_helper, loc, ui_callback)
-    self.ai_helper = ai_helper
-    self.loc = loc
-    self.ui_callback = ui_callback
+    local ok_run, result = pcall(function()
+        self.ai_helper = ai_helper
+        self.loc = loc
+        self.ui_callback = ui_callback
 
-    -- Check Network
-    local ok_net, NetworkMgr = pcall(require, "ui/network/manager")
-    if ok_net and NetworkMgr and NetworkMgr.isOnline then
-        local ok, online = pcall(function() return NetworkMgr:isOnline() end)
-        if ok and online == false then
+        -- Check Network
+        local ok_net, NetworkMgr = pcall(require, "ui/network/manager")
+        if ok_net and NetworkMgr and NetworkMgr.isOnline then
+            local ok, online = pcall(function() return NetworkMgr:isOnline() end)
+            if ok and online == false then
+                UIManager:show(InfoMessage:new{
+                    text = (loc and loc:t("web_setup_no_wifi")) or "Wi-Fi is disconnected. Please connect to Wi-Fi first.",
+                    timeout = 5
+                })
+                return false
+            end
+        end
+
+        self:stop()
+
+        local worker_url = DEFAULT_WORKER_URL
+        if self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.cloud_setup_worker_url then
+            worker_url = self.ai_helper.settings.cloud_setup_worker_url
+        end
+        worker_url = worker_url:gsub("/+$", "")
+
+        -- 1. Generate client secret
+        local secret_hex = Crypto:generateSecretHex()
+        self.session_secret = secret_hex
+
+        -- 2. Request new session from Cloudflare Worker
+        local create_url = worker_url .. "/api/session/create"
+        local ok, code, resp_text = httpRequest(create_url, "POST", { ["Content-Type"] = "application/json" }, "{}", 6)
+
+        if not ok or code ~= 200 or not resp_text then
+            logErr("WebSetup: Failed to create session on worker (" .. tostring(code) .. "): " .. tostring(resp_text))
             UIManager:show(InfoMessage:new{
-                text = (loc and loc:t("web_setup_no_wifi")) or "Wi-Fi is disconnected. Please connect to Wi-Fi first.",
+                text = "Could not reach Cloud Relay (" .. tostring(code or "Network error") .. "). Check your Wi-Fi or try Local Wi-Fi mode.",
                 timeout = 5
             })
             return false
         end
-    end
 
-    self:stop()
+        local sess_data
+        pcall(function() sess_data = json.decode(resp_text) end)
+        if not sess_data or not sess_data.session_id then
+            logErr("WebSetup: Invalid response payload from worker: " .. tostring(resp_text))
+            UIManager:show(InfoMessage:new{ text = "Invalid response from Cloud Relay.", timeout = 4 })
+            return false
+        end
 
-    local worker_url = DEFAULT_WORKER_URL
-    if self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.cloud_setup_worker_url then
-        worker_url = self.ai_helper.settings.cloud_setup_worker_url
-    end
-    worker_url = worker_url:gsub("/+$", "")
+        local session_id = sess_data.session_id
+        self.session_id = session_id
+        self.is_running = true
+        self.poll_start_time = os.time()
+        self.poll_count = 0
+        logInfo("WebSetup: Started Cloud Relay session " .. session_id .. " on worker " .. worker_url)
 
-    -- 1. Generate client secret
-    local secret_hex = Crypto:generateSecretHex()
-    self.session_secret = secret_hex
+        local full_url = string.format("%s/?s=%s#%s", worker_url, session_id, secret_hex)
+        local short_domain = worker_url:gsub("^https?://", "")
 
-    -- 2. Request new session from Cloudflare Worker
-    local InfoMessageWidget = require("ui/widget/infomessage")
-    local wait_msg = InfoMessageWidget:new{ text = "Connecting to Cloud Relay...", timeout = 8 }
-    UIManager:show(wait_msg)
+        -- 3. Render Modal Dialog using native robust KOReader widgets
+        local Device = require("device")
+        local Screen = Device.screen
+        local Font = require("ui/font")
+        local Geom = require("ui/geometry")
+        local Blitbuffer = require("ffi/blitbuffer")
+        local FrameContainer = require("ui/widget/container/framecontainer")
+        local InputContainer = require("ui/widget/container/inputcontainer")
+        local CenterContainer = require("ui/widget/container/centercontainer")
+        local MovableContainer = require("ui/widget/container/movablecontainer")
+        local VerticalGroup = require("ui/widget/verticalgroup")
+        local HorizontalGroup = require("ui/widget/horizontalgroup")
+        local TextWidget = require("ui/widget/textwidget")
+        local TextBoxWidget = require("ui/widget/textboxwidget")
+        local Button = require("ui/widget/button")
+        local VerticalSpan = require("ui/widget/verticalspan")
+        local WidgetContainer = require("ui/widget/container/widgetcontainer")
+        local xray_theme = require(plugin_path .. "xray_theme")
 
-    local create_url = worker_url .. "/api/session/create"
-    local ok, code, resp_text = httpRequest(create_url, "POST", { ["Content-Type"] = "application/json" }, "{}", 8)
-    UIManager:close(wait_msg)
+        local function sc(val) return Screen:scaleBySize(val) end
+        local sw = Screen:getWidth()
+        local sh = Screen:getHeight()
+        local dialog_w = math.min(sw - sc(20), sc(460))
 
-    if not ok or code ~= 200 or not resp_text then
-        logErr("WebSetup: Failed to create session on worker (" .. tostring(code) .. "): " .. tostring(resp_text))
+        local fs = 20
+        if G_reader_settings then
+            fs = G_reader_settings:readSetting("cre_font_size") or 20
+        end
+        local ui_font_size = math.max(14, math.min(fs, 20))
+        local title_font_size = math.max(10, math.min(fs - 5, 14))
+
+        local content_vg = VerticalGroup:new{ align = "center" }
+
+        -- Tag
+        table.insert(content_vg, TextWidget:new{
+            text = (loc and loc:t("welcome_tag") or "WELCOME TO X-RAY"):upper(),
+            face = Font:getFace("cfont", title_font_size),
+            bold = true,
+            fgcolor = Blitbuffer.COLOR_BLACK,
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(4) })
+
+        -- Headline
+        table.insert(content_vg, TextWidget:new{
+            text = (loc and loc:t("cloud_setup_title")) or "Connect via Phone/PC",
+            face = Font:getFace("cfont", ui_font_size + 2),
+            bold = true,
+            fgcolor = Blitbuffer.COLOR_BLACK,
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+
+        -- QR Code
+        local qr_size = math.max(100, math.min(math.floor((dialog_w - sc(32)) * 0.40), 150))
+        local ok_qr, QRWidget = pcall(require, "ui/widget/qrwidget")
+        if ok_qr and QRWidget then
+            local ok_inst, qr_widget = pcall(function()
+                return QRWidget:new{
+                    text = full_url,
+                    width = qr_size,
+                    height = qr_size,
+                }
+            end)
+            if ok_inst and qr_widget then
+                local qr_frame = FrameContainer:new{
+                    background = Blitbuffer.COLOR_WHITE,
+                    padding = sc(4),
+                    bordersize = 1,
+                    margin = 0,
+                    qr_widget,
+                }
+                table.insert(content_vg, CenterContainer:new{
+                    dimen = Geom:new{ w = dialog_w - sc(32), h = qr_size + sc(12) },
+                    qr_frame,
+                })
+                table.insert(content_vg, VerticalSpan:new{ width = sc(6) })
+            end
+        end
+
+        -- Pairing code badge
+        table.insert(content_vg, TextWidget:new{
+            text = short_domain .. "  •  Code: " .. session_id,
+            face = Font:getFace("cfont", ui_font_size),
+            bold = true,
+            fgcolor = Blitbuffer.COLOR_BLACK,
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+
+        -- Instructions
+        table.insert(content_vg, TextBoxWidget:new{
+            text = "1. Scan QR code or visit the link on your phone/PC.\n2. Paste your API key on the web page and tap Save.",
+            face = Font:getFace("cfont", math.max(12, ui_font_size - 2)),
+            width = dialog_w - sc(32),
+            alignment = "left",
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(12) })
+
+        -- Action Buttons
+        local local_btn = Button:new{
+            text = (loc and loc:t("menu_setup_local")) or "Local Wi-Fi",
+            face = Font:getFace("cfont", ui_font_size - 1),
+            bordersize = sc(1),
+            radius = xray_theme.radius_button,
+            padding = sc(8),
+            callback = function()
+                self:stop()
+                self:startLocalServer(ai_helper, loc, ui_callback)
+            end,
+        }
+        local cancel_btn = Button:new{
+            text = (loc and loc:t("cancel")) or "Cancel",
+            face = Font:getFace("cfont", ui_font_size - 1),
+            bordersize = sc(1),
+            radius = xray_theme.radius_button,
+            padding = sc(8),
+            callback = function()
+                self:stop()
+            end,
+        }
+
+        local btn_row = HorizontalGroup:new{
+            align = "center",
+            local_btn,
+            WidgetContainer:new{ dimen = Geom:new{ w = sc(8), h = 1 } },
+            cancel_btn,
+        }
+        table.insert(content_vg, btn_row)
+
+        local inner_card = FrameContainer:new{
+            padding = sc(12),
+            radius = xray_theme.radius_window,
+            bordersize = sc(2),
+            color = Blitbuffer.COLOR_BLACK,
+            background = xray_theme.color_bg,
+            width = dialog_w - sc(2),
+            content_vg,
+        }
+
+        local outer_card = FrameContainer:new{
+            bordersize = sc(1),
+            color = Blitbuffer.Color8(180),
+            padding = 0,
+            background = xray_theme.color_bg,
+            radius = xray_theme.radius_window,
+            width = dialog_w,
+            inner_card,
+        }
+
+        local movable = MovableContainer:new{
+            CenterContainer:new{
+                dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
+                outer_card,
+            }
+        }
+
+        self.dialog = InputContainer:new{
+            dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
+            movable,
+        }
+
+        UIManager:show(self.dialog, "ui")
+
+        -- 4. Start Polling Loop
+        self:pollCloudRelay(worker_url, session_id, secret_hex)
+        return true
+    end)
+
+    if not ok_run then
+        logErr("WebSetup: Exception in startCloudRelay: " .. tostring(result))
         UIManager:show(InfoMessage:new{
-            text = "Could not reach Cloud Relay (" .. tostring(code or "Network error") .. "). Check your Wi-Fi or try Local Wi-Fi mode.",
-            timeout = 5
+            text = "Error launching Web Setup: " .. tostring(result),
+            timeout = 6
         })
         return false
     end
-
-    local sess_data
-    pcall(function() sess_data = json.decode(resp_text) end)
-    if not sess_data or not sess_data.session_id then
-        logErr("WebSetup: Invalid response payload from worker: " .. tostring(resp_text))
-        UIManager:show(InfoMessage:new{ text = "Invalid response from Cloud Relay.", timeout = 4 })
-        return false
-    end
-
-    local session_id = sess_data.session_id
-    self.session_id = session_id
-    self.is_running = true
-    self.poll_start_time = os.time()
-    logInfo("WebSetup: Started Cloud Relay session " .. session_id .. " on worker " .. worker_url)
-
-    local full_url = string.format("%s/?s=%s#%s", worker_url, session_id, secret_hex)
-    local short_domain = worker_url:gsub("^https?://", "")
-
-    -- 3. Render Modal Dialog
-    local Device = require("device")
-    local Screen = Device.screen
-    local Size = require("ui/size")
-    local Font = require("ui/font")
-    local Geom = require("ui/geometry")
-    local VerticalGroup = require("ui/widget/verticalgroup")
-    local TextBoxWidget = require("ui/widget/textboxwidget")
-    local VerticalSpan = require("ui/widget/verticalspan")
-    local CenterContainer = require("ui/widget/container/centercontainer")
-    local FrameContainer = require("ui/widget/container/framecontainer")
-    local Blitbuffer = require("ffi/blitbuffer")
-
-    local dialog_width = math.floor(math.min(Screen:getWidth(), Screen:getHeight()) * 0.9)
-    local border_window = (Size.border and Size.border.window) or 1
-    local padding_button = (Size.padding and Size.padding.button) or 10
-    local padding_default = (Size.padding and Size.padding.default) or 10
-    local margin_default = (Size.margin and Size.margin.default) or 5
-    local buttontable_width = dialog_width - 2 * border_window - 2 * padding_button
-    local content_width = buttontable_width - 2 * (padding_default + margin_default)
-
-    local qr_size = math.max(120, math.min(math.floor(content_width * 0.42), 160))
-    local base_fs = 16
-    if Size and Size.font and Size.font.menu then
-        base_fs = math.max(15, math.floor(Size.font.menu * 0.9))
-    end
-
-    local vg_components = { align = "center" }
-
-    -- Title
-    table.insert(vg_components, TextBoxWidget:new{
-        text = (loc and loc:t("cloud_setup_title")) or "Connect via Phone/PC",
-        face = Font:getFace("cfont", base_fs + 4),
-        bold = true,
-        width = content_width,
-        alignment = "center",
-    })
-    table.insert(vg_components, VerticalSpan:new{ width = 8 })
-
-    -- QR Code
-    local ok_qr, QRWidget = pcall(require, "ui/widget/qrwidget")
-    if ok_qr and QRWidget then
-        local qr_widget = QRWidget:new{
-            text = full_url,
-            width = qr_size,
-            height = qr_size,
-        }
-        local qr_frame = FrameContainer:new{
-            background = Blitbuffer.COLOR_WHITE,
-            padding = 6,
-            bordersize = 1,
-            margin = 0,
-            qr_widget,
-        }
-        local centered_qr = CenterContainer:new{
-            dimen = Geom:new{ w = content_width, h = qr_size + 14 },
-            qr_frame,
-        }
-        table.insert(vg_components, centered_qr)
-        table.insert(vg_components, VerticalSpan:new{ width = 8 })
-    end
-
-    -- URL and Pairing Code
-    table.insert(vg_components, TextBoxWidget:new{
-        text = short_domain .. "  •  Code: " .. session_id,
-        face = Font:getFace("cfont", base_fs + 1),
-        bold = true,
-        width = content_width,
-        alignment = "center",
-    })
-    table.insert(vg_components, VerticalSpan:new{ width = 10 })
-
-    -- Instructions
-    local step_instructions = "1. Scan the QR code or visit the link on your phone/PC.\n2. Paste your API key on the web page and tap Save."
-    table.insert(vg_components, TextBoxWidget:new{
-        text = step_instructions,
-        face = Font:getFace("cfont", base_fs),
-        width = content_width,
-        alignment = "left",
-    })
-
-    local vg = VerticalGroup:new(vg_components)
-
-    self.dialog = ButtonDialog:new{
-        _added_widgets = { vg },
-        buttons = {
-            {
-                {
-                    text = (loc and loc:t("menu_setup_local")) or "Local Wi-Fi (Offline LAN)",
-                    callback = function()
-                        self:stop()
-                        self:startLocalServer(ai_helper, loc, ui_callback)
-                    end,
-                },
-                {
-                    text = (loc and loc:t("cancel")) or "Cancel",
-                    is_enter_default = true,
-                    callback = function()
-                        self:stop()
-                    end,
-                }
-            }
-        }
-    }
-
-    UIManager:show(self.dialog)
-
-    -- 4. Start Polling Loop
-    self:pollCloudRelay(worker_url, session_id, secret_hex)
-    return true
+    return result
 end
 
 function WebSetup:pollCloudRelay(worker_url, session_id, secret_hex)
@@ -474,12 +536,13 @@ local HTML_LOCAL_TEMPLATE = [[<!DOCTYPE html>
   </div>
   <div class="security-box">
     <div class="security-header">
-      <span>📶 100% Local & Offline</span>
+      <span>100% Local & Offline</span>
     </div>
     <div class="security-text">
-      This page connects directly to your e-reader over your local Wi-Fi. No data leaves your home network.
+      This page is served directly by your e-reader over your home Wi-Fi network. No cloud servers are involved.
     </div>
   </div>
+
   <span class="section-label">Select AI Provider</span>
   <div class="provider-grid">
     <button type="button" class="provider-btn active" onclick="switchProvider('gemini')">
@@ -487,95 +550,88 @@ local HTML_LOCAL_TEMPLATE = [[<!DOCTYPE html>
       <span class="tag-free">FREE</span>
     </button>
     <button type="button" class="provider-btn" onclick="switchProvider('chatgpt')">
-      <span>OpenAI ChatGPT</span>
+      <span>OpenAI</span>
     </button>
     <button type="button" class="provider-btn" onclick="switchProvider('deepseek')">
       <span>DeepSeek</span>
     </button>
     <button type="button" class="provider-btn" onclick="switchProvider('claude')">
-      <span>Anthropic Claude</span>
+      <span>Claude</span>
     </button>
     <button type="button" class="provider-btn full-width" onclick="switchProvider('custom1')">
-      <span>Custom API / OpenRouter / Local LLM</span>
+      <span>Custom / OpenRouter</span>
     </button>
   </div>
-  <!-- Provider Specific Instructions & Link -->
+
   <div id="guideContent"></div>
 
-  <!-- Form Fields -->
-  <div id="tabContent"></div>
+  <form id="keyForm" onsubmit="event.preventDefault(); submitKey();">
+    <div id="tabContent"></div>
+    <button type="submit" id="submitBtn" class="btn-submit">
+      Save to E-Reader
+    </button>
+  </form>
 
-  <button id="submitBtn" class="btn-submit" onclick="submitKey()">Save to E-Reader</button>
   <div id="msgBox"></div>
 </div>
+
 <script>
 let currentProvider = 'gemini';
+
 const providerDetails = {
   gemini: {
-    name: 'Google Gemini',
-    guideTitle: 'How to get a Free Google Gemini API Key:',
+    guideTitle: 'Get a Free Google Gemini API Key',
     steps: [
-      'Click the button below to open Google AI Studio.',
-      'Sign in with your Google account and click <strong>Create API Key</strong>.',
-      'Copy the generated key (starts with <code>AQ.</code> or <code>AIzaSy...</code>) and paste it below.'
+      'Open Google AI Studio in a new tab.',
+      'Sign in with your Google account.',
+      'Click "Create API Key" and copy the key.'
     ],
+    linkText: 'Open Google AI Studio ↗',
     linkUrl: 'https://aistudio.google.com/app/apikey',
-    linkText: '🔑 Open Google AI Studio (Get Free Key) →',
-    fields: [
-      { id: 'key', label: 'Google Gemini API Key', placeholder: 'AQ.YourKey... or AIzaSy...', type: 'text' }
-    ]
+    fields: [{ id: 'key', label: 'Gemini API Key', placeholder: 'AQ.Ab8RN6... or AIzaSy...', type: 'password' }]
   },
   chatgpt: {
-    name: 'OpenAI ChatGPT',
-    guideTitle: 'How to get an OpenAI API Key:',
+    guideTitle: 'Get an OpenAI API Key',
     steps: [
-      'Click the button below to open OpenAI Developer Platform.',
-      'Sign in and navigate to <strong>API Keys → Create new secret key</strong>.',
-      'Copy the generated key (starts with <code>sk-proj-...</code> or <code>sk-...</code>) and paste it below.'
+      'Open OpenAI Platform.',
+      'Go to API Keys section.',
+      'Click "Create new secret key".'
     ],
+    linkText: 'Open OpenAI Dashboard ↗',
     linkUrl: 'https://platform.openai.com/api-keys',
-    linkText: '🔑 Open OpenAI Platform API Keys →',
-    fields: [
-      { id: 'key', label: 'OpenAI API Key', placeholder: 'sk-proj-... or sk-...', type: 'text' }
-    ]
+    fields: [{ id: 'key', label: 'OpenAI API Key', placeholder: 'sk-proj-...', type: 'password' }]
   },
   deepseek: {
-    name: 'DeepSeek',
-    guideTitle: 'How to get a DeepSeek API Key:',
+    guideTitle: 'Get a DeepSeek API Key',
     steps: [
-      'Click the button below to open DeepSeek Open Platform.',
-      'Sign in and create a new API Key in your dashboard.',
-      'Copy the key (starts with <code>sk-...</code>) and paste it below.'
+      'Open the DeepSeek Platform.',
+      'Create an account or log in.',
+      'Navigate to API Keys and create a new key.'
     ],
+    linkText: 'Open DeepSeek Console ↗',
     linkUrl: 'https://platform.deepseek.com/api_keys',
-    linkText: '🔑 Open DeepSeek API Dashboard →',
-    fields: [
-      { id: 'key', label: 'DeepSeek API Key', placeholder: 'sk-...', type: 'text' }
-    ]
+    fields: [{ id: 'key', label: 'DeepSeek API Key', placeholder: 'sk-...', type: 'password' }]
   },
   claude: {
-    name: 'Anthropic Claude',
-    guideTitle: 'How to get an Anthropic Claude API Key:',
+    guideTitle: 'Get an Anthropic Claude API Key',
     steps: [
-      'Click the button below to open Anthropic Console.',
-      'Sign in and go to <strong>Settings → API Keys → Create Key</strong>.',
-      'Copy the key (starts with <code>sk-ant-...</code>) and paste it below.'
+      'Open Anthropic Console.',
+      'Sign in and navigate to Settings → API Keys.',
+      'Create and copy your key.'
     ],
+    linkText: 'Open Anthropic Console ↗',
     linkUrl: 'https://console.anthropic.com/settings/keys',
-    linkText: '🔑 Open Anthropic Console →',
-    fields: [
-      { id: 'key', label: 'Anthropic Claude API Key', placeholder: 'sk-ant-...', type: 'text' }
-    ]
+    fields: [{ id: 'key', label: 'Claude API Key', placeholder: 'sk-ant-...', type: 'password' }]
   },
   custom1: {
-    name: 'Custom API (OpenRouter / Local LLM)',
-    guideTitle: 'Custom OpenAI-Compatible API:',
+    guideTitle: 'Custom API / OpenRouter',
     steps: [
-      'For <strong>OpenRouter</strong>: Get an API key from openrouter.ai/keys.',
-      'Enter your API key, endpoint URL, and default model name below.'
+      'Use any OpenAI-compatible API endpoint.',
+      'For OpenRouter, obtain a key at openrouter.ai.',
+      'Enter the full endpoint URL and model name below.'
     ],
+    linkText: 'Get OpenRouter Key ↗',
     linkUrl: 'https://openrouter.ai/keys',
-    linkText: '🔑 Open OpenRouter Keys Dashboard →',
     fields: [
       { id: 'key', label: 'API Key', placeholder: 'sk-or-... or custom key', type: 'text' },
       { id: 'endpoint', label: 'Endpoint URL', placeholder: 'https://openrouter.ai/api/v1/chat/completions', type: 'text', def: 'https://openrouter.ai/api/v1/chat/completions' },
@@ -592,7 +648,7 @@ function switchProvider(p) {
   const details = providerDetails[p];
 
   let guideHtml = '<div style="background:#0b121e; border:1px solid #1e293b; border-radius:12px; padding:12px 14px; margin-bottom:16px;">';
-  guideHtml += '<div style="font-size:0.82rem; font-weight:700; color:#38bdf8; margin-bottom:6px;">ℹ️ ' + details.guideTitle + '</div>';
+  guideHtml += '<div style="font-size:0.82rem; font-weight:700; color:#38bdf8; margin-bottom:6px;">' + details.guideTitle + '</div>';
   guideHtml += '<ol style="font-size:0.78rem; color:#cbd5e1; line-height:1.5; margin-bottom:8px; padding-left:16px;">';
   details.steps.forEach(function(s) { guideHtml += '<li>' + s + '</li>'; });
   guideHtml += '</ol>';
@@ -604,7 +660,7 @@ function switchProvider(p) {
   details.fields.forEach(function(f) {
     h += '<div class="form-group"><label>' + f.label + '</label><div class="input-wrap">';
     h += '<input type="' + f.type + '" id="' + f.id + '" placeholder="' + f.placeholder + '" value="' + (f.def || '') + '">';
-    if (f.id === 'key') h += '<button type="button" class="btn-paste" onclick="pasteClip(\'' + f.id + '\')">📋 Paste</button>';
+    if (f.id === 'key') h += '<button type="button" class="btn-paste" onclick="pasteClip(\'' + f.id + '\')">Paste</button>';
     h += '</div></div>';
   });
   document.getElementById('tabContent').innerHTML = h;
@@ -633,7 +689,7 @@ async function submitKey() {
     const r = await fetch('/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const d = await r.json();
     if (r.ok && d.success) {
-      showMsg('✓ Saved to e-reader successfully!', 'success');
+      showMsg('Saved to e-reader successfully!', 'success');
       btn.textContent = 'Saved!';
     } else {
       showMsg(d.error || 'Failed to save', 'error');
@@ -649,30 +705,34 @@ async function submitKey() {
 
 function showMsg(t, c) {
   const b = document.getElementById('msgBox');
-  b.className = c; b.textContent = t; b.style.display = 'block';
+  b.textContent = t;
+  b.className = c;
+  b.style.display = 'block';
 }
 
 switchProvider('gemini');
 </script>
 </body>
-</html>
-]]
+</html>]]
 
 function WebSetup:handleLocalRequest(client)
-    client:settimeout(1.0)
-    local req_line = client:receive("*l")
-    if not req_line then client:close(); return end
+    local line = client:receive("*l")
+    if not line then client:close(); return end
 
-    local method, path = req_line:match("^(%u+)%s+(%S+)")
+    local method, path = line:match("^(%u+)%s+(%S+)")
     if not method or not path then client:close(); return end
 
+    local headers = {}
     local content_length = 0
     while true do
-        local line = client:receive("*l")
-        if not line or line == "" or line == "\r" then break end
-        local k, v = line:match("^([^:]+):%s*(.+)")
-        if k and k:lower() == "content-length" then
-            content_length = tonumber(v:match("^%s*(%d+)")) or 0
+        local h = client:receive("*l")
+        if not h or h == "" then break end
+        local k, v = h:match("^(.-):%s*(.*)$")
+        if k and v then
+            headers[k:lower()] = v
+            if k:lower() == "content-length" then
+                content_length = tonumber(v) or 0
+            end
         end
     end
 
@@ -725,163 +785,228 @@ function WebSetup:pollLocalServer()
 end
 
 function WebSetup:startLocalServer(ai_helper, loc, ui_callback)
-    self.ai_helper = ai_helper
-    self.loc = loc
-    self.ui_callback = ui_callback
+    local ok_run, result = pcall(function()
+        self.ai_helper = ai_helper
+        self.loc = loc
+        self.ui_callback = ui_callback
 
-    -- Check Network
-    local ok_net, NetworkMgr = pcall(require, "ui/network/manager")
-    if ok_net and NetworkMgr and NetworkMgr.isOnline then
-        local ok, online = pcall(function() return NetworkMgr:isOnline() end)
-        if ok and online == false then
+        -- Check Network
+        local ok_net, NetworkMgr = pcall(require, "ui/network/manager")
+        if ok_net and NetworkMgr and NetworkMgr.isOnline then
+            local ok, online = pcall(function() return NetworkMgr:isOnline() end)
+            if ok and online == false then
+                UIManager:show(InfoMessage:new{
+                    text = (loc and loc:t("web_setup_no_wifi")) or "Wi-Fi is disconnected. Please connect to Wi-Fi first.",
+                    timeout = 5
+                })
+                return false
+            end
+        end
+
+        self:stop()
+
+        local ip = Utils:getLocalIP()
+        local port_start = 8088
+        local bound_server = nil
+        local active_port = nil
+
+        for p = port_start, port_start + 7 do
+            local s = socket.bind("*", p)
+            if s then
+                bound_server = s
+                active_port = p
+                break
+            end
+        end
+
+        if not bound_server then
             UIManager:show(InfoMessage:new{
-                text = (loc and loc:t("web_setup_no_wifi")) or "Wi-Fi is disconnected. Please connect to Wi-Fi first.",
+                text = "Could not start local server on port 8088–8095.",
                 timeout = 5
             })
             return false
         end
-    end
 
-    self:stop()
+        bound_server:settimeout(0)
+        self.server = bound_server
+        self.port = active_port
+        self.is_running = true
 
-    local ip = Utils:getLocalIP()
-    local port_start = 8088
-    local bound_server = nil
-    local active_port = nil
+        local url = string.format("http://%s:%d", ip, active_port)
+        logInfo("XRayPlugin WebSetup: Local server running at " .. url)
 
-    for p = port_start, port_start + 7 do
-        local s = socket.bind("*", p)
-        if s then
-            bound_server = s
-            active_port = p
-            break
+        local Device = require("device")
+        local Screen = Device.screen
+        local Font = require("ui/font")
+        local Geom = require("ui/geometry")
+        local Blitbuffer = require("ffi/blitbuffer")
+        local FrameContainer = require("ui/widget/container/framecontainer")
+        local InputContainer = require("ui/widget/container/inputcontainer")
+        local CenterContainer = require("ui/widget/container/centercontainer")
+        local MovableContainer = require("ui/widget/container/movablecontainer")
+        local VerticalGroup = require("ui/widget/verticalgroup")
+        local HorizontalGroup = require("ui/widget/horizontalgroup")
+        local TextWidget = require("ui/widget/textwidget")
+        local TextBoxWidget = require("ui/widget/textboxwidget")
+        local Button = require("ui/widget/button")
+        local VerticalSpan = require("ui/widget/verticalspan")
+        local WidgetContainer = require("ui/widget/container/widgetcontainer")
+        local xray_theme = require(plugin_path .. "xray_theme")
+
+        local function sc(val) return Screen:scaleBySize(val) end
+        local sw = Screen:getWidth()
+        local sh = Screen:getHeight()
+        local dialog_w = math.min(sw - sc(20), sc(460))
+
+        local fs = 20
+        if G_reader_settings then
+            fs = G_reader_settings:readSetting("cre_font_size") or 20
         end
-    end
+        local ui_font_size = math.max(14, math.min(fs, 20))
+        local title_font_size = math.max(10, math.min(fs - 5, 14))
 
-    if not bound_server then
+        local content_vg = VerticalGroup:new{ align = "center" }
+
+        -- Tag
+        table.insert(content_vg, TextWidget:new{
+            text = (loc and loc:t("welcome_tag") or "WELCOME TO X-RAY"):upper(),
+            face = Font:getFace("cfont", title_font_size),
+            bold = true,
+            fgcolor = Blitbuffer.COLOR_BLACK,
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(4) })
+
+        -- Headline
+        table.insert(content_vg, TextWidget:new{
+            text = (loc and loc:t("local_setup_title")) or "Connect via Local Wi-Fi",
+            face = Font:getFace("cfont", ui_font_size + 2),
+            bold = true,
+            fgcolor = Blitbuffer.COLOR_BLACK,
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+
+        -- QR Code Widget
+        local qr_size = math.max(100, math.min(math.floor((dialog_w - sc(32)) * 0.40), 150))
+        local ok_qr, QRWidget = pcall(require, "ui/widget/qrwidget")
+        if ok_qr and QRWidget then
+            local ok_inst, qr_widget = pcall(function()
+                return QRWidget:new{
+                    text = url,
+                    width = qr_size,
+                    height = qr_size,
+                }
+            end)
+            if ok_inst and qr_widget then
+                local qr_frame = FrameContainer:new{
+                    background = Blitbuffer.COLOR_WHITE,
+                    padding = sc(4),
+                    bordersize = 1,
+                    margin = 0,
+                    qr_widget,
+                }
+                table.insert(content_vg, CenterContainer:new{
+                    dimen = Geom:new{ w = dialog_w - sc(32), h = qr_size + sc(12) },
+                    qr_frame,
+                })
+                table.insert(content_vg, VerticalSpan:new{ width = sc(6) })
+            end
+        end
+
+        -- URL text
+        table.insert(content_vg, TextWidget:new{
+            text = url,
+            face = Font:getFace("cfont", ui_font_size),
+            bold = true,
+            fgcolor = Blitbuffer.COLOR_BLACK,
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(8) })
+
+        -- Instructions
+        table.insert(content_vg, TextBoxWidget:new{
+            text = "1. Connect phone/PC to the same Wi-Fi network.\n2. Scan QR code or open URL in browser.\n3. Paste API key on web page and tap Save.",
+            face = Font:getFace("cfont", math.max(12, ui_font_size - 2)),
+            width = dialog_w - sc(32),
+            alignment = "left",
+        })
+        table.insert(content_vg, VerticalSpan:new{ width = sc(12) })
+
+        -- Action Buttons
+        local cloud_btn = Button:new{
+            text = (loc and loc:t("menu_setup_cloud")) or "Cloud Relay",
+            face = Font:getFace("cfont", ui_font_size - 1),
+            bordersize = sc(1),
+            radius = xray_theme.radius_button,
+            padding = sc(8),
+            callback = function()
+                self:stop()
+                self:startCloudRelay(ai_helper, loc, ui_callback)
+            end,
+        }
+        local cancel_btn = Button:new{
+            text = (loc and loc:t("cancel")) or "Cancel",
+            face = Font:getFace("cfont", ui_font_size - 1),
+            bordersize = sc(1),
+            radius = xray_theme.radius_button,
+            padding = sc(8),
+            callback = function()
+                self:stop()
+            end,
+        }
+
+        local btn_row = HorizontalGroup:new{
+            align = "center",
+            cloud_btn,
+            WidgetContainer:new{ dimen = Geom:new{ w = sc(8), h = 1 } },
+            cancel_btn,
+        }
+        table.insert(content_vg, btn_row)
+
+        local inner_card = FrameContainer:new{
+            padding = sc(12),
+            radius = xray_theme.radius_window,
+            bordersize = sc(2),
+            color = Blitbuffer.COLOR_BLACK,
+            background = xray_theme.color_bg,
+            width = dialog_w - sc(2),
+            content_vg,
+        }
+
+        local outer_card = FrameContainer:new{
+            bordersize = sc(1),
+            color = Blitbuffer.Color8(180),
+            padding = 0,
+            background = xray_theme.color_bg,
+            radius = xray_theme.radius_window,
+            width = dialog_w,
+            inner_card,
+        }
+
+        local movable = MovableContainer:new{
+            CenterContainer:new{
+                dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
+                outer_card,
+            }
+        }
+
+        self.dialog = InputContainer:new{
+            dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh },
+            movable,
+        }
+
+        UIManager:show(self.dialog, "ui")
+        self:pollLocalServer()
+        return true
+    end)
+
+    if not ok_run then
+        logErr("WebSetup: Exception in startLocalServer: " .. tostring(result))
         UIManager:show(InfoMessage:new{
-            text = "Could not start local server on port 8088–8095.",
-            timeout = 5
+            text = "Error launching Local Web Setup: " .. tostring(result),
+            timeout = 6
         })
         return false
     end
-
-    bound_server:settimeout(0)
-    self.server = bound_server
-    self.port = active_port
-    self.is_running = true
-
-    local url = string.format("http://%s:%d", ip, active_port)
-    logInfo("XRayPlugin WebSetup: Local server running at " .. url)
-
-    local Device = require("device")
-    local Screen = Device.screen
-    local Size = require("ui/size")
-    local Font = require("ui/font")
-    local Geom = require("ui/geometry")
-    local VerticalGroup = require("ui/widget/verticalgroup")
-    local TextBoxWidget = require("ui/widget/textboxwidget")
-    local VerticalSpan = require("ui/widget/verticalspan")
-    local CenterContainer = require("ui/widget/container/centercontainer")
-    local FrameContainer = require("ui/widget/container/framecontainer")
-    local Blitbuffer = require("ffi/blitbuffer")
-
-    local dialog_width = math.floor(math.min(Screen:getWidth(), Screen:getHeight()) * 0.9)
-    local border_window = (Size.border and Size.border.window) or 1
-    local padding_button = (Size.padding and Size.padding.button) or 10
-    local padding_default = (Size.padding and Size.padding.default) or 10
-    local margin_default = (Size.margin and Size.margin.default) or 5
-    local buttontable_width = dialog_width - 2 * border_window - 2 * padding_button
-    local content_width = buttontable_width - 2 * (padding_default + margin_default)
-
-    local qr_size = math.max(120, math.min(math.floor(content_width * 0.42), 160))
-    local base_fs = 16
-    if Size and Size.font and Size.font.menu then
-        base_fs = math.max(15, math.floor(Size.font.menu * 0.9))
-    end
-
-    local vg_components = { align = "center" }
-
-    -- Title
-    table.insert(vg_components, TextBoxWidget:new{
-        text = (loc and loc:t("local_setup_title")) or "Connect via Local Wi-Fi",
-        face = Font:getFace("cfont", base_fs + 4),
-        bold = true,
-        width = content_width,
-        alignment = "center",
-    })
-    table.insert(vg_components, VerticalSpan:new{ width = 8 })
-
-    -- QR Code Widget
-    local ok_qr, QRWidget = pcall(require, "ui/widget/qrwidget")
-    if ok_qr and QRWidget then
-        local qr_widget = QRWidget:new{
-            text = url,
-            width = qr_size,
-            height = qr_size,
-        }
-        local qr_frame = FrameContainer:new{
-            background = Blitbuffer.COLOR_WHITE,
-            padding = 6,
-            bordersize = 1,
-            margin = 0,
-            qr_widget,
-        }
-        local centered_qr = CenterContainer:new{
-            dimen = Geom:new{ w = content_width, h = qr_size + 14 },
-            qr_frame,
-        }
-        table.insert(vg_components, centered_qr)
-        table.insert(vg_components, VerticalSpan:new{ width = 8 })
-    end
-
-    -- URL
-    table.insert(vg_components, TextBoxWidget:new{
-        text = url,
-        face = Font:getFace("cfont", base_fs + 2),
-        bold = true,
-        width = content_width,
-        alignment = "center",
-    })
-    table.insert(vg_components, VerticalSpan:new{ width = 10 })
-
-    -- Instructions
-    local step_instructions = "1. Connect phone/PC to the same Wi-Fi.\n2. Scan the QR code above or open the URL in your browser.\n3. Paste your API key on the web page and tap Save."
-
-    table.insert(vg_components, TextBoxWidget:new{
-        text = step_instructions,
-        face = Font:getFace("cfont", base_fs),
-        width = content_width,
-        alignment = "left",
-    })
-
-    local vg = VerticalGroup:new(vg_components)
-
-    self.dialog = ButtonDialog:new{
-        _added_widgets = { vg },
-        buttons = {
-            {
-                {
-                    text = (loc and loc:t("menu_setup_cloud")) or "Cloud Relay (Recommended)",
-                    callback = function()
-                        self:stop()
-                        self:startCloudRelay(ai_helper, loc, ui_callback)
-                    end,
-                },
-                {
-                    text = (loc and loc:t("cancel")) or "Cancel",
-                    is_enter_default = true,
-                    callback = function()
-                        self:stop()
-                    end,
-                }
-            }
-        }
-    }
-
-    UIManager:show(self.dialog)
-    self:pollLocalServer()
-    return true
+    return result
 end
 
 -- Backward compatibility alias
@@ -898,8 +1023,9 @@ function WebSetup:stop()
         self.server = nil
     end
     if self.dialog then
-        UIManager:close(self.dialog)
+        local dlg = self.dialog
         self.dialog = nil
+        pcall(function() UIManager:close(dlg) end)
     end
 end
 

@@ -1,4 +1,4 @@
-name = "koreader-xray-setup"
+name = "xray-setup"
 main = "worker.js"
 compatibility_date = "2024-09-01"
 

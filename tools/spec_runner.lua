@@ -135,6 +135,8 @@ _G.assert = {
 }
 _G.assert.equals = _G.assert.are.equal
 _G.assert.same = _G.assert.are.same
+_G.assert.is_falsy = _G.assert.falsy
+_G.assert.is_truthy = _G.assert.truthy
 
 -- List of spec files to execute
 local specs = {

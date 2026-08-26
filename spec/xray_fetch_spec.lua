@@ -197,6 +197,7 @@ describe("xray_fetch", function()
                 assert.are.equal(501, cancelled_pids[1])
                 assert.is_false(plugin.bg_fetch_active)
                 assert.is_true(#removed_files > 0)
+                assert.are.equal(first_dialog, _G.ui_tracker.closed[#_G.ui_tracker.closed])
 
                 -- Start again before the cancelled fetch's queued poll runs.
                 plugin:continueWithFetch(50)
@@ -533,6 +534,43 @@ describe("xray_fetch", function()
                 assert.are.equal(1001, cancelled_pid)
                 assert.is_nil(plugin._active_ai_dialog)
                 assert.is_nil(plugin._active_ai_cancel)
+            end)
+
+            UIManager.scheduleIn = old_schedule
+            if not ok then error(err) end
+        end)
+
+        it("does not spawn a lookup child when cancelled before deferred analysis", function()
+            local UIManager = require("ui/uimanager")
+            local old_schedule = UIManager.scheduleIn
+            local scheduled = {}
+            local spawn_count = 0
+
+            UIManager.scheduleIn = function(self, delay, callback)
+                table.insert(scheduled, callback)
+            end
+            plugin.ui.getCurrentPage = function() return 1 end
+            plugin.chapter_analyzer = {
+                getDetailedChapterSamples = function() return {}, {} end,
+                getEndPageForCurrentPage = function() return 1 end,
+                getTextFromPageRange = function() return "book text" end,
+            }
+            plugin.ai_helper = {
+                hasApiKey = function() return true end,
+                lookupSingleWordAsync = function()
+                    spawn_count = spawn_count + 1
+                    return 1001
+                end,
+                cancelAsyncChild = function() return true end,
+            }
+
+            local ok, err = pcall(function()
+                plugin:fetchSingleWord("TestTerm", 1, 2)
+                plugin._active_ai_dialog.args.buttons[1][1].callback()
+                while #scheduled > 0 do
+                    table.remove(scheduled, 1)()
+                end
+                assert.are.equal(0, spawn_count)
             end)
 
             UIManager.scheduleIn = old_schedule

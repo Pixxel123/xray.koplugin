@@ -16,7 +16,7 @@ end
 local M = {}
 
 function M:isRequestTimedOut(started_at, timeout_seconds)
-    return os.time() - started_at >= timeout_seconds
+    return os.difftime(os.time(), started_at or os.time()) >= timeout_seconds
 end
 
 function M:cancelActiveAIRequest(reason)
@@ -148,12 +148,12 @@ function M:fetchSingleWord(text, pos0, pos1)
         -- Second tick: start the actual work. This two-step approach ensures the progress
         -- bar borders are fully committed to screen before the CPU starts blocking.
         UIManager:scheduleIn(0.3, function()
-            if self.destroyed or not self.ui or not self.ui.document then
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
                 if progress_msg then UIManager:close(progress_msg) end
                 return
             end
             UIManager:scheduleIn(0.3, function()
-            if self.destroyed or not self.ui or not self.ui.document then
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
                 if progress_msg then UIManager:close(progress_msg) end
                 return
             end
@@ -202,7 +202,7 @@ function M:fetchSingleWord(text, pos0, pos1)
                 end
             end)
 
-            if self.destroyed or not self.ui or not self.ui.document then
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
                 if progress_msg then UIManager:close(progress_msg) end
                 return
             end
@@ -271,9 +271,11 @@ function M:fetchSingleWord(text, pos0, pos1)
                             UIManager:close(progress_msg)
                             if self._active_ai_dialog == progress_msg then self._active_ai_dialog = nil end
                             if self._active_ai_cancel == cancelLookup then self._active_ai_cancel = nil end
-                            self:_processSingleWordResult(data, text, book_text, current_page)
+                            if not is_cancelled then
+                                self:_processSingleWordResult(data, text, book_text, current_page)
+                            end
                         end)
-                    else
+                    elseif not is_cancelled then
                         self:_processSingleWordResult(data, text, book_text, current_page)
                     end
                 end
@@ -477,6 +479,9 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
         end
         if result_file then
             pcall(function() os.remove(result_file) end)
+        end
+        if wait_msg then
+            UIManager:close(wait_msg)
         end
         finishActiveRequest()
         self:log("XRayPlugin: " .. reason)

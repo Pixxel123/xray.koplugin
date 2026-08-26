@@ -236,11 +236,12 @@ end
 function XRayPlugin:destroy()
     if self.destroyed then return end
     self:log("XRayPlugin: destroy called, marking as destroyed")
-    self.destroyed = true
-    
-    if self.ai_helper then
+    if self.cancelActiveAIRequest then
+        self:cancelActiveAIRequest("Plugin destroyed")
+    elseif self.ai_helper then
         self.ai_helper:cancelAsyncChild()
     end
+    self.destroyed = true
     
     if self.active_mention_scan and self.active_mention_scan.cancel_handle then
         self.active_mention_scan.cancel_handle:cancel()

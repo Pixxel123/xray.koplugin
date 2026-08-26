@@ -429,6 +429,106 @@ describe("xray_ui", function()
             assert.is_true(asyncSave_called)
             assert.is_true(plugin.book_data.series_context_dismissed)
         end)
+
+        it("should automatically merge series context offline if all prior books are cached", function()
+            -- Mock NetworkMgr as offline
+            package.loaded["ui/network/manager"] = {
+                isConnected = function() return false end,
+                isOnline = function() return false end
+            }
+            local merge_called = false
+            plugin.mergeSeriesContext = function(self_p, cache_data, series_info)
+                merge_called = true
+            end
+            plugin.series_manager = {
+                detectSeries = function()
+                    return { name = "Mistborn", index = 2, slug = "mistborn" }
+                end,
+                loadSeriesCache = function(self_sm, slug)
+                    return {
+                        books = {
+                            [1] = {
+                                title = "The Final Empire",
+                                timeline = { { chapter = "Ch 1", event = "Kelsier" } }
+                            }
+                        }
+                    }
+                end
+            }
+            plugin.ai_helper = {
+                settings = {
+                    series_context_enabled = true
+                }
+            }
+            plugin.book_data = {}
+
+            plugin:checkSeriesContext()
+
+            assert.is_true(merge_called)
+            -- Verify no popup prompt shown because it was merged automatically offline
+            local last = _G.ui_tracker.last_shown
+            assert.is_nil(last)
+        end)
+    end)
+
+    describe("clearCache and clearSeriesCache", function()
+        it("should reset all in-memory tables and flags on clearCache", function()
+            plugin.characters = { { name = "Vin" } }
+            plugin.locations = { { name = "Luthadel" } }
+            plugin.timeline = { { chapter = "Ch 1", event = "Event" } }
+            plugin.historical_figures = { { name = "Person" } }
+            plugin.terms = { { name = "Allomancy" } }
+            plugin.terms_fetched = true
+            plugin.author_info = { name = "Author" }
+            plugin.book_data = { series_context_loaded = true, series_slug = "mistborn" }
+            plugin.series_context_loaded = true
+            plugin.xray_mode_enabled = true
+
+            local clear_file_called = false
+            plugin.cache_manager = {
+                clearCache = function(self_cm, file)
+                    clear_file_called = true
+                    return true
+                end
+            }
+
+            plugin:clearCache()
+
+            assert.is_true(clear_file_called)
+            assert.are.equal(0, #plugin.characters)
+            assert.are.equal(0, #plugin.locations)
+            assert.are.equal(0, #plugin.timeline)
+            assert.are.equal(0, #plugin.historical_figures)
+            assert.are.equal(0, #plugin.terms)
+            assert.is_false(plugin.terms_fetched)
+            assert.is_nil(plugin.author_info)
+            assert.is_false(plugin.series_context_loaded)
+            assert.is_false(plugin.xray_mode_enabled)
+            assert.are.same({}, plugin.book_data)
+        end)
+
+        it("should clear series cache file and flags on clearSeriesCache", function()
+            plugin.series_manager = {
+                detectSeries = function()
+                    return { name = "Mistborn", index = 2, slug = "mistborn" }
+                end,
+                getSeriesCachePath = function(self_sm, slug)
+                    return "/tmp/koreader/settings/xray/series/mistborn.lua"
+                end
+            }
+            plugin.book_data = {
+                series_context_loaded = true,
+                series_context_dismissed = true,
+                series_slug = "mistborn"
+            }
+            plugin.series_context_loaded = true
+
+            plugin:clearSeriesCache()
+
+            assert.is_false(plugin.series_context_loaded)
+            assert.is_nil(plugin.book_data.series_context_loaded)
+            assert.is_nil(plugin.book_data.series_context_dismissed)
+        end)
     end)
 
     describe("scanBookForUnits", function()
@@ -1024,8 +1124,8 @@ describe("xray_ui", function()
             assert.is_not_nil(claude_item)
 
             local gemini_menu = gemini_item.sub_item_table_func()
-            assert.is_not_nil(gemini_menu[1].text:find("gemini%-3%.6%-flash"))
-            assert.is_not_nil(gemini_menu[2].text:find("gemini%-3%.5%-flash%-lite"))
+            assert.is_not_nil(gemini_menu[1].text:find("gemini%-3%.7%-flash"))
+            assert.is_not_nil(gemini_menu[2].text:find("gemini%-3%.6%-flash"))
 
             local chatgpt_menu = chatgpt_item.sub_item_table_func()
             assert.is_not_nil(chatgpt_menu[1].text:find("gpt%-5%.6%-terra"))
@@ -1033,6 +1133,137 @@ describe("xray_ui", function()
 
             local claude_menu = claude_item.sub_item_table_func()
             assert.is_not_nil(claude_menu[1].text:find("claude%-sonnet%-5"))
+        end)
+    end)
+
+    describe("Welcome Screen & Onboarding Flow", function()
+        it("should route showQuickXRayMenu to showWelcomeCard when no API key is set and cache is empty", function()
+            plugin.ai_helper.hasApiKey = function() return false end
+            plugin.book_data = nil
+            plugin:showQuickXRayMenu()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("InputContainer", last.type)
+        end)
+
+        it("should route showQuickXRayMenu to showFullXRayMenu when key is present", function()
+            plugin.ai_helper.hasApiKey = function() return true end
+            plugin:showQuickXRayMenu()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("Menu", last.type)
+        end)
+
+        it("should render showConfigFileGuide dialog with import and wiki options", function()
+            plugin:showConfigFileGuide()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("InputContainer", last.type)
+        end)
+
+        it("should handle welcome actions appropriately", function()
+            plugin:handleWelcomeAction("phone_pc")
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+
+            plugin:handleWelcomeAction("ereader")
+            local last_ereader = _G.ui_tracker.last_shown
+            assert.is_not_nil(last_ereader)
+            assert.are.equal("ButtonDialog", last_ereader.type)
+
+            -- Test clicking a provider from the picker
+            local gemini_btn = last_ereader.args.buttons[1][1]
+            assert.is_not_nil(gemini_btn)
+            gemini_btn.callback()
+            local input_dlg = _G.ui_tracker.last_shown
+            assert.is_not_nil(input_dlg)
+            assert.are.equal("InputDialog", input_dlg.type)
+        end)
+    end)
+
+    describe("Clear API Keys Menu", function()
+        it("should validate all menu items in getAPIKeysMenu have valid non-nil text and working callbacks", function()
+            local items = plugin:getAPIKeysMenu()
+            assert.is_not_nil(items)
+            
+            for idx, item in ipairs(items) do
+                assert.is_not_nil(item.text, "Item " .. idx .. " is missing a required text string")
+                assert.are.equal("string", type(item.text), "Item " .. idx .. " text is not a string")
+                assert.is_true(#item.text > 0, "Item " .. idx .. " has an empty text string")
+                if item.text_func then
+                    assert.are.equal("function", type(item.text_func))
+                    local dynamic_text = item.text_func()
+                    assert.is_not_nil(dynamic_text)
+                    assert.are.equal("string", type(dynamic_text))
+                    assert.is_true(#dynamic_text > 0)
+                end
+            end
+
+            local clear_item = nil
+            for _, item in ipairs(items) do
+                if item.text:find("menu_clear_all_keys") or item.text:find("Clear All API Keys") then
+                    clear_item = item
+                    break
+                end
+            end
+            assert.is_not_nil(clear_item)
+            
+            -- Trigger callback and check ButtonDialog is shown
+            clear_item.callback()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("ButtonDialog", last.type)
+            local buttons = last.args.buttons[1]
+            assert.is_not_nil(buttons)
+            local clear_btn = buttons[2]
+            assert.is_not_nil(clear_btn)
+            assert.are.equal("function", type(clear_btn.callback))
+
+            -- Execute clear button callback to ensure no crashes during clearing
+            local ok, err = pcall(clear_btn.callback)
+            assert.is_true(ok, "clear_all_keys callback failed: " .. tostring(err))
+        end)
+
+        it("should validate all menu items in getProviderKeySubMenu have valid non-nil text and working clear callback", function()
+            local items = plugin:getProviderKeySubMenu("gemini", "Google Gemini")
+            assert.is_not_nil(items)
+
+            for idx, item in ipairs(items) do
+                assert.is_not_nil(item.text, "Provider sub-item " .. idx .. " is missing a required text string")
+                assert.are.equal("string", type(item.text), "Provider sub-item " .. idx .. " text is not a string")
+                assert.is_true(#item.text > 0, "Provider sub-item " .. idx .. " has an empty text string")
+                if item.text_func then
+                    assert.are.equal("function", type(item.text_func))
+                    local dynamic_text = item.text_func()
+                    assert.is_not_nil(dynamic_text)
+                    assert.are.equal("string", type(dynamic_text))
+                    assert.is_true(#dynamic_text > 0)
+                end
+            end
+
+            local clear_item = nil
+            for _, item in ipairs(items) do
+                if item.text:find("Clear") or item.text:find("menu_clear_single_key") then
+                    clear_item = item
+                    break
+                end
+            end
+            assert.is_not_nil(clear_item)
+
+            -- Trigger callback and check ButtonDialog is shown
+            clear_item.callback()
+            local last = _G.ui_tracker.last_shown
+            assert.is_not_nil(last)
+            assert.are.equal("ButtonDialog", last.type)
+            local buttons = last.args.buttons[1]
+            assert.is_not_nil(buttons)
+            local clear_btn = buttons[2]
+            assert.is_not_nil(clear_btn)
+            assert.are.equal("function", type(clear_btn.callback))
+
+            -- Execute clear button callback to ensure no crashes during clearing
+            local ok, err = pcall(clear_btn.callback)
+            assert.is_true(ok, "clear_single_key callback failed: " .. tostring(err))
         end)
     end)
 end)

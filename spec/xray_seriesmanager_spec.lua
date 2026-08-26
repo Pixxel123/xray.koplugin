@@ -32,6 +32,40 @@ describe("xray_seriesmanager", function()
         end)
     end)
 
+    describe("extractIndexFromTitle", function()
+        it("extracts index from standard numeric patterns", function()
+            assert.are.equal(2, manager:extractIndexFromTitle("Book 02 - Dark Tide I - Onslaught"))
+            assert.are.equal(1, manager:extractIndexFromTitle("The Way of Kings (The Stormlight Archive, #1)"))
+            assert.are.equal(2, manager:extractIndexFromTitle("Dune Messiah (Chronicles of Dune Vol. 2)"))
+            assert.are.equal(3, manager:extractIndexFromTitle("The Hero of Ages (Volume 3)"))
+            assert.are.equal(4, manager:extractIndexFromTitle("Bk. 4 - Wizard and Glass"))
+            assert.are.equal(5, manager:extractIndexFromTitle("Nemesis Games (The Expanse Part 5)"))
+            assert.are.equal(6, manager:extractIndexFromTitle("No. 06 - Babylon's Ashes"))
+        end)
+
+        it("extracts index from series name prefix in title", function()
+            assert.are.equal(3, manager:extractIndexFromTitle("The New Jedi Order 03 - Ruin", "The New Jedi Order"))
+            assert.are.equal(2, manager:extractIndexFromTitle("The New Jedi Order: 2 - Dark Tide", "The New Jedi Order"))
+        end)
+
+        it("extracts index from word numbers", function()
+            assert.are.equal(2, manager:extractIndexFromTitle("Words of Radiance: Book Two of the Stormlight Archive"))
+            assert.are.equal(1, manager:extractIndexFromTitle("The Final Empire - Book One"))
+            assert.are.equal(3, manager:extractIndexFromTitle("Volume Three: The Return of the King"))
+        end)
+
+        it("extracts index from Roman numerals", function()
+            assert.are.equal(4, manager:extractIndexFromTitle("Book IV - The Shadow Rising"))
+            assert.are.equal(5, manager:extractIndexFromTitle("The Fires of Heaven - Volume V"))
+        end)
+
+        it("returns nil when title contains no series index pattern", function()
+            assert.is_nil(manager:extractIndexFromTitle("1984"))
+            assert.is_nil(manager:extractIndexFromTitle("Catch-22"))
+            assert.is_nil(manager:extractIndexFromTitle("A Game of Thrones"))
+        end)
+    end)
+
     describe("detectSeries", function()
         it("detects series from EPUB props.series and props.seriesindex", function()
             local props = { series = "Mistborn", seriesindex = 2 }
@@ -49,6 +83,41 @@ describe("xray_seriesmanager", function()
             assert.are.equal("Stormlight Archive", info.name)
             assert.are.equal(4, info.index)
             assert.are.equal("stormlight_archive", info.slug)
+        end)
+
+        it("extracts index from title when props.series is present but series_index is missing", function()
+            local props = { series = "The New Jedi Order" }
+            local title = "Book 02 - Dark Tide I - Onslaught"
+            local info = manager:detectSeries(props, title, "Michael A. Stackpole", nil)
+            assert.is_not_nil(info)
+            assert.are.equal("The New Jedi Order", info.name)
+            assert.are.equal(2, info.index)
+            assert.are.equal("the_new_jedi_order", info.slug)
+        end)
+
+        it("falls back to AI for index when props.series is present, series_index is missing, and title has no index", function()
+            local props = { series = "The New Jedi Order" }
+            local title = "Dark Tide I - Onslaught"
+            local mock_ai = {
+                createPrompt = function(self, t, author, context, prompt_type)
+                    assert.are.equal("Dark Tide I - Onslaught", t)
+                    assert.are.equal("series_detect", prompt_type)
+                    return { type = "detect" }
+                end,
+                executeUnifiedRequest = function(self, prompt)
+                    return {
+                        is_series = true,
+                        series_name = "The New Jedi Order",
+                        book_index = 2
+                    }
+                end
+            }
+
+            local info = manager:detectSeries(props, title, "Michael A. Stackpole", mock_ai)
+            assert.is_not_nil(info)
+            assert.are.equal("The New Jedi Order", info.name)
+            assert.are.equal(2, info.index)
+            assert.are.equal("the_new_jedi_order", info.slug)
         end)
 
         it("falls back to AI detection when metadata is missing", function()

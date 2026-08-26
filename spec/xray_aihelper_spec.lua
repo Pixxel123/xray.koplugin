@@ -680,10 +680,10 @@ describe("AIHelper", function()
     end)
 
     describe("DEFAULT_AI configuration", function()
-        it("should have gemini-3.6-flash as default primary model", function()
-            local primary = AIHelper.settings.primary_ai or { provider = "gemini", model = "gemini-3.6-flash" }
+        it("should have gemini-3.7-flash as default primary model", function()
+            local primary = AIHelper.settings.primary_ai or { provider = "gemini", model = "gemini-3.7-flash" }
             assert.are.equal("gemini", primary.provider)
-            assert.are.equal("gemini-3.6-flash", primary.model)
+            assert.are.equal("gemini-3.7-flash", primary.model)
         end)
 
         it("should have gemini-3.5-flash-lite as default secondary model", function()
@@ -693,11 +693,80 @@ describe("AIHelper", function()
         end)
     end)
 
+    describe("Gemini model migration", function()
+        it("should migrate deprecated and shut down Gemini models in primary and secondary slots", function()
+            local json = require("json")
+            local saved_settings = nil
+            AIHelper.saveSettings = function(self)
+                saved_settings = self.settings
+            end
+
+            -- Test with mock settings containing deprecated Gemini models
+            local mock_settings = {
+                primary_ai = { provider = "gemini", model = "gemini-2.0-flash" },
+                secondary_ai = { provider = "gemini", model = "gemini-3.1-flash-lite" },
+                gemini_primary_model = "gemini-1.5-flash",
+                gemini_secondary_model = "gemini-2.0-flash-lite",
+            }
+
+            -- Mock io.open to return our test settings
+            local old_open = io.open
+            io.open = function(path, mode)
+                if path:find("settings.json") and (mode == "r" or mode == nil) then
+                    return {
+                        read = function() return json.encode(mock_settings) end,
+                        close = function() end
+                    }
+                end
+                return old_open(path, mode)
+            end
+
+            AIHelper:loadSettings()
+            io.open = old_open
+
+            assert.is_not_nil(AIHelper.settings)
+            assert.are.equal("gemini-3.7-flash", AIHelper.settings.primary_ai.model)
+            assert.are.equal("gemini-3.5-flash-lite", AIHelper.settings.secondary_ai.model)
+            assert.are.equal("gemini-3.7-flash", AIHelper.settings.gemini_primary_model)
+            assert.are.equal("gemini-3.5-flash-lite", AIHelper.settings.gemini_secondary_model)
+        end)
+
+        it("should migrate legacy Gemini preview and 1.5/1.0 models", function()
+            local json = require("json")
+            local mock_settings = {
+                primary_ai = { provider = "gemini", model = "gemini-1.5-pro" },
+                secondary_ai = { provider = "gemini", model = "gemini-2.5-flash-preview-05-20" },
+            }
+
+            local old_open = io.open
+            io.open = function(path, mode)
+                if path:find("settings.json") and (mode == "r" or mode == nil) then
+                    return {
+                        read = function() return json.encode(mock_settings) end,
+                        close = function() end
+                    }
+                end
+                return old_open(path, mode)
+            end
+
+            AIHelper:loadSettings()
+            io.open = old_open
+
+            assert.are.equal("gemini-2.5-pro", AIHelper.settings.primary_ai.model)
+            assert.are.equal("gemini-3.7-flash", AIHelper.settings.secondary_ai.model)
+        end)
+    end)
+
     describe("persistent config backup and restoration", function()
         it("should back up config keys to stored config and restore missing keys to config file", function()
             local stored_content = nil
             local config_file_written = nil
             local json = require("json")
+
+            local orig_getStoredConfigPath = AIHelper.getStoredConfigPath
+            local orig_loadStoredConfig = AIHelper.loadStoredConfig
+            local orig_saveStoredConfig = AIHelper.saveStoredConfig
+            local orig_writeConfigToFile = AIHelper.writeConfigToFile
 
             AIHelper.getStoredConfigPath = function()
                 return "/fake/path/config_backup.json"
@@ -742,6 +811,82 @@ describe("AIHelper", function()
             assert.is_true(restored)
             assert.are.equal("test_gemini_key_123", mock_empty_config.gemini_api_key)
             assert.are.equal("test_gemini_key_123", config_file_written.gemini_api_key)
+
+            AIHelper.getStoredConfigPath = orig_getStoredConfigPath
+            AIHelper.loadStoredConfig = orig_loadStoredConfig
+            AIHelper.saveStoredConfig = orig_saveStoredConfig
+            AIHelper.writeConfigToFile = orig_writeConfigToFile
+        end)
+
+        it("imports keys from plain text file xray_key.txt", function()
+            local test_file = AIHelper.path .. "/xray_key.txt"
+            local f = io.open(test_file, "w")
+            if f then
+                f:write([[
+# My X-Ray Keys
+gemini = AQ.TEST_GEMINI_MOCK_KEY_1234567890abcdef
+openai = sk-proj-1234567890abcdef
+custom1_endpoint = https://openrouter.ai/api/v1/chat/completions
+custom1_model = google/gemini-2.5-flash
+]])
+                f:close()
+            end
+
+            local ok, count, path = AIHelper:importFromTextFile(true)
+            assert.is_true(ok)
+            assert.is_true(count >= 2)
+            assert.are.equal("AQ.TEST_GEMINI_MOCK_KEY_1234567890abcdef", AIHelper.providers.gemini.api_key)
+            assert.are.equal("sk-proj-1234567890abcdef", AIHelper.providers.chatgpt.api_key)
+
+            -- Clean up test files
+            os.remove(test_file)
+            os.remove(test_file .. ".imported")
+        end)
+
+        it("clears all API keys correctly across all 3 stores", function()
+            AIHelper:setAPIKey("gemini", "my_gemini_key")
+            AIHelper:setAPIKey("chatgpt", "my_chatgpt_key")
+            AIHelper:saveStoredConfig({ gemini_api_key = "backup_gemini", chatgpt_api_key = "backup_chatgpt" })
+            AIHelper:writeConfigToFile({ gemini_api_key = "config_gemini", chatgpt_api_key = "config_chatgpt" })
+            
+            AIHelper:clearAllAPIKeys()
+            
+            -- Store 1: UI settings
+            assert.are.equal("", AIHelper.settings.gemini_api_key or "")
+            assert.are.equal("", AIHelper.settings.chatgpt_api_key or "")
+            assert.is_true(not AIHelper.settings.gemini_use_ui_key)
+            assert.is_true(not AIHelper.settings.chatgpt_use_ui_key)
+
+            -- Store 2: Persistent backup store
+            local stored = AIHelper:loadStoredConfig()
+            assert.are.equal("", stored.gemini_api_key or "")
+            assert.are.equal("", stored.chatgpt_api_key or "")
+
+            -- Store 3: xray_config.lua
+            local ok, cfg = pcall(dofile, AIHelper.path .. "/xray_config.lua")
+            assert.is_true(ok)
+            assert.are.equal("", cfg.gemini_api_key or "")
+            assert.are.equal("", cfg.chatgpt_api_key or "")
+        end)
+
+        it("clears a single provider key correctly across all 3 stores", function()
+            AIHelper:setAPIKey("gemini", "keep_this")
+            AIHelper:setAPIKey("deepseek", "delete_this")
+            AIHelper:saveStoredConfig({ gemini_api_key = "keep_this", deepseek_api_key = "delete_this" })
+            AIHelper:writeConfigToFile({ gemini_api_key = "keep_this", deepseek_api_key = "delete_this" })
+
+            AIHelper:clearProviderKey("deepseek")
+
+            assert.are.equal("", AIHelper.settings.deepseek_api_key or "")
+            assert.is_true(not AIHelper.settings.deepseek_use_ui_key)
+
+            local stored = AIHelper:loadStoredConfig()
+            assert.are.equal("", stored.deepseek_api_key or "")
+
+            local ok, cfg = pcall(dofile, AIHelper.path .. "/xray_config.lua")
+            assert.is_true(ok)
+            assert.are.equal("", cfg.deepseek_api_key or "")
+            assert.are.equal("keep_this", cfg.gemini_api_key or "")
         end)
     end)
 end)

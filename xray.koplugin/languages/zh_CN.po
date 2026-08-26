@@ -161,6 +161,10 @@ msgstr "虚构"
 msgid "book_type_nonfiction"
 msgstr "非虚构"
 
+# en-hash: 36bb6559696dc9124986ae120515984f
+msgid "btn_paste"
+msgstr "粘贴"
+
 # en-hash: cd00fdfb57dccc660b305e787262e649
 msgid "cache_cleared"
 msgstr "缓存已清除！\n\n现在可以获取新数据：\n菜单 → X-Ray → 获取 AI 数据"
@@ -285,26 +289,6 @@ msgstr "非常详细"
 msgid "dont_ask_again"
 msgstr "不再询问此书"
 
-# en-hash: 994d06622c761cbceb384fd10a0b53f3
-msgid "entity_cat_characters"
-msgstr "角色"
-
-# en-hash: 60b01aa51c38e7a952d2760bf1584915
-msgid "entity_cat_historical_figures"
-msgstr "历史人物"
-
-# en-hash: eebd338ddbd547e41e4a1296de82963a
-msgid "entity_cat_locations"
-msgstr "地点"
-
-# en-hash: 6f1bf85c9ebb3c7fa26251e1e335e032
-msgid "entity_cat_terms"
-msgstr "术语"
-
-# en-hash: ae9dd42ad9130146fe11fe3c2a820da4
-msgid "entity_footnotes_enabled"
-msgstr "启用实体脚注"
-
 # en-hash: 2593c7ce3ff937293feb1e61c152e551
 msgid "entity_label_characters"
 msgstr "角色"
@@ -313,29 +297,9 @@ msgstr "角色"
 msgid "entity_label_locations"
 msgstr "地点"
 
-# en-hash: 2e507ae5d58861d457e684dfe05b9593
-msgid "entity_manual_scan_button"
-msgstr "扫描/重新扫描"
-
-# en-hash: 2f87b6e0ed7427b4a49f4e0836064b66
-msgid "entity_no_description"
-msgstr "暂无描述。"
-
 # en-hash: b972b14200d0fad941304c0b361a18f0
 msgid "entity_not_found"
 msgstr "未发现 '%s' 为角色或地点。"
-
-# en-hash: f508f927f96f86c1786c570f0ea83665
-msgid "entity_scanning_book"
-msgstr "正在扫描书籍脚注…"
-
-# en-hash: 44f3e25be2fb58cf61516f4f06a0575f
-msgid "entity_scanning_title"
-msgstr "X-Ray：实体脚注"
-
-# en-hash: 37a611b3aed746b1f20cd611500496f2
-msgid "entity_style_settings"
-msgstr "样式与下划线设置"
 
 # en-hash: 76e73569f84e76aa9de514fea51ef9f3
 msgid "entity_ui_style_both"
@@ -368,10 +332,6 @@ msgstr "API Key 无效"
 # en-hash: 8a92a303055af14321f3cc7f644623fe
 msgid "error_extract_text"
 msgstr "错误：无法提取书籍文本。"
-
-# en-hash: 6f19d0bda35aaa9b39c3adc080e31220
-msgid "no_new_text"
-msgstr "当前位置没有可用的新文本；X-Ray 在这里已经是最新的。"
 
 # en-hash: 0f09bc754e4c901533fa9bcdb6e41926
 msgid "error_model_access_desc"
@@ -480,6 +440,26 @@ msgstr "查找提及"
 # en-hash: 68aeeb5f5f2b6deb964d2c1cebfe0e62
 msgid "full_book_option"
 msgstr "整本书模式"
+
+# en-hash: 57519cae872270f11151178ce007fd53
+msgid "import_file_not_found"
+msgstr "在存储根目录或设置目录中未找到 xray_key.txt 文件。"
+
+# en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
+msgid "import_file_success"
+msgstr "已成功从 %2$s 导入 %1$d 个 API 密钥！"
+
+# en-hash: 46d812c9b950c3de4557b539f7c32634
+msgid "key_status_err"
+msgstr "[ERR] 失败：%s"
+
+# en-hash: 0314635e45812438980e1ef245848537
+msgid "key_status_not_set"
+msgstr "[--] 未配置"
+
+# en-hash: 36fb433675bfba1852e2bc20f946afb9
+msgid "key_status_ok"
+msgstr "[OK] 已连接（%d 毫秒）"
 
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
@@ -677,6 +657,10 @@ msgstr "清除缓存"
 msgid "menu_clear_logs"
 msgstr "清除日志"
 
+# en-hash: edcf008bae916e157620688fbff8d980
+msgid "menu_clear_series_cache"
+msgstr "清除系列缓存"
+
 # en-hash: 5c4a6c4395765ab86fc49b6c957525d9
 msgid "menu_content_fetch_settings"
 msgstr "内容获取设置"
@@ -697,14 +681,6 @@ msgstr "显示与界面设置"
 msgid "menu_enter_custom_model"
 msgstr "输入自定义模型..."
 
-# en-hash: 5d8cafb3474ef8ffde41bb6e85bf5acc
-msgid "menu_entity_categories"
-msgstr "实体类别"
-
-# en-hash: 8b3c4f8a886412fa4c714855ce8d885a
-msgid "menu_entity_footnotes"
-msgstr "实体脚注"
-
 # en-hash: c78507f1735096000bbc8f4b4ddfc289
 msgid "menu_entity_ui_mode"
 msgstr "实体描述显示样式"
@@ -721,7 +697,7 @@ msgstr "获取更多角色"
 msgid "menu_fetch_more_terms"
 msgstr "获取更多术语"
 
-# en-hash: f0d29ae92c638538610d26014bda7269
+# en-hash: 6230c4dd24ba41dff51eb292727348fe
 msgid "menu_fetch_series_context"
 msgstr "获取/刷新 Series Context"
 
@@ -732,6 +708,10 @@ msgstr "频率"
 # en-hash: 60b01aa51c38e7a952d2760bf1584915
 msgid "menu_historical_figures"
 msgstr "历史人物"
+
+# en-hash: 31a20a82ddb0aada27aab20c1352115f
+msgid "menu_import_file"
+msgstr "从 xray_key.txt 导入密钥"
 
 # en-hash: 4994a8ffeba4ac3140beb89e8d41f174
 msgid "menu_language"
@@ -752,6 +732,10 @@ msgstr "维护"
 # en-hash: 2c126ee6ce85ef471a3a0e096c78b724
 msgid "menu_mentions_settings"
 msgstr "提及设置"
+
+# en-hash: ed2a15d3eeee0693f0274e6b772fd466
+msgid "menu_paste_clipboard"
+msgstr "从剪贴板粘贴 %s 密钥"
 
 # en-hash: f0e87a49b3cb82e4faabd5fc3729e8e8
 msgid "menu_primary_ai_model"
@@ -777,6 +761,10 @@ msgstr "设置"
 msgid "menu_terms"
 msgstr "术语表"
 
+# en-hash: 6310faa148f6d077593bdad673760e0d
+msgid "menu_test_key"
+msgstr "测试连接"
+
 # en-hash: 3d1f92a565d3b1a61880236e33c49bf3
 msgid "menu_timeline"
 msgstr "时间线"
@@ -801,6 +789,10 @@ msgstr "单位转换器"
 msgid "menu_update_xray"
 msgstr "更新 X-Ray 数据 (合并)"
 
+# en-hash: 5f67980bfad5601276847f8b2f74cd19
+msgid "menu_validate_all_keys"
+msgstr "测试并验证所有 API 密钥"
+
 # en-hash: 02c89382dc0b7f202b7d455bf88ab785
 msgid "menu_view_config"
 msgstr "查看所有配置"
@@ -808,6 +800,10 @@ msgstr "查看所有配置"
 # en-hash: 8f96241822e718c6be629d036f586ca6
 msgid "menu_view_log"
 msgstr "查看日志"
+
+# en-hash: 464b65f46044b81b6b95485f1d38ccfa
+msgid "menu_web_setup"
+msgstr "通过手机 / 电脑配置 API 密钥（二维码）"
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -929,6 +925,14 @@ msgstr "暂无地点数据。请先使用“获取 X-Ray 数据”。"
 msgid "no_merges_performed"
 msgstr "未执行任何合并。"
 
+# en-hash: 6f19d0bda35aaa9b39c3adc080e31220
+msgid "no_new_text"
+msgstr "当前位置没有可用的新文本；X-Ray 在这里已经是最新的。"
+
+# en-hash: f90c5e84342ce9096a0f72b0fe9c5203
+msgid "no_series_to_clear"
+msgstr "未检测到此书的系列信息。"
+
 # en-hash: 29503d301d509e5cfea9e97daffa9e79
 msgid "no_terms_data"
 msgstr "尚无术语数据。请先使用“Fetch X-Ray Data”。"
@@ -944,6 +948,10 @@ msgstr "确定"
 # en-hash: 386b384e3eec6bf9bf55d32b5018de15
 msgid "pair_rejected"
 msgstr "Pair marked as not a duplicate."
+
+# en-hash: b8d4677ac13de48defd22ae1a3fe2479
+msgid "paste_clipboard_confirm"
+msgstr "是否将剪贴板中的 API 密钥用于 %s？"
 
 # en-hash: 607481fc96e754b33650eb171aac9447
 msgid "path"
@@ -1029,6 +1037,10 @@ msgstr "搜索术语"
 msgid "series_ask_later_msg"
 msgstr "系列剧情回顾已推迟。我们会在你下次打开/继续阅读此书时再次询问。"
 
+# en-hash: ca2f917dc09a99bc7b63ada86cabdfa4
+msgid "series_cache_cleared"
+msgstr "已清除“%s”的系列缓存。"
+
 # en-hash: c69ce70b393414a1cdee677a96a195e4
 msgid "series_context_enabled_toggle"
 msgstr "启用 Series Context"
@@ -1092,6 +1104,10 @@ msgstr "Stop"
 # en-hash: d725036d492c380f06f4eb32f5704bc9
 msgid "term_not_found"
 msgstr "未找到匹配“%s”的术语"
+
+# en-hash: 1ecbe04157c9f7433d24d17cf5e70564
+msgid "testing_api_keys"
+msgstr "正在测试 API 密钥连接..."
 
 # en-hash: 5d5b473a14bed6f67fdbe6c745b045a7
 msgid "this_chapter"
@@ -1421,6 +1437,26 @@ msgstr "正在更新 X-Ray 数据..."
 msgid "val"
 msgstr "???"
 
+# en-hash: 1739e3ae6d734407aef8af879665b8ee
+msgid "validate_keys_title"
+msgstr "API 密钥状态与验证"
+
+# en-hash: 94eeb39559330226a1d0c942718547ea
+msgid "web_setup_msg"
+msgstr "1. 将手机/电脑连接到同一 Wi-Fi 网络。\n2. 扫描此二维码或访问：\n\n%s\n\n3. 粘贴 API 密钥并点击保存。"
+
+# en-hash: d845f459e17a314cfc7949ba6a1659cb
+msgid "web_setup_no_wifi"
+msgstr "Wi-Fi 未连接。请连接 Wi-Fi 后使用网页配置。"
+
+# en-hash: 81daae83c93d7822f5bfc4779f5a7c2c
+msgid "web_setup_success"
+msgstr "已成功接收并保存 %s 的 API 密钥！"
+
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "web_setup_title"
+msgstr "通过手机 / 电脑连接"
+
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
 msgstr "已禁用"
@@ -1437,3 +1473,156 @@ msgstr "在字典和选择菜单中添加“X-Ray”按钮，实现即时查询�
 msgid "yes"
 msgstr "是"
 
+
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "从手机 / 电脑设置 API 密钥"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "云端中继（推荐 — 随时随地可用）"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "本地 Wi-Fi（离线局域网）"
+
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "通过手机 / 电脑连接"
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "通过本地 Wi-Fi 连接"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "欢迎使用 X-RAY"
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "设置 AI 服务商"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "要开始使用，请选择连接 API 密钥的方式："
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "通过手机 / 电脑快速设置 (推荐)"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "扫描二维码即可通过云端中继或局域网免打字快速填入密钥。"
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "在电子阅读器上直接输入"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "使用屏幕软键盘直接输入或粘贴您的 API 密钥。"
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "通过文本文件 (xray_key.txt) 或配置文件导入"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "从 xray_key.txt 自动导入密钥，或查看 Wiki 详细配置指南。"
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "打开完整服务商设置"
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "配置自定义接口、OpenAI、DeepSeek、Claude 或 OpenRouter。"
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "继续"
+
+# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
+msgid "welcome_action_skip"
+msgstr "暂时跳过"
+
+# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
+msgid "welcome_file_guide_title"
+msgstr "配置文件与文本文件设置"
+
+# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
+msgid "welcome_file_guide_desc"
+msgstr "您可以通过在设备上放置文本文件来免打字配置 API 密钥：\n\n1. 在 KOReader 目录下创建名为 'xray_key.txt' 的文件。\n2. 在文件中填入您的密钥（例如 'gemini: AQ...' 或直接填入密钥）。\n3. 点击下方的“立即导入”自动读取并保存。"
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "立即导入"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "在 KOReader 目录下未找到 xray_key.txt 文件。"
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "欢迎与快速配置..."
+
+# en-hash: 3845eb0df76becd72ddfa51233992d18
+msgid "menu_gemini_key"
+msgstr "Google Gemini API 密钥"
+
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "输入 Google AI Studio 免费获取的 Gemini 密钥（以 AQ. 或 AIzaSy... 开头）："
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "API 密钥已保存！"
+
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "清除所有 API 密钥..."
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "确定要清除所有已配置的 API 密钥和自定义接口吗？\n\n此操作将从此设备中移除所有已保存的密钥。"
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "清除所有密钥"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "所有 API 密钥已清除。"
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "清除 %s 密钥..."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "确定要清除 %s 的已配置 API 密钥吗？"
+
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "清除密钥"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "%s API 密钥已清除。"
+
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "稍后询问"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "不再提示"
+
+# en-hash: 47df1620e012b20c174af13225cc4a36
+msgid "welcome_file_guide_scan"
+msgstr "扫描二维码查看高级使用 Wiki 说明"
+
+
+
+msgid "welcome_select_provider"
+msgstr "选择 AI 提供商"

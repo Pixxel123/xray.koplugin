@@ -1,3 +1,6 @@
 similar/
 xray.koplugin.zip
 scratch/
+.wrangler/
+*.log
+*.log.old

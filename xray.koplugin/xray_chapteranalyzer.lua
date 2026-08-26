@@ -524,31 +524,34 @@ function ChapterAnalyzer:getTextForAnalysis(ui, max_len, progress_callback, curr
             AIHelper:log("ChapterAnalyzer: Using exact target_xp for context boundary")
         end
         
-        -- Priority 2: Use getPageXPointer if provided and supported
-        if not current_xp and current_page and ui.document.getPageXPointer then
-            local total_pages = ui.document:getPageCount() or current_page
-            local safe_pos = math.min(current_page, total_pages)
-            -- If we are at the very end of the book, getPageXPointer might not get the absolute end, 
-            -- but safe_pos guarantees it won't throw out of bounds.
-            current_xp = ui.document:getPageXPointer(safe_pos)
-        end
-        -- Fallback to jumping if getPageXPointer is not available but we have a target pos
-        if not current_xp and current_page then
-            local total_pages = ui.document:getPageCount() or current_page
-            local safe_pos = math.min(current_page, total_pages)
-            
-            -- Save current position to jump back
-            local current_real_xp = ui.document:getXPointer()
-            if current_real_xp then
-                ui.document:gotoPage(safe_pos)
-                current_xp = ui.document:getXPointer()
-                ui.document:gotoXPointer(current_real_xp)
-            end
-        end
-        
-        -- Ultimate fallback to current screen top
-        if not current_xp then 
-            current_xp = ui.document:getXPointer()
+        if not current_xp then
+            pcall(function()
+                if not ui or not ui.document then return end
+                -- Priority 2: Use getPageXPointer if provided and supported
+                if current_page and ui.document.getPageXPointer then
+                    local total_pages = ui.document:getPageCount() or current_page
+                    local safe_pos = math.min(current_page, total_pages)
+                    current_xp = ui.document:getPageXPointer(safe_pos)
+                end
+                -- Fallback to jumping if getPageXPointer is not available but we have a target pos
+                if not current_xp and current_page then
+                    local total_pages = ui.document:getPageCount() or current_page
+                    local safe_pos = math.min(current_page, total_pages)
+                    
+                    -- Save current position to jump back
+                    local current_real_xp = ui.document:getXPointer()
+                    if current_real_xp then
+                        ui.document:gotoPage(safe_pos)
+                        current_xp = ui.document:getXPointer()
+                        ui.document:gotoXPointer(current_real_xp)
+                    end
+                end
+                
+                -- Ultimate fallback to current screen top
+                if not current_xp then 
+                    current_xp = ui.document:getXPointer()
+                end
+            end)
         end
         
         if not current_xp then 
@@ -558,6 +561,7 @@ function ChapterAnalyzer:getTextForAnalysis(ui, max_len, progress_callback, curr
         
         -- Optimization: Try to get start XPointer without jumping to avoid "white flash"
         local success, result = pcall(function()
+            if not ui or not ui.document then return "" end
             if progress_callback then progress_callback(0.1) end
             
             local start_xp = nil
@@ -640,11 +644,14 @@ function ChapterAnalyzer:getTextForAnalysis(ui, max_len, progress_callback, curr
         AIHelper:log("ChapterAnalyzer: Extracting PDF pages " .. tostring(calc_start_page) .. " to " .. tostring(current_pos))
         
         for page = calc_start_page, current_pos do
+            if not ui or not ui.document then break end
             if progress_callback and (page % 10 == 0) and current_pos > calc_start_page then
                 progress_callback(0.1 + (0.8 * (page - calc_start_page) / (current_pos - calc_start_page)))
             end
             
-            local page_text = ui.document:getPageText(page) or ""
+            local ok_page, page_text = pcall(function() return ui.document:getPageText(page) end)
+            if not ok_page then page_text = "" end
+            page_text = page_text or ""
             if type(page_text) == "table" then
                 local texts = {}
                 for _, block in ipairs(page_text) do
@@ -698,7 +705,12 @@ end
 function ChapterAnalyzer:getDetailedChapterSamples(ui, max_chapters, total_limit, is_full_book, start_page, known_chapters, resolved_current_page)
     if not ui or not ui.document then return nil, nil end
     
-    local raw_toc = ui.document:getToc()
+    local raw_toc
+    pcall(function()
+        if ui.document and ui.document.getToc then
+            raw_toc = ui.document:getToc()
+        end
+    end)
     local toc = flattenTOC(raw_toc)
     if not toc or #toc == 0 then 
         logger.info("ChapterAnalyzer: No TOC found for detailed sampling")
@@ -839,6 +851,7 @@ function ChapterAnalyzer:getDetailedChapterSamples(ui, max_chapters, total_limit
         AIHelper:log("ChapterAnalyzer: Sampling " .. #active_chapters .. " chapters with " .. per_chapter_budget .. " chars each.")
         
         for i, chapter in ipairs(active_chapters) do
+            if not ui or not ui.document then break end
             local is_current_chapter = false
             if not is_full_book and current_page and chapter.page and chapter.page <= current_page then
                 local next_chapter = toc[chapter.toc_index + 1]
@@ -848,6 +861,7 @@ function ChapterAnalyzer:getDetailedChapterSamples(ui, max_chapters, total_limit
             end
 
             local success, chapter_text = pcall(function()
+                if not ui or not ui.document then return "" end
                 if is_current_chapter then
                     local end_page = self:getEndPageForCurrentPage(ui, current_page)
                     return self:getTextFromPageRange(ui, chapter.page, end_page, total_limit)
@@ -873,7 +887,12 @@ function ChapterAnalyzer:getDetailedChapterSamples(ui, max_chapters, total_limit
         end
     else
         -- NO TOC FALLBACK: Even sampling across the book
-        local max_range = (is_full_book or not current_page) and ui.document:getPageCount() or current_page
+        local max_range = 0
+        pcall(function()
+            if ui and ui.document then
+                max_range = (is_full_book or not current_page) and ui.document:getPageCount() or current_page
+            end
+        end)
         if max_range and max_range > 0 then
             local num_sections = math.min(20, max_range)
             local step = math.floor(max_range / num_sections)
@@ -883,9 +902,10 @@ function ChapterAnalyzer:getDetailedChapterSamples(ui, max_chapters, total_limit
             AIHelper:log(log_msg)
             
             for i = 1, num_sections do
+                if not ui or not ui.document then break end
                 local p = (i - 1) * step + 1
                 local success, section_text = pcall(function()
-                    if ui.document.getPageText then
+                    if ui and ui.document and ui.document.getPageText then
                         return ui.document:getPageText(p)
                     end
                     return ""
@@ -1357,7 +1377,7 @@ function ChapterAnalyzer:scanMentionsAsync(ui, entity, toc, min_page, max_page, 
     end)
 
     local function resumeScan()
-        if cancel_handle._cancelled then return end
+        if cancel_handle._cancelled or not ui or not ui.document then return end
         
         local ok, err = coroutine.resume(scan_co)
         if not ok then

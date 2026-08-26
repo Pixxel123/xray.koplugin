@@ -3,7 +3,8 @@
 ![Platform](https://img.shields.io/badge/platform-KOReader-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
-![liberapay](https://img.shields.io/liberapay/patrons/ultimatejimmy.svg?logo=liberapay) 
+[![liberapay](https://img.shields.io/liberapay/patrons/ultimatejimmy.svg?logo=liberapay)](https://liberapay.com/ultimatejimmy)
+[!["Buy Me A Coffee"](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/ultimatejimmy)
 
 This plugin brings Kindle-style X-Ray features to KOReader. It uses AI to track characters, build plot timelines, and provide insights while you read.
 
@@ -15,6 +16,7 @@ This plugin brings Kindle-style X-Ray features to KOReader. It uses AI to track 
 ## What it does
 
 - **AI-Powered Insights**: Supports Google Gemini, OpenAI, **DeepSeek**, **Claude**, and **Custom API** providers (like OpenRouter).
+- **Phone & PC Quick Setup**: Set API keys in seconds via QR code scanning or web browser with end-to-end zero-knowledge encryption, completely eliminating on-screen e-ink typing.
 - **Character Tracking**: View bios and roles. Now supports **Merging Duplicates** with AI-consolidated summaries.
 - **Customizable Detail**: Choose between short or long AI descriptions to fit your preference.
 - **Linked Entries**: Automatically connect related characters and locations through smart cross-referencing.

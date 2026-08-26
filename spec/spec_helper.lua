@@ -47,7 +47,10 @@ package.loaded["logger"] = {
 }
 
 package.loaded["xray_logger"] = {
-    log = function(...) print(...) end,
+    log = function(...) end,
+    info = function(...) end,
+    warn = function(...) end,
+    err = function(...) end,
 }
 
 package.loaded["datastorage"] = {
@@ -238,6 +241,14 @@ package.loaded["ui/widget/button"] = {
         return btn
     end
 }
+package.loaded["ui/widget/inputdialog"] = {
+    new = function(a, b)
+        local dialog = { type = "InputDialog", args = b or a }
+        dialog.getInputText = function() return "test_key" end
+        dialog.onShowKeyboard = function() end
+        return dialog
+    end
+}
 package.loaded["ffi/blitbuffer"] = {
     COLOR_BLACK = 0,
     COLOR_WHITE = 1,
@@ -364,7 +375,17 @@ function _G.createMockPlugin()
         },
         ai_helper = {
             log = function() end,
-            settings = {}
+            settings = {},
+            providers = {
+                gemini = { name = "Google Gemini", api_key = "test_key" },
+                chatgpt = { name = "ChatGPT", api_key = "" },
+                deepseek = { name = "DeepSeek", api_key = "" },
+                claude = { name = "Anthropic Claude", api_key = "" },
+                custom1 = { name = "Custom API 1", api_key = "" },
+                custom2 = { name = "Custom API 2", api_key = "" },
+            },
+            clearAllAPIKeys = function() end,
+            clearProviderKey = function() end,
         },
         characters = {},
         locations = {},
@@ -376,7 +397,8 @@ function _G.createMockPlugin()
         deduplicateByName = function(self, list) return list end,
         sortDataByFrequency = function(self, list) return list end,
         assignTimelinePages = function() end,
-        sortTimelineByTOC = function() end
+        sortTimelineByTOC = function() end,
+        getSubMenuItems = function() return {} end,
     }
     return plugin
 end

@@ -161,6 +161,14 @@ msgstr "Белетристика"
 msgid "book_type_nonfiction"
 msgstr "Стручна литература"
 
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "Обриши кључ"
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "Обриши све кључеве"
+
 # en-hash: 36bb6559696dc9124986ae120515984f
 msgid "btn_paste"
 msgstr "Налепи"
@@ -193,6 +201,10 @@ msgstr "Није пронађен лик који одговара '%s'"
 msgid "close"
 msgstr "Затвори"
 
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "Connect via Phone/PC"
+
 # en-hash: 3441bb13db3b069cccbba18579ae99f2
 msgid "config_default_gemini"
 msgstr "  Подразумевано (Gemini)"
@@ -208,6 +220,14 @@ msgstr "ПОДЕШЕН"
 # en-hash: 70d9be9b139893aa6c69b5e77e614311
 msgid "confirm"
 msgstr "Confirm"
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "Да ли сте сигурни да желите да обришете све конфигурисане API кључеве и прилагођене крајње тачке?\n\nОво ће уклонити све сачуване кључеве са овог уређаја."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "Обрисати конфигурисани API кључ за %s?"
 
 # en-hash: 9cfefed8fb9497baa5cd519d7d2bb5d7
 msgid "current_language"
@@ -441,6 +461,10 @@ msgstr "Пронађи помињања"
 msgid "full_book_option"
 msgstr "Режим целе књиге"
 
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "Унесите свој бесплатни Gemini кључ из Google AI Studio (почиње са AQ. или AIzaSy...):"
+
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"
 msgstr "Датотека xray_key.txt није пронађена у корену меморије или директоријуму подешавања."
@@ -448,6 +472,10 @@ msgstr "Датотека xray_key.txt није пронађена у корен�
 # en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
 msgid "import_file_success"
 msgstr "Успешно увезено %d API кључ(ева) из %s!"
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "API кључ је сачуван!"
 
 # en-hash: 46d812c9b950c3de4557b539f7c32634
 msgid "key_status_err"
@@ -460,6 +488,10 @@ msgstr "[--] Није подешено"
 # en-hash: 36fb433675bfba1852e2bc20f946afb9
 msgid "key_status_ok"
 msgstr "[OK] Повезано (%d ms)"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "Сви API кључеви су обрисани."
 
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
@@ -536,6 +568,10 @@ msgstr "Омогућено"
 # en-hash: f2cb4c8134446083c3d2859f02c963f6
 msgid "linked_entries_setting_desc"
 msgstr "Повезани уноси аутоматски повезују ликове, локације и историјске личности када се помињу у описима једни других.\n\nОнемогућавање овога ће сакрити дугме 'Повезани уноси' из дијалога са детаљима."
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "Connect via Local Wi-Fi"
 
 # en-hash: db644ab64bb392cf0d28dfd9cc2c0372
 msgid "log_empty"
@@ -649,6 +685,10 @@ msgstr "Тип књиге"
 msgid "menu_characters"
 msgstr "Ликови"
 
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "Обриши све API кључеве..."
+
 # en-hash: 06f4f7bd90b1c8a0145d18ee55c265c4
 msgid "menu_clear_cache"
 msgstr "Очисти кеш"
@@ -660,6 +700,10 @@ msgstr "Очисти дневнике"
 # en-hash: edcf008bae916e157620688fbff8d980
 msgid "menu_clear_series_cache"
 msgstr "Очисти кеш серија"
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "Обриши кључ за %s..."
 
 # en-hash: 5c4a6c4395765ab86fc49b6c957525d9
 msgid "menu_content_fetch_settings"
@@ -697,9 +741,9 @@ msgstr "Преузми више ликова"
 msgid "menu_fetch_more_terms"
 msgstr "Преузми више термина"
 
-# en-hash: 6230c4dd24ba41dff51eb292727348fe
+# en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Преузми / Освежи контекст серијала"
+msgstr "Preuzmi / Osveži kontekst serijala"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -753,9 +797,21 @@ msgstr "Секундарни АИ модел"
 msgid "menu_series_context"
 msgstr "Контекст серијала"
 
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "Set API Key from Phone/PC"
+
 # en-hash: f4f70727dc34561dfde1a3c529b6205c
 msgid "menu_settings"
 msgstr "Подешавања"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "Cloud Relay (Recommended — works anywhere)"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "Local Wi-Fi (Offline LAN)"
 
 # en-hash: 31d109d162629f8d0cfc8ce8316c0567
 msgid "menu_terms"
@@ -804,6 +860,10 @@ msgstr "Прикажи дневник"
 # en-hash: 464b65f46044b81b6b95485f1d38ccfa
 msgid "menu_web_setup"
 msgstr "Подеси API кључ преко телефона / рачунара (QR код)"
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "Добродошлица и брзо подешавање..."
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -1072,6 +1132,10 @@ msgstr "── Претходне књиге ──"
 # en-hash: 38a1412b98e409d6f6a0b2464c62fa08
 msgid "series_prior_label"
 msgstr "[Претходно]"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "API кључ за %s је обрисан."
 
 # en-hash: 72ef2b9b6965d078e3c7f95487a82d1c
 msgid "skip"
@@ -1441,6 +1505,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Статус и верификација API кључева"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Lokalni Wi-Fi server nije podržan na Kindle uređajima zbog ograničenja požarnog zida operativnog sistema. Koristite Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Повежите телефон/рачунар на исти Wi-Fi.\n2. Скенирајте овај QR код или посетите:\n\n%s\n\n3. Налепите API кључ и додирните Сачувај."
@@ -1456,6 +1524,86 @@ msgstr "API кључ за %s је примљен и сачуван!"
 # en-hash: 400a15f44cdb7cf1b903d40d661c98c4
 msgid "web_setup_title"
 msgstr "Повезивање преко телефона / рачунара"
+
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "Питај касније"
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "Настави"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "Не питај поново"
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "Увези сада"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "За почетак, изаберите како желите да повежете свој API кључ:"
+
+# en-hash: b6b5dc2a0846b328e444266fa87d26ec
+msgid "welcome_file_guide_desc"
+msgstr "Kako konfigurisati API ključeve putem tekstualne datoteke:\n\n1. Napravite datoteku pod nazivom 'xray_key.txt' na vašem uređaju ili računaru.\n2. Postavite je u vaš KOReader fasciklu (npr. koreader/ ili koreader/settings/).\n3. Dodajte vaš ključ unutra u jednom redu:\n   • Gemini: gemini = VAŠ_KLJUČ (ili jednostavno nalepite sirovi ključ)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Dodirnite 'Uvezi sada' ispod da biste učitali ključeve.\n\nRučna konfiguracija: Možete takođe urediti koreader/plugins/xray.koplugin/xray_config.lua."
+
+# en-hash: 6db5d8a713e37567f7785261dc00ae74
+msgid "welcome_file_guide_scan"
+msgstr "Skenirajte QR kod za vodič za podešavanje API ključa na viki stranici"
+
+# en-hash: c832496ce43a8a4c1465b7089b7ba5b6
+msgid "welcome_file_guide_title"
+msgstr "Podešavanje konfiguracije i tekstualne datoteke..."
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "Подеси провајдера вештачке интелигенције"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "Датотека xray_key.txt није пронађена у KOReader фасцикли."
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "Конфигуриши прилагођене крајње тачке, OpenAI, DeepSeek, Claude или OpenRouter."
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "Отвори сва подешавања провајдера"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "Укуцајте или налепите API кључ помоћу тастатуре на екрану."
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "Унеси кључ на е-читачу"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "Аутоматски увези кључеве из xray_key.txt датотеке или погледај вики упутство."
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "Увези преко текстуалне датотеке (xray_key.txt) или конфигурације"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "Скенирајте QR код да унесете кључ преко Cloud Relay-а или локалног Wi-Fi-ја."
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "Подеси са телефона / рачунара (Препоручено)"
+
+# en-hash: 741987eccc2e46095fdd70cf9377e31e
+msgid "welcome_select_provider"
+msgstr "Изаберите добављача вештачке интелигенције"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "ДОБРО ДОШЛИ У X-RAY"
 
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
@@ -1473,156 +1621,3 @@ msgstr "Додаје дугме 'X-Ray' у речнике и селекцион�
 msgid "yes"
 msgstr "Да"
 
-
-# en-hash: c1cd902a55171a323ff6504b0dfdb405
-msgid "menu_set_keys_device"
-msgstr "Set API Key from Phone/PC"
-
-# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
-msgid "menu_setup_cloud"
-msgstr "Cloud Relay (Recommended — works anywhere)"
-
-# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
-msgid "menu_setup_local"
-msgstr "Local Wi-Fi (Offline LAN)"
-
-# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
-msgid "cloud_setup_title"
-msgstr "Connect via Phone/PC"
-
-# en-hash: 08ea860427184895725e398c5ef821b1
-msgid "local_setup_title"
-msgstr "Connect via Local Wi-Fi"
-
-# en-hash: b88c7d8b4f064676524e945ceb6fc35c
-msgid "welcome_tag"
-msgstr "ДОБРО ДОШЛИ У X-RAY"
-
-# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
-msgid "welcome_headline"
-msgstr "Подеси провајдера вештачке интелигенције"
-
-# en-hash: bcaef36c11aa1e80a9357b990991575e
-msgid "welcome_desc"
-msgstr "За почетак, изаберите како желите да повежете свој API кључ:"
-
-# en-hash: f5d12f602967b00beea3f12412fcb3a2
-msgid "welcome_opt_phone_title"
-msgstr "Подеси са телефона / рачунара (Препоручено)"
-
-# en-hash: 0b8604ae3471a584cb27ba990fb656d9
-msgid "welcome_opt_phone_desc"
-msgstr "Скенирајте QR код да унесете кључ преко Cloud Relay-а или локалног Wi-Fi-ја."
-
-# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
-msgid "welcome_opt_ereader_title"
-msgstr "Унеси кључ на е-читачу"
-
-# en-hash: 39f6b18d9eef21577906958535c0e9ed
-msgid "welcome_opt_ereader_desc"
-msgstr "Укуцајте или налепите API кључ помоћу тастатуре на екрану."
-
-# en-hash: 5e2364ee83d001f6721276c20925e78e
-msgid "welcome_opt_file_title"
-msgstr "Увези преко текстуалне датотеке (xray_key.txt) или конфигурације"
-
-# en-hash: c3c978de8a982902e76b01a8bc5a996b
-msgid "welcome_opt_file_desc"
-msgstr "Аутоматски увези кључеве из xray_key.txt датотеке или погледај вики упутство."
-
-# en-hash: 4c25c9a50a911c95509525f745eb9a6a
-msgid "welcome_opt_all_title"
-msgstr "Отвори сва подешавања провајдера"
-
-# en-hash: 7464eef1919692978bb13f0aab065f20
-msgid "welcome_opt_all_desc"
-msgstr "Конфигуриши прилагођене крајње тачке, OpenAI, DeepSeek, Claude или OpenRouter."
-
-# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
-msgid "welcome_action_continue"
-msgstr "Настави"
-
-# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
-msgid "welcome_action_skip"
-msgstr "Прескочи за сада"
-
-# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
-msgid "welcome_file_guide_title"
-msgstr "Подешавање преко датотеке и конфигурације"
-
-# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
-msgid "welcome_file_guide_desc"
-msgstr "Можете подесити API кључеве без куцања постављањем текстуалне датотеке на ваш уређај:\n\n1. Направите датотеку под називом 'xray_key.txt' у KOReader фасцикли.\n2. Унесите свој кључ (нпр. 'gemini: AQ...' или само кључ).\n3. Додирните 'Увези сада' испод да бисте га учитали."
-
-# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
-msgid "welcome_btn_import_now"
-msgstr "Увези сада"
-
-# en-hash: f307ec8cddbe39ac8784564076e583ae
-msgid "welcome_no_file_found"
-msgstr "Датотека xray_key.txt није пронађена у KOReader фасцикли."
-
-# en-hash: a7c2b2011b7d2850cb512d993e312e49
-msgid "menu_welcome_quick_setup"
-msgstr "Добродошлица и брзо подешавање..."
-
-# en-hash: 3845eb0df76becd72ddfa51233992d18
-msgid "menu_gemini_key"
-msgstr "Google Gemini API кључ"
-
-# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
-msgid "gemini_key_hint"
-msgstr "Унесите свој бесплатни Gemini кључ из Google AI Studio (почиње са AQ. или AIzaSy...):"
-
-# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
-msgid "key_saved"
-msgstr "API кључ је сачуван!"
-
-# en-hash: d842d358ea8d0d431df1113c927b3629
-msgid "menu_clear_all_keys"
-msgstr "Обриши све API кључеве..."
-
-# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
-msgid "confirm_clear_all_keys"
-msgstr "Да ли сте сигурни да желите да обришете све конфигурисане API кључеве и прилагођене крајње тачке?\n\nОво ће уклонити све сачуване кључеве са овог уређаја."
-
-# en-hash: 9cf1692949f390c46b8cfb9d074674b2
-msgid "btn_clear_keys"
-msgstr "Обриши све кључеве"
-
-# en-hash: 27828475d7e3158c09df57d723b02ba4
-msgid "keys_cleared"
-msgstr "Сви API кључеви су обрисани."
-
-# en-hash: ebdd9cc3e307ed530b80afc1b698a302
-msgid "menu_clear_single_key"
-msgstr "Обриши кључ за %s..."
-
-# en-hash: dd6eee404e54eafd92e56d09cb4848f3
-msgid "confirm_clear_single_key"
-msgstr "Обрисати конфигурисани API кључ за %s?"
-
-# en-hash: 7deeb207a3f824e059410b7f6f118e60
-msgid "btn_clear_key"
-msgstr "Обриши кључ"
-
-# en-hash: 4307bc48de0a1f321210a63396bea390
-msgid "single_key_cleared"
-msgstr "API кључ за %s је обрисан."
-
-# en-hash: ad608bec35300c1dbb0180723f2f6b9f
-msgid "welcome_action_ask_later"
-msgstr "Питај касније"
-
-# en-hash: 10577dd8e9aef1c7097268c665a5f46e
-msgid "welcome_action_dont_ask"
-msgstr "Не питај поново"
-
-# en-hash: 47df1620e012b20c174af13225cc4a36
-msgid "welcome_file_guide_scan"
-msgstr "Скенирајте QR за приказ wiki водича за напредно коришћење"
-
-
-
-msgid "welcome_select_provider"
-msgstr "Изаберите добављача вештачке интелигенције"

@@ -329,6 +329,7 @@ function Localization:t(key, ...)
             web_setup_msg = "1. Connect your phone/PC to the same Wi-Fi.\n2. Scan this QR code or visit:\n\n%s\n\n3. Paste your API key and tap Save.",
             web_setup_success = "API key for %s received and saved!",
             web_setup_no_wifi = "Wi-Fi is disconnected. Please connect to Wi-Fi to use Web Setup.",
+            web_setup_local_unsupported = "Local Wi-Fi server is not supported on Kindle devices due to OS firewall restrictions. Please use Cloud Relay.",
             menu_validate_all_keys = "Test & Validate All API Keys",
             menu_test_key = "Test Connection",
             testing_api_keys = "Testing API key connections...",

@@ -78,4 +78,19 @@ describe("xray_websetup", function()
         assert.is_nil(WebSetup.session_id)
         assert.is_nil(WebSetup.session_secret)
     end)
+
+    it("correctly identifies whether local server is supported by device", function()
+        local Device = require("device")
+        local orig_isKindle = Device.isKindle
+
+        -- When device is Kindle (firewall blocks inbound connections)
+        Device.isKindle = function() return true end
+        assert.is_false(WebSetup:isLocalServerSupported())
+
+        -- When device is Android / Kobo / etc.
+        Device.isKindle = function() return false end
+        assert.is_true(WebSetup:isLocalServerSupported())
+
+        Device.isKindle = orig_isKindle
+    end)
 end)

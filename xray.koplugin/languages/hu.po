@@ -161,6 +161,14 @@ msgstr "Szépirodalom"
 msgid "book_type_nonfiction"
 msgstr "Ismeretterjesztő"
 
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "Kulcs törlése"
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "Összes kulcs törlése"
+
 # en-hash: 36bb6559696dc9124986ae120515984f
 msgid "btn_paste"
 msgstr "Beillesztés"
@@ -193,6 +201,10 @@ msgstr "Nem található a következőnek megfelelő szereplő: '%s'"
 msgid "close"
 msgstr "Bezárás"
 
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "Csatlakozás telefonról / PC-ről"
+
 # en-hash: 3441bb13db3b069cccbba18579ae99f2
 msgid "config_default_gemini"
 msgstr "  Alapértelmezett (Gemini)"
@@ -208,6 +220,14 @@ msgstr "BEÁLLÍTVA"
 # en-hash: 70d9be9b139893aa6c69b5e77e614311
 msgid "confirm"
 msgstr "Confirm"
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "Biztosan törölni szeretné az összes beállított API-kulcsot és egyéni végpontot?\n\nEz eltávolítja az összes mentett kulcsot erről az eszközről."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "Törli a beállított API-kulcsot a következőhöz: %s?"
 
 # en-hash: 9cfefed8fb9497baa5cd519d7d2bb5d7
 msgid "current_language"
@@ -441,6 +461,10 @@ msgstr "Említések keresése"
 msgid "full_book_option"
 msgstr "Teljes könyv mód"
 
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "Adja meg ingyenes Gemini kulcsát a Google AI Studio-ból (AQ. vagy AIzaSy... kezdetű):"
+
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"
 msgstr "Nem található xray_key.txt fájl a gyökérkönyvtárban vagy a beállításoknál."
@@ -448,6 +472,10 @@ msgstr "Nem található xray_key.txt fájl a gyökérkönyvtárban vagy a beáll
 # en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
 msgid "import_file_success"
 msgstr "Sikeresen importálva %d API kulcs a(z) %s fájlból!"
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "API-kulcs mentve!"
 
 # en-hash: 46d812c9b950c3de4557b539f7c32634
 msgid "key_status_err"
@@ -460,6 +488,10 @@ msgstr "[--] Nincs konfigurálva"
 # en-hash: 36fb433675bfba1852e2bc20f946afb9
 msgid "key_status_ok"
 msgstr "[OK] Csatlakozva (%d ms)"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "Az összes API-kulcs törölve."
 
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
@@ -536,6 +568,10 @@ msgstr "Bekapcsolva"
 # en-hash: f2cb4c8134446083c3d2859f02c963f6
 msgid "linked_entries_setting_desc"
 msgstr "A kapcsolódó bejegyzések funkció automatikusan összekapcsolja a szereplőket, helyszíneket és történelmi alakokat, ha említik őket egymás leírásában.\n\nE funkció kikapcsolása elrejti a 'Kapcsolódó bejegyzések' gombot a részletek párbeszédpanelén."
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "Csatlakozás helyi Wi-Fi-n"
 
 # en-hash: db644ab64bb392cf0d28dfd9cc2c0372
 msgid "log_empty"
@@ -649,6 +685,10 @@ msgstr "Könyvtípus"
 msgid "menu_characters"
 msgstr "Szereplők"
 
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "Összes API-kulcs törlése..."
+
 # en-hash: 06f4f7bd90b1c8a0145d18ee55c265c4
 msgid "menu_clear_cache"
 msgstr "Gyorsítótár törlése"
@@ -660,6 +700,10 @@ msgstr "Naplófájlok törlése"
 # en-hash: edcf008bae916e157620688fbff8d980
 msgid "menu_clear_series_cache"
 msgstr "Sorozat gyorsítótárának törlése"
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "%s kulcs törlése..."
 
 # en-hash: 5c4a6c4395765ab86fc49b6c957525d9
 msgid "menu_content_fetch_settings"
@@ -697,7 +741,7 @@ msgstr "További szereplők lekérdezése"
 msgid "menu_fetch_more_terms"
 msgstr "További kifejezések lekérése"
 
-# en-hash: 6230c4dd24ba41dff51eb292727348fe
+# en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
 msgstr "Sorozatkontextus lekérése / frissítése"
 
@@ -753,9 +797,21 @@ msgstr "Másodlagos AI modell"
 msgid "menu_series_context"
 msgstr "Sorozat kontextusa"
 
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "API kulcs beállítása telefonról / PC-ről"
+
 # en-hash: f4f70727dc34561dfde1a3c529b6205c
 msgid "menu_settings"
 msgstr "Beállítások"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "Felhő átjátszó (Ajánlott — bárhol működik)"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "Helyi Wi-Fi (Offline LAN)"
 
 # en-hash: 31d109d162629f8d0cfc8ce8316c0567
 msgid "menu_terms"
@@ -804,6 +860,10 @@ msgstr "Napló megtekintése"
 # en-hash: 464b65f46044b81b6b95485f1d38ccfa
 msgid "menu_web_setup"
 msgstr "API kulcs beállítása telefonról / PC-ről (QR-kód)"
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "Üdvözlés és gyorsbeállítás..."
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -1072,6 +1132,10 @@ msgstr "── Korábbi könyvek ──"
 # en-hash: 38a1412b98e409d6f6a0b2464c62fa08
 msgid "series_prior_label"
 msgstr "[Előzmény]"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "%s API-kulcs törölve."
 
 # en-hash: 72ef2b9b6965d078e3c7f95487a82d1c
 msgid "skip"
@@ -1441,6 +1505,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "API kulcsok állapota és érvényesítése"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "A helyi Wi-Fi szerver nem támogatott a Kindle eszközökön az operációs rendszer tűzfal-korlátozásai miatt. Kérjük, használja a Cloud Relay-t."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Csatlakoztassa telefonját/PC-jét ugyanahhoz a Wi-Fi-hez.\n2. Olvassa be ezt a QR-kódot vagy látogasson el ide:\n\n%s\n\n3. Illessze be az API kulcsot, majd koppintson a Mentésre."
@@ -1456,6 +1524,86 @@ msgstr "A(z) %s API kulcsa sikeresen fogadva és mentve!"
 # en-hash: 400a15f44cdb7cf1b903d40d661c98c4
 msgid "web_setup_title"
 msgstr "Csatlakozás telefonról / PC-ről"
+
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "Kérdezze később"
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "Folytatás"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "Ne kérdezze újra"
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "Importálás most"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "A kezdéshez válassza ki, hogyan szeretné csatlakoztatni az API-kulcsát:"
+
+# en-hash: b6b5dc2a0846b328e444266fa87d26ec
+msgid "welcome_file_guide_desc"
+msgstr "Gépelés nélkül is beállíthat API-kulcsokat egy szöveges fájl elhelyezésével az eszközön:\n\n1. Hozzon létre egy 'xray_key.txt' nevű fájlt a KOReader könyvtárban.\n2. Helyezze el benne a kulcsot (pl. 'gemini: AQ...' vagy csak a kulcsot).\n3. Érintse meg az 'Importálás most' gombot a betöltéshez."
+
+# en-hash: 6db5d8a713e37567f7785261dc00ae74
+msgid "welcome_file_guide_scan"
+msgstr "Olvassa be a QR-kódot a Haladó használati útmutató megtekintéséhez"
+
+# en-hash: c832496ce43a8a4c1465b7089b7ba5b6
+msgid "welcome_file_guide_title"
+msgstr "Konfiguráció és szöveges fájl beállítása"
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "MI-szolgáltató beállítása"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "Nem található xray_key.txt a KOReader könyvtárban."
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "Egyéni végpontok, OpenAI, DeepSeek, Claude vagy OpenRouter beállítása."
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "Összes szolgáltató beállításainak megnyitása"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "Gépelje be vagy illessze be az API-kulcsot a képernyő-billentyűzettel."
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "Kulcs megadása az e-olvasón"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "Kulcsok automatikus importálása az xray_key.txt-ből, vagy wiki útmutató megtekintése."
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "Importálás szöveges fájlból (xray_key.txt) vagy konfigurációból"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "Olvasson be egy QR-kódot a kulcs megadásához Cloud Relay-en vagy helyi Wi-Fi-n keresztül."
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "Beállítás telefonról / PC-ről (Ajánlott)"
+
+# en-hash: 741987eccc2e46095fdd70cf9377e31e
+msgid "welcome_select_provider"
+msgstr "AI szolgáltató kiválasztása"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "ÜDVÖZLI AZ X-RAY"
 
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
@@ -1473,156 +1621,3 @@ msgstr "Hozzáad egy 'X-Ray' gombot a szótár és kijelölés menükhöz az azo
 msgid "yes"
 msgstr "Igen"
 
-
-# en-hash: c1cd902a55171a323ff6504b0dfdb405
-msgid "menu_set_keys_device"
-msgstr "API kulcs beállítása telefonról / PC-ről"
-
-# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
-msgid "menu_setup_cloud"
-msgstr "Felhő átjátszó (Ajánlott — bárhol működik)"
-
-# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
-msgid "menu_setup_local"
-msgstr "Helyi Wi-Fi (Offline LAN)"
-
-# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
-msgid "cloud_setup_title"
-msgstr "Csatlakozás telefonról / PC-ről"
-
-# en-hash: 08ea860427184895725e398c5ef821b1
-msgid "local_setup_title"
-msgstr "Csatlakozás helyi Wi-Fi-n"
-
-# en-hash: b88c7d8b4f064676524e945ceb6fc35c
-msgid "welcome_tag"
-msgstr "ÜDVÖZLI AZ X-RAY"
-
-# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
-msgid "welcome_headline"
-msgstr "MI-szolgáltató beállítása"
-
-# en-hash: bcaef36c11aa1e80a9357b990991575e
-msgid "welcome_desc"
-msgstr "A kezdéshez válassza ki, hogyan szeretné csatlakoztatni az API-kulcsát:"
-
-# en-hash: f5d12f602967b00beea3f12412fcb3a2
-msgid "welcome_opt_phone_title"
-msgstr "Beállítás telefonról / PC-ről (Ajánlott)"
-
-# en-hash: 0b8604ae3471a584cb27ba990fb656d9
-msgid "welcome_opt_phone_desc"
-msgstr "Olvasson be egy QR-kódot a kulcs megadásához Cloud Relay-en vagy helyi Wi-Fi-n keresztül."
-
-# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
-msgid "welcome_opt_ereader_title"
-msgstr "Kulcs megadása az e-olvasón"
-
-# en-hash: 39f6b18d9eef21577906958535c0e9ed
-msgid "welcome_opt_ereader_desc"
-msgstr "Gépelje be vagy illessze be az API-kulcsot a képernyő-billentyűzettel."
-
-# en-hash: 5e2364ee83d001f6721276c20925e78e
-msgid "welcome_opt_file_title"
-msgstr "Importálás szöveges fájlból (xray_key.txt) vagy konfigurációból"
-
-# en-hash: c3c978de8a982902e76b01a8bc5a996b
-msgid "welcome_opt_file_desc"
-msgstr "Kulcsok automatikus importálása az xray_key.txt-ből, vagy wiki útmutató megtekintése."
-
-# en-hash: 4c25c9a50a911c95509525f745eb9a6a
-msgid "welcome_opt_all_title"
-msgstr "Összes szolgáltató beállításainak megnyitása"
-
-# en-hash: 7464eef1919692978bb13f0aab065f20
-msgid "welcome_opt_all_desc"
-msgstr "Egyéni végpontok, OpenAI, DeepSeek, Claude vagy OpenRouter beállítása."
-
-# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
-msgid "welcome_action_continue"
-msgstr "Folytatás"
-
-# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
-msgid "welcome_action_skip"
-msgstr "Kihagyás most"
-
-# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
-msgid "welcome_file_guide_title"
-msgstr "Konfiguráció és szöveges fájl beállítása"
-
-# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
-msgid "welcome_file_guide_desc"
-msgstr "Gépelés nélkül is beállíthat API-kulcsokat egy szöveges fájl elhelyezésével az eszközön:\n\n1. Hozzon létre egy 'xray_key.txt' nevű fájlt a KOReader könyvtárban.\n2. Helyezze el benne a kulcsot (pl. 'gemini: AQ...' vagy csak a kulcsot).\n3. Érintse meg az 'Importálás most' gombot a betöltéshez."
-
-# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
-msgid "welcome_btn_import_now"
-msgstr "Importálás most"
-
-# en-hash: f307ec8cddbe39ac8784564076e583ae
-msgid "welcome_no_file_found"
-msgstr "Nem található xray_key.txt a KOReader könyvtárban."
-
-# en-hash: a7c2b2011b7d2850cb512d993e312e49
-msgid "menu_welcome_quick_setup"
-msgstr "Üdvözlés és gyorsbeállítás..."
-
-# en-hash: 3845eb0df76becd72ddfa51233992d18
-msgid "menu_gemini_key"
-msgstr "Google Gemini API-kulcs"
-
-# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
-msgid "gemini_key_hint"
-msgstr "Adja meg ingyenes Gemini kulcsát a Google AI Studio-ból (AQ. vagy AIzaSy... kezdetű):"
-
-# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
-msgid "key_saved"
-msgstr "API-kulcs mentve!"
-
-# en-hash: d842d358ea8d0d431df1113c927b3629
-msgid "menu_clear_all_keys"
-msgstr "Összes API-kulcs törlése..."
-
-# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
-msgid "confirm_clear_all_keys"
-msgstr "Biztosan törölni szeretné az összes beállított API-kulcsot és egyéni végpontot?\n\nEz eltávolítja az összes mentett kulcsot erről az eszközről."
-
-# en-hash: 9cf1692949f390c46b8cfb9d074674b2
-msgid "btn_clear_keys"
-msgstr "Összes kulcs törlése"
-
-# en-hash: 27828475d7e3158c09df57d723b02ba4
-msgid "keys_cleared"
-msgstr "Az összes API-kulcs törölve."
-
-# en-hash: ebdd9cc3e307ed530b80afc1b698a302
-msgid "menu_clear_single_key"
-msgstr "%s kulcs törlése..."
-
-# en-hash: dd6eee404e54eafd92e56d09cb4848f3
-msgid "confirm_clear_single_key"
-msgstr "Törli a beállított API-kulcsot a következőhöz: %s?"
-
-# en-hash: 7deeb207a3f824e059410b7f6f118e60
-msgid "btn_clear_key"
-msgstr "Kulcs törlése"
-
-# en-hash: 4307bc48de0a1f321210a63396bea390
-msgid "single_key_cleared"
-msgstr "%s API-kulcs törölve."
-
-# en-hash: ad608bec35300c1dbb0180723f2f6b9f
-msgid "welcome_action_ask_later"
-msgstr "Kérdezze később"
-
-# en-hash: 10577dd8e9aef1c7097268c665a5f46e
-msgid "welcome_action_dont_ask"
-msgstr "Ne kérdezze újra"
-
-# en-hash: 47df1620e012b20c174af13225cc4a36
-msgid "welcome_file_guide_scan"
-msgstr "Olvassa be a QR-kódot a Haladó használati útmutató megtekintéséhez"
-
-
-
-msgid "welcome_select_provider"
-msgstr "AI szolgáltató kiválasztása"

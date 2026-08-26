@@ -161,6 +161,14 @@ msgstr "Fiksi"
 msgid "book_type_nonfiction"
 msgstr "Non-Fiksi"
 
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "Hapus Kunci"
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "Hapus Semua Kunci"
+
 # en-hash: 36bb6559696dc9124986ae120515984f
 msgid "btn_paste"
 msgstr "Tempel"
@@ -193,6 +201,10 @@ msgstr "Tidak ada karakter yang cocok dengan '%s'"
 msgid "close"
 msgstr "Tutup"
 
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "Hubungkan via Ponsel / PC"
+
 # en-hash: 3441bb13db3b069cccbba18579ae99f2
 msgid "config_default_gemini"
 msgstr "  Default (Gemini)"
@@ -208,6 +220,14 @@ msgstr "SUDAH DIATUR"
 # en-hash: 70d9be9b139893aa6c69b5e77e614311
 msgid "confirm"
 msgstr "Confirm"
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "Apakah Anda yakin ingin menghapus semua kunci API dan endpoint khusus yang dikonfigurasi?\n\nIni akan menghapus semua kunci yang tersimpan dari perangkat ini."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "Hapus kunci API yang dikonfigurasi untuk %s?"
 
 # en-hash: 9cfefed8fb9497baa5cd519d7d2bb5d7
 msgid "current_language"
@@ -441,6 +461,10 @@ msgstr "Temukan Sebutan"
 msgid "full_book_option"
 msgstr "Mode Buku Penuh"
 
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "Masukkan kunci Gemini gratis dari Google AI Studio (dimulai dengan AQ. atau AIzaSy...):"
+
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"
 msgstr "Berkas xray_key.txt tidak ditemukan di penyimpanan utama atau direktori pengaturan."
@@ -448,6 +472,10 @@ msgstr "Berkas xray_key.txt tidak ditemukan di penyimpanan utama atau direktori 
 # en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
 msgid "import_file_success"
 msgstr "Berhasil mengimpor %d kunci API dari %s!"
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "Kunci API disimpan!"
 
 # en-hash: 46d812c9b950c3de4557b539f7c32634
 msgid "key_status_err"
@@ -460,6 +488,10 @@ msgstr "[--] Belum dikonfigurasi"
 # en-hash: 36fb433675bfba1852e2bc20f946afb9
 msgid "key_status_ok"
 msgstr "[OK] Terhubung (%d ms)"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "Semua kunci API telah dihapus."
 
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
@@ -536,6 +568,10 @@ msgstr "Aktif"
 # en-hash: f2cb4c8134446083c3d2859f02c963f6
 msgid "linked_entries_setting_desc"
 msgstr "Entri Terkait secara otomatis menghubungkan karakter, lokasi, dan tokoh sejarah ketika mereka disebutkan dalam deskripsi satu sama lain.\n\nMenonaktifkan ini akan menyembunyikan tombol 'Entri Terkait' dari dialog detail."
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "Hubungkan via Wi-Fi Lokal"
 
 # en-hash: db644ab64bb392cf0d28dfd9cc2c0372
 msgid "log_empty"
@@ -649,6 +685,10 @@ msgstr "Mode Buku"
 msgid "menu_characters"
 msgstr "Karakter"
 
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "Hapus Semua Kunci API..."
+
 # en-hash: 06f4f7bd90b1c8a0145d18ee55c265c4
 msgid "menu_clear_cache"
 msgstr "Bersihkan Cache"
@@ -660,6 +700,10 @@ msgstr "Bersihkan Log"
 # en-hash: edcf008bae916e157620688fbff8d980
 msgid "menu_clear_series_cache"
 msgstr "Hapus Cache Seri"
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "Hapus Kunci %s..."
 
 # en-hash: 5c4a6c4395765ab86fc49b6c957525d9
 msgid "menu_content_fetch_settings"
@@ -697,7 +741,7 @@ msgstr "Ambil Karakter Lainnya"
 msgid "menu_fetch_more_terms"
 msgstr "Ambil Istilah Lainnya"
 
-# en-hash: 6230c4dd24ba41dff51eb292727348fe
+# en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
 msgstr "Ambil / Segarkan Konteks Seri"
 
@@ -753,9 +797,21 @@ msgstr "Model AI Sekunder"
 msgid "menu_series_context"
 msgstr "Konteks Seri"
 
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "Atur Kunci API dari Ponsel / PC"
+
 # en-hash: f4f70727dc34561dfde1a3c529b6205c
 msgid "menu_settings"
 msgstr "Pengaturan"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "Relay Cloud (Disarankan — berfungsi di mana saja)"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "Wi-Fi Lokal (LAN Offline)"
 
 # en-hash: 31d109d162629f8d0cfc8ce8316c0567
 msgid "menu_terms"
@@ -804,6 +860,10 @@ msgstr "Lihat Log"
 # en-hash: 464b65f46044b81b6b95485f1d38ccfa
 msgid "menu_web_setup"
 msgstr "Atur Kunci API dari Ponsel / PC (Kode QR)"
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "Selamat Datang & Penyiapan Cepat..."
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -1072,6 +1132,10 @@ msgstr "── Buku Sebelumnya ──"
 # en-hash: 38a1412b98e409d6f6a0b2464c62fa08
 msgid "series_prior_label"
 msgstr "[Sebelumnya]"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "Kunci API %s telah dihapus."
 
 # en-hash: 72ef2b9b6965d078e3c7f95487a82d1c
 msgid "skip"
@@ -1441,6 +1505,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Status & Validasi Kunci API"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Server Wi-Fi lokal tidak didukung pada perangkat Kindle karena pembatasan firewall sistem operasi. Silakan gunakan Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Sambungkan ponsel/PC Anda ke Wi-Fi yang sama.\n2. Pindai kode QR ini atau kunjungi:\n\n%s\n\n3. Tempel kunci API dan ketuk Simpan."
@@ -1456,6 +1524,86 @@ msgstr "Kunci API untuk %s berhasil diterima dan disimpan!"
 # en-hash: 400a15f44cdb7cf1b903d40d661c98c4
 msgid "web_setup_title"
 msgstr "Hubungkan via Ponsel / PC"
+
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "Tanya Nanti"
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "Lanjutkan"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "Jangan Tanya Lagi"
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "Impor Sekarang"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "Untuk memulai, pilih cara Anda ingin menghubungkan kunci API Anda:"
+
+# en-hash: b6b5dc2a0846b328e444266fa87d26ec
+msgid "welcome_file_guide_desc"
+msgstr "Anda dapat mengatur kunci API tanpa mengetik dengan menaruh berkas teks di perangkat:\n\n1. Buat berkas bernama 'xray_key.txt' di direktori KOReader Anda.\n2. Masukkan kunci Anda (misalnya 'gemini: AQ...' atau kuncinya saja).\n3. Ketuk 'Impor Sekarang' di bawah untuk mendeteksi dan memuatnya."
+
+# en-hash: 6db5d8a713e37567f7785261dc00ae74
+msgid "welcome_file_guide_scan"
+msgstr "Pindai QR untuk melihat panduan wiki Penggunaan Lanjutan"
+
+# en-hash: c832496ce43a8a4c1465b7089b7ba5b6
+msgid "welcome_file_guide_title"
+msgstr "Penyiapan Konfigurasi & Berkas Teks"
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "Siapkan Penyedia AI"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "Berkas xray_key.txt tidak ditemukan di direktori KOReader."
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "Konfigurasikan endpoint khusus, OpenAI, DeepSeek, Claude, atau OpenRouter."
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "Buka Semua Pengaturan Penyedia"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "Ketik atau tempel kunci API menggunakan keyboard di layar."
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "Masukkan Kunci di E-Reader"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "Impor kunci otomatis dari berkas xray_key.txt, atau lihat panduan wiki."
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "Impor melalui Berkas Teks (xray_key.txt) atau Konfigurasi"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "Pindai kode QR untuk memasukkan kunci Anda secara online via Cloud Relay atau Wi-Fi lokal."
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "Atur dari Ponsel / PC (Disarankan)"
+
+# en-hash: 741987eccc2e46095fdd70cf9377e31e
+msgid "welcome_select_provider"
+msgstr "Pilih Penyedia AI"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "SELAMAT DATANG DI X-RAY"
 
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
@@ -1473,156 +1621,3 @@ msgstr "Menambahkan tombol 'X-Ray' ke menu kamus dan pilihan untuk pencarian ins
 msgid "yes"
 msgstr "Ya"
 
-
-# en-hash: c1cd902a55171a323ff6504b0dfdb405
-msgid "menu_set_keys_device"
-msgstr "Atur Kunci API dari Ponsel / PC"
-
-# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
-msgid "menu_setup_cloud"
-msgstr "Relay Cloud (Disarankan — berfungsi di mana saja)"
-
-# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
-msgid "menu_setup_local"
-msgstr "Wi-Fi Lokal (LAN Offline)"
-
-# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
-msgid "cloud_setup_title"
-msgstr "Hubungkan via Ponsel / PC"
-
-# en-hash: 08ea860427184895725e398c5ef821b1
-msgid "local_setup_title"
-msgstr "Hubungkan via Wi-Fi Lokal"
-
-# en-hash: b88c7d8b4f064676524e945ceb6fc35c
-msgid "welcome_tag"
-msgstr "SELAMAT DATANG DI X-RAY"
-
-# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
-msgid "welcome_headline"
-msgstr "Siapkan Penyedia AI"
-
-# en-hash: bcaef36c11aa1e80a9357b990991575e
-msgid "welcome_desc"
-msgstr "Untuk memulai, pilih cara Anda ingin menghubungkan kunci API Anda:"
-
-# en-hash: f5d12f602967b00beea3f12412fcb3a2
-msgid "welcome_opt_phone_title"
-msgstr "Atur dari Ponsel / PC (Disarankan)"
-
-# en-hash: 0b8604ae3471a584cb27ba990fb656d9
-msgid "welcome_opt_phone_desc"
-msgstr "Pindai kode QR untuk memasukkan kunci Anda secara online via Cloud Relay atau Wi-Fi lokal."
-
-# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
-msgid "welcome_opt_ereader_title"
-msgstr "Masukkan Kunci di E-Reader"
-
-# en-hash: 39f6b18d9eef21577906958535c0e9ed
-msgid "welcome_opt_ereader_desc"
-msgstr "Ketik atau tempel kunci API menggunakan keyboard di layar."
-
-# en-hash: 5e2364ee83d001f6721276c20925e78e
-msgid "welcome_opt_file_title"
-msgstr "Impor melalui Berkas Teks (xray_key.txt) atau Konfigurasi"
-
-# en-hash: c3c978de8a982902e76b01a8bc5a996b
-msgid "welcome_opt_file_desc"
-msgstr "Impor kunci otomatis dari berkas xray_key.txt, atau lihat panduan wiki."
-
-# en-hash: 4c25c9a50a911c95509525f745eb9a6a
-msgid "welcome_opt_all_title"
-msgstr "Buka Semua Pengaturan Penyedia"
-
-# en-hash: 7464eef1919692978bb13f0aab065f20
-msgid "welcome_opt_all_desc"
-msgstr "Konfigurasikan endpoint khusus, OpenAI, DeepSeek, Claude, atau OpenRouter."
-
-# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
-msgid "welcome_action_continue"
-msgstr "Lanjutkan"
-
-# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
-msgid "welcome_action_skip"
-msgstr "Lewati untuk Sekarang"
-
-# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
-msgid "welcome_file_guide_title"
-msgstr "Penyiapan Konfigurasi & Berkas Teks"
-
-# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
-msgid "welcome_file_guide_desc"
-msgstr "Anda dapat mengatur kunci API tanpa mengetik dengan menaruh berkas teks di perangkat:\n\n1. Buat berkas bernama 'xray_key.txt' di direktori KOReader Anda.\n2. Masukkan kunci Anda (misalnya 'gemini: AQ...' atau kuncinya saja).\n3. Ketuk 'Impor Sekarang' di bawah untuk mendeteksi dan memuatnya."
-
-# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
-msgid "welcome_btn_import_now"
-msgstr "Impor Sekarang"
-
-# en-hash: f307ec8cddbe39ac8784564076e583ae
-msgid "welcome_no_file_found"
-msgstr "Berkas xray_key.txt tidak ditemukan di direktori KOReader."
-
-# en-hash: a7c2b2011b7d2850cb512d993e312e49
-msgid "menu_welcome_quick_setup"
-msgstr "Selamat Datang & Penyiapan Cepat..."
-
-# en-hash: 3845eb0df76becd72ddfa51233992d18
-msgid "menu_gemini_key"
-msgstr "Kunci API Google Gemini"
-
-# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
-msgid "gemini_key_hint"
-msgstr "Masukkan kunci Gemini gratis dari Google AI Studio (dimulai dengan AQ. atau AIzaSy...):"
-
-# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
-msgid "key_saved"
-msgstr "Kunci API disimpan!"
-
-# en-hash: d842d358ea8d0d431df1113c927b3629
-msgid "menu_clear_all_keys"
-msgstr "Hapus Semua Kunci API..."
-
-# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
-msgid "confirm_clear_all_keys"
-msgstr "Apakah Anda yakin ingin menghapus semua kunci API dan endpoint khusus yang dikonfigurasi?\n\nIni akan menghapus semua kunci yang tersimpan dari perangkat ini."
-
-# en-hash: 9cf1692949f390c46b8cfb9d074674b2
-msgid "btn_clear_keys"
-msgstr "Hapus Semua Kunci"
-
-# en-hash: 27828475d7e3158c09df57d723b02ba4
-msgid "keys_cleared"
-msgstr "Semua kunci API telah dihapus."
-
-# en-hash: ebdd9cc3e307ed530b80afc1b698a302
-msgid "menu_clear_single_key"
-msgstr "Hapus Kunci %s..."
-
-# en-hash: dd6eee404e54eafd92e56d09cb4848f3
-msgid "confirm_clear_single_key"
-msgstr "Hapus kunci API yang dikonfigurasi untuk %s?"
-
-# en-hash: 7deeb207a3f824e059410b7f6f118e60
-msgid "btn_clear_key"
-msgstr "Hapus Kunci"
-
-# en-hash: 4307bc48de0a1f321210a63396bea390
-msgid "single_key_cleared"
-msgstr "Kunci API %s telah dihapus."
-
-# en-hash: ad608bec35300c1dbb0180723f2f6b9f
-msgid "welcome_action_ask_later"
-msgstr "Tanya Nanti"
-
-# en-hash: 10577dd8e9aef1c7097268c665a5f46e
-msgid "welcome_action_dont_ask"
-msgstr "Jangan Tanya Lagi"
-
-# en-hash: 47df1620e012b20c174af13225cc4a36
-msgid "welcome_file_guide_scan"
-msgstr "Pindai QR untuk melihat panduan wiki Penggunaan Lanjutan"
-
-
-
-msgid "welcome_select_provider"
-msgstr "Pilih Penyedia AI"

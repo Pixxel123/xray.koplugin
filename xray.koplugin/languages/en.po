@@ -122,6 +122,12 @@ msgstr "Fiction"
 msgid "book_type_nonfiction"
 msgstr "Non-Fiction"
 
+msgid "btn_clear_key"
+msgstr "Clear Key"
+
+msgid "btn_clear_keys"
+msgstr "Clear All Keys"
+
 msgid "btn_paste"
 msgstr "Paste"
 
@@ -146,6 +152,9 @@ msgstr "No character found matching '%s'"
 msgid "close"
 msgstr "Close"
 
+msgid "cloud_setup_title"
+msgstr "Connect via Phone/PC"
+
 msgid "config_default_gemini"
 msgstr "Default (Gemini)"
 
@@ -157,6 +166,12 @@ msgstr "SET"
 
 msgid "confirm"
 msgstr "Confirm"
+
+msgid "confirm_clear_all_keys"
+msgstr "Are you sure you want to clear all configured API keys and custom endpoints?\n\nThis will remove all saved keys from this device."
+
+msgid "confirm_clear_single_key"
+msgstr "Clear the configured API key for %s?"
 
 msgid "current_language"
 msgstr "en"
@@ -332,11 +347,17 @@ msgstr "Find Mentions"
 msgid "full_book_option"
 msgstr "Full Book Mode"
 
+msgid "gemini_key_hint"
+msgstr "Enter your free Gemini key from Google AI Studio (starts with AQ. or AIzaSy...):"
+
 msgid "import_file_not_found"
 msgstr "No xray_key.txt file found in storage root or settings directory."
 
 msgid "import_file_success"
 msgstr "Successfully imported %d API key(s) from %s!"
+
+msgid "key_saved"
+msgstr "API key saved!"
 
 msgid "key_status_err"
 msgstr "[ERR] Failed: %s"
@@ -346,6 +367,9 @@ msgstr "[--] Not configured"
 
 msgid "key_status_ok"
 msgstr "[OK] Connected (%d ms)"
+
+msgid "keys_cleared"
+msgstr "All API keys cleared."
 
 msgid "label_aliases"
 msgstr "Aliases"
@@ -403,6 +427,9 @@ msgstr "Enabled"
 
 msgid "linked_entries_setting_desc"
 msgstr "Linked Entries automatically connects characters, locations, and historical figures when they are mentioned in each other's descriptions.\n\nDisabling this will hide the [B]Linked Entries[/B] button from detail dialogs."
+
+msgid "local_setup_title"
+msgstr "Connect via Local Wi-Fi"
 
 msgid "log_empty"
 msgstr "Log is empty."
@@ -488,6 +515,9 @@ msgstr "Book Type"
 msgid "menu_characters"
 msgstr "Characters"
 
+msgid "menu_clear_all_keys"
+msgstr "Clear All API Keys..."
+
 msgid "menu_clear_cache"
 msgstr "Clear Cache"
 
@@ -496,6 +526,9 @@ msgstr "Clear Logs"
 
 msgid "menu_clear_series_cache"
 msgstr "Clear Series Cache"
+
+msgid "menu_clear_single_key"
+msgstr "Clear %s Key..."
 
 msgid "menu_content_fetch_settings"
 msgstr "Content & Fetch Settings"
@@ -525,7 +558,7 @@ msgid "menu_fetch_more_terms"
 msgstr "Fetch More Terms"
 
 msgid "menu_fetch_series_context"
-msgstr "Fetch/Refresh Series Context"
+msgstr "Fetch / Refresh Series Context"
 
 msgid "menu_frequency"
 msgstr "Frequency"
@@ -566,8 +599,17 @@ msgstr "Secondary AI Model"
 msgid "menu_series_context"
 msgstr "Series Context"
 
+msgid "menu_set_keys_device"
+msgstr "Set API Key from Phone/PC"
+
 msgid "menu_settings"
 msgstr "Settings"
+
+msgid "menu_setup_cloud"
+msgstr "Cloud Relay (Recommended — works anywhere)"
+
+msgid "menu_setup_local"
+msgstr "Local Wi-Fi (Offline LAN)"
 
 msgid "menu_terms"
 msgstr "Glossary"
@@ -604,6 +646,9 @@ msgstr "View Log"
 
 msgid "menu_web_setup"
 msgstr "Set API Key from Phone/PC (QR Code)"
+
+msgid "menu_welcome_quick_setup"
+msgstr "Welcome & Quick Setup..."
 
 msgid "menu_xray"
 msgstr "X-Ray"
@@ -805,6 +850,9 @@ msgstr "── Prior Books ──"
 
 msgid "series_prior_label"
 msgstr "[Prior]"
+
+msgid "single_key_cleared"
+msgstr "%s API key cleared."
 
 msgid "skip"
 msgstr "Skip"
@@ -1082,6 +1130,9 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "API Key Status & Validation"
 
+msgid "web_setup_local_unsupported"
+msgstr "Local Wi-Fi server is not supported on Kindle devices due to OS firewall restrictions. Please use Cloud Relay."
+
 msgid "web_setup_msg"
 msgstr "1. Connect your phone/PC to the same Wi-Fi.\n2. Scan this QR code or visit:\n\n%s\n\n3. Paste your API key and tap Save."
 
@@ -1093,6 +1144,66 @@ msgstr "API key for %s received and saved!"
 
 msgid "web_setup_title"
 msgstr "Connect via Phone/PC"
+
+msgid "welcome_action_ask_later"
+msgstr "Ask Later"
+
+msgid "welcome_action_continue"
+msgstr "Continue"
+
+msgid "welcome_action_dont_ask"
+msgstr "Don't Ask Again"
+
+msgid "welcome_btn_import_now"
+msgstr "Import Now"
+
+msgid "welcome_desc"
+msgstr "To get started, choose how you would like to connect your API key:"
+
+msgid "welcome_file_guide_desc"
+msgstr "How to configure API keys via text file:\n\n1. Create a file named 'xray_key.txt' on your device or computer.\n2. Place it in your KOReader folder (e.g. koreader/ or koreader/settings/).\n3. Add your key inside on a single line:\n   • Gemini: gemini = YOUR_KEY (or simply paste raw key)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Tap 'Import Now' below to load your keys.\n\nManual Config: You can also edit koreader/plugins/xray.koplugin/xray_config.lua."
+
+msgid "welcome_file_guide_scan"
+msgstr "Scan QR to view API Key Setup wiki guide"
+
+msgid "welcome_file_guide_title"
+msgstr "Config & Text File Setup..."
+
+msgid "welcome_headline"
+msgstr "Set Up AI Provider"
+
+msgid "welcome_no_file_found"
+msgstr "No xray_key.txt found in KOReader directory."
+
+msgid "welcome_opt_all_desc"
+msgstr "Configure custom endpoints, OpenAI, DeepSeek, Claude, or OpenRouter."
+
+msgid "welcome_opt_all_title"
+msgstr "Open All Provider Settings"
+
+msgid "welcome_opt_ereader_desc"
+msgstr "Type or paste your API key directly using the on-screen keyboard."
+
+msgid "welcome_opt_ereader_title"
+msgstr "Enter Key on E-Reader"
+
+msgid "welcome_opt_file_desc"
+msgstr "Auto-import keys from an xray_key.txt file, or view wiki setup instructions."
+
+msgid "welcome_opt_file_title"
+msgstr "Import via Text File (xray_key.txt) or Config"
+
+msgid "welcome_opt_phone_desc"
+msgstr "Scan a QR code to enter your key online via Cloud Relay or local Wi-Fi."
+
+msgid "welcome_opt_phone_title"
+msgstr "Set from Phone/PC (Recommended)"
+
+msgid "welcome_select_provider"
+msgstr "Select AI Provider"
+
+msgid "welcome_tag"
+msgstr "WELCOME TO X-RAY"
 
 msgid "xray_disabled_label"
 msgstr "Disabled"
@@ -1106,118 +1217,3 @@ msgstr "Adds an 'X-Ray' button to dictionary and selection menus for instant loo
 msgid "yes"
 msgstr "Yes"
 
-
-msgid "menu_set_keys_device"
-msgstr "Set API Key from Phone/PC"
-
-msgid "menu_setup_cloud"
-msgstr "Cloud Relay (Recommended — works anywhere)"
-
-msgid "menu_setup_local"
-msgstr "Local Wi-Fi (Offline LAN)"
-
-msgid "cloud_setup_title"
-msgstr "Connect via Phone/PC"
-
-msgid "local_setup_title"
-msgstr "Connect via Local Wi-Fi"
-
-msgid "welcome_tag"
-msgstr "WELCOME TO X-RAY"
-
-msgid "welcome_headline"
-msgstr "Set Up AI Provider"
-
-msgid "welcome_desc"
-msgstr "To get started, choose how you would like to connect your API key:"
-
-msgid "welcome_opt_phone_title"
-msgstr "Set from Phone/PC (Recommended)"
-
-msgid "welcome_opt_phone_desc"
-msgstr "Scan a QR code to enter your key online via Cloud Relay or local Wi-Fi."
-
-msgid "welcome_opt_ereader_title"
-msgstr "Enter Key on E-Reader"
-
-msgid "welcome_opt_ereader_desc"
-msgstr "Type or paste your API key directly using the on-screen keyboard."
-
-msgid "welcome_opt_file_title"
-msgstr "Import via Text File (xray_key.txt) or Config"
-
-msgid "welcome_opt_file_desc"
-msgstr "Auto-import keys from an xray_key.txt file, or view wiki setup instructions."
-
-msgid "welcome_opt_all_title"
-msgstr "Open All Provider Settings"
-
-msgid "welcome_opt_all_desc"
-msgstr "Configure custom endpoints, OpenAI, DeepSeek, Claude, or OpenRouter."
-
-msgid "welcome_action_continue"
-msgstr "Continue"
-
-msgid "welcome_action_skip"
-msgstr "Skip for Now"
-
-msgid "welcome_file_guide_title"
-msgstr "Config & Text File Setup"
-
-msgid "welcome_file_guide_desc"
-msgstr "You can configure API keys without typing by placing a text file on your device:\n\n1. Create a file named 'xray_key.txt' in your KOReader directory.\n2. Put your API key inside (e.g. 'gemini: AQ.Ab8RN6...' or simply the key itself).\n3. Tap 'Import Now' below to automatically detect and load your key."
-
-msgid "welcome_btn_import_now"
-msgstr "Import Now"
-
-msgid "welcome_no_file_found"
-msgstr "No xray_key.txt found in KOReader directory."
-
-msgid "menu_welcome_quick_setup"
-msgstr "Welcome & Quick Setup..."
-
-msgid "menu_gemini_key"
-msgstr "Google Gemini API Key"
-
-msgid "gemini_key_hint"
-msgstr "Enter your free Gemini key from Google AI Studio (starts with AQ. or AIzaSy...):"
-
-msgid "key_saved"
-msgstr "API key saved!"
-
-msgid "menu_clear_all_keys"
-msgstr "Clear All API Keys..."
-
-msgid "confirm_clear_all_keys"
-msgstr "Are you sure you want to clear all configured API keys and custom endpoints?\n\nThis will remove all saved keys from this device."
-
-msgid "btn_clear_keys"
-msgstr "Clear All Keys"
-
-msgid "keys_cleared"
-msgstr "All API keys cleared."
-
-msgid "menu_clear_single_key"
-msgstr "Clear %s Key..."
-
-msgid "confirm_clear_single_key"
-msgstr "Clear the configured API key for %s?"
-
-msgid "btn_clear_key"
-msgstr "Clear Key"
-
-msgid "single_key_cleared"
-msgstr "%s API key cleared."
-
-msgid "welcome_action_ask_later"
-msgstr "Ask Later"
-
-msgid "welcome_action_dont_ask"
-msgstr "Don't Ask Again"
-
-msgid "welcome_file_guide_scan"
-msgstr "Scan QR to view Advanced Usage wiki guide"
-
-
-msgid "welcome_select_provider"
-msgstr "Select AI Provider"

@@ -804,12 +804,15 @@ function M:checkBookLanguageMatch()
                 {
                     text = self.loc:t("dont_ask_again") or "Don't ask again",
                     callback = function()
+                        local doc_file = self.ui and self.ui.document and self.ui.document.file
                         if not self.book_data then
-                            self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                            self.book_data = (doc_file and self.cache_manager and self.cache_manager:loadCache(doc_file)) or {}
                         end
                         local current_cache = self.book_data
                         current_cache.ignore_lang_mismatch = true
-                        self.cache_manager:asyncSaveCache(self.ui.document.file, current_cache)
+                        if doc_file and self.cache_manager then
+                            self.cache_manager:asyncSaveCache(doc_file, current_cache)
+                        end
                         UIManager:close(mismatch_dialog)
                     end
                 }
@@ -1921,13 +1924,16 @@ function M:showBookTypeSettings()
             return current
         end,
         save_func = function(mode)
+            local doc_file = self.ui and self.ui.document and self.ui.document.file
             if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
             if not self.book_data then
-                self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
             end
             local cache = self.book_data
             cache.book_mode_override = mode
-            self.cache_manager:asyncSaveCache(self.ui.document.file, cache)
+            if doc_file and self.cache_manager then
+                self.cache_manager:asyncSaveCache(doc_file, cache)
+            end
             self.book_type = (mode == "auto") and nil or mode
             UIManager:setDirty(nil, "ui")
         end,
@@ -2068,11 +2074,12 @@ function M:walkDuplicatePairs(list, list_name, pairs_found)
 
     local function saveAndRefresh()
         if merge_count == 0 then return end
+        local doc_file = self.ui and self.ui.document and self.ui.document.file
         if not self.cache_manager then
             self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
         end
         if not self.book_data then
-            self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+            self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
         end
         local cache = self.book_data
         if list_name == "characters" then
@@ -2080,7 +2087,9 @@ function M:walkDuplicatePairs(list, list_name, pairs_found)
         elseif list_name == "locations" then
             cache.locations = list
         end
-        self.cache_manager:asyncSaveCache(self.ui.document.file, cache)
+        if doc_file and self.cache_manager then
+            self.cache_manager:asyncSaveCache(doc_file, cache)
+        end
         -- Clear normalized lookup caches
         for _, it in ipairs(list) do
             it._norm_name = nil
@@ -2172,11 +2181,12 @@ function M:walkDuplicatePairs(list, list_name, pairs_found)
                     callback = function()
                         self:log("XRayPlugin: Rejecting pair '" .. tostring(pair.primary) .. "' / '" .. tostring(pair.secondary) .. "'")
                         UIManager:close(confirm_dialog)
+                        local doc_file = self.ui and self.ui.document and self.ui.document.file
                         if not self.book_data then
                             if not self.cache_manager then
                                 self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
                             end
-                            self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                            self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
                         end
                         self.book_data.rejected_merge_pairs = self.book_data.rejected_merge_pairs or {}
                         local p_name = pair.primary:lower()
@@ -2188,7 +2198,9 @@ function M:walkDuplicatePairs(list, list_name, pairs_found)
                         if not self.cache_manager then
                             self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
                         end
-                        self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
+                        if doc_file and self.cache_manager then
+                            self.cache_manager:asyncSaveCache(doc_file, self.book_data)
+                        end
                         
                         UIManager:show(InfoMessage:new{ text = self.loc:t("pair_rejected") or "Pair marked as not a duplicate.", timeout = 2 })
                         processNextPair()
@@ -2313,11 +2325,12 @@ function M:showMergeFlow(list, list_name)
                                     
                                     if self:mergeEntries(list, primary_item.name, secondary_name, ai_merged_desc) then
                                         -- Save cache: load existing, patch only the changed list
+                                        local doc_file = self.ui and self.ui.document and self.ui.document.file
                                         if not self.cache_manager then
                                             self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
                                         end
                                         if not self.book_data then
-                                            self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                                            self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
                                         end
                                         local cache = self.book_data
                                         if list_name == "characters" then
@@ -2325,7 +2338,9 @@ function M:showMergeFlow(list, list_name)
                                         elseif list_name == "locations" then
                                             cache.locations = list
                                         end
-                                        self.cache_manager:asyncSaveCache(self.ui.document.file, cache)
+                                        if doc_file and self.cache_manager then
+                                            self.cache_manager:asyncSaveCache(doc_file, cache)
+                                        end
                                         
                                         -- Clear normalized lookup caches so the LookupManager rebuilds them
                                         for _, it in ipairs(list) do
@@ -5398,15 +5413,18 @@ function M:showSeriesContextPrompt(series_info)
                     callback = function()
                         self:log("XRayPlugin: Series: User chose DONT_ASK_AGAIN on series context prompt.")
                         UIManager:close(confirm)
+                        local doc_file = self.ui and self.ui.document and self.ui.document.file
                         if not self.cache_manager then
                             self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
                         end
                         if not self.book_data then
-                            self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                            self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
                         end
                         local cache = self.book_data
                         cache.series_context_dismissed = true
-                        self.cache_manager:asyncSaveCache(self.ui.document.file, cache)
+                        if doc_file and self.cache_manager then
+                            self.cache_manager:asyncSaveCache(doc_file, cache)
+                        end
                         local disabled_msg = self.loc:t("series_disabled_msg") or "Auto-prompt disabled for this book. You can manually fetch recap from X-Ray menu."
                         UIManager:show(InfoMessage:new{
                             text = disabled_msg,
@@ -5462,14 +5480,17 @@ function M:checkSeriesContext()
 
     local function saveSeriesChecked()
         self:log("XRayPlugin: Series: Saving series check outcome (dismissed=true) to cache")
+        local doc_file = self.ui and self.ui.document and self.ui.document.file
         if not self.cache_manager then
             self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
         end
         if not self.book_data then
-            self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+            self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
         end
         self.book_data.series_context_dismissed = true
-        self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
+        if doc_file and self.cache_manager then
+            self.cache_manager:asyncSaveCache(doc_file, self.book_data)
+        end
     end
 
     -- 1. Try metadata check first (without AI, passes nil for ai_helper)

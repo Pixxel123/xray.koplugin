@@ -394,8 +394,9 @@ function M:_processSingleWordResult(result, text, book_text, current_page)
             self:sortDataByFrequency(target_list, book_text, "name")
             if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
             
+            local doc_file = self.ui and self.ui.document and self.ui.document.file
             if not self.book_data then
-                self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+                self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
             end
             local updated = self.book_data
             updated.characters = self.characters
@@ -407,7 +408,9 @@ function M:_processSingleWordResult(result, text, book_text, current_page)
             updated.author_info = self.author_info or updated.author_info
             updated.last_fetch_page = updated.last_fetch_page
             
-            self.cache_manager:asyncSaveCache(self.ui.document.file, updated)
+            if doc_file then
+                self.cache_manager:asyncSaveCache(doc_file, updated)
+            end
         end
         
         -- Always show result if it's valid, even if it didn't merge into a target_list
@@ -525,8 +528,8 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
     end
 
     UIManager:scheduleIn(0.5, function()
-        if is_cancelled then return end
-        if self.destroyed or not self.ui or not self.ui.document then
+        if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
+            clearFetchState()
             cancelActiveRequest(self.destroyed
                 and "Fetch stopped because plugin was destroyed"
                 or "Fetch stopped because the document was closed")
@@ -579,12 +582,11 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
         end
 
         UIManager:scheduleIn(0, function()
-            if is_cancelled or self.destroyed then
-                if not is_cancelled then cancelActiveRequest("Fetch stopped because plugin was destroyed") end
-                return
-            end
-            if not self.ui or not self.ui.document then
-                cancelActiveRequest("Fetch stopped because the document was closed")
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
+                clearFetchState()
+                cancelActiveRequest(self.destroyed
+                    and "Fetch stopped because plugin was destroyed"
+                    or "Fetch stopped because the document was closed")
                 return
             end
 

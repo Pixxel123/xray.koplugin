@@ -144,12 +144,16 @@ end
 -- Removed background scanning functions
 
 function M:saveMentionsToCache()
+    if self.destroyed or not self.ui or not self.ui.document then return end
+    local doc_file = self.ui.document.file
+    if not doc_file then return end
+
     if not self.cache_manager then
         self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
     end
     
     if not self.book_data then
-        self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+        self.book_data = self.cache_manager:loadCache(doc_file) or {}
     end
     local updated = self.book_data
     
@@ -170,10 +174,11 @@ function M:saveMentionsToCache()
         updated.author_info = self.author_info
     end
 
-    self.cache_manager:asyncSaveCache(self.ui.document.file, updated)
+    self.cache_manager:asyncSaveCache(doc_file, updated)
 end
 
 function M:showMentionsForEntity(entity)
+    if self.destroyed or not self.ui or not self.ui.document then return end
     if not entity then return end
     local name = entity.name or "???"
     if (self.active_mention_scan and self.active_mention_scan.entity_name == name) then
@@ -186,7 +191,7 @@ function M:showMentionsForEntity(entity)
         self.active_mention_scan = nil
     end
     local utils = require(plugin_path .. "xray_utils")
-    local toc = utils:flattenTOC(self.ui.document:getToc())
+    local toc = utils:flattenTOC(self.ui and self.ui.document and self.ui.document.getToc and self.ui.document:getToc())
     local spoiler_free = (self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.spoiler_setting or "spoiler_free") == "spoiler_free"
     local max_page = spoiler_free and _getCurrentPage(self) or nil
     

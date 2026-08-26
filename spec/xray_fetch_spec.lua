@@ -161,6 +161,60 @@ describe("xray_fetch", function()
             os.remove = old_remove
             if not ok then error(err) end
         end)
+
+        it("clears fetch state and does not crash when self.ui.document becomes nil before scheduled callback fires", function()
+            local UIManager = require("ui/uimanager")
+            local old_schedule = UIManager.scheduleIn
+            local scheduled = {}
+
+            UIManager.scheduleIn = function(self, delay, callback)
+                table.insert(scheduled, callback)
+            end
+
+            plugin.ui.getCurrentPage = function() return 10 end
+            plugin:continueWithFetch(50)
+            assert.is_true(plugin.bg_fetch_active)
+
+            -- Simulate reader closing mid-flight
+            plugin.ui.document = nil
+
+            local callback = table.remove(scheduled, 1)
+            assert.is_not_nil(callback)
+
+            local ok, err = pcall(callback)
+            assert.is_true(ok)
+            assert.is_nil(err)
+            assert.is_false(plugin.bg_fetch_active)
+
+            UIManager.scheduleIn = old_schedule
+        end)
+
+        it("clears fetch state and does not crash when self.ui becomes nil before scheduled callback fires", function()
+            local UIManager = require("ui/uimanager")
+            local old_schedule = UIManager.scheduleIn
+            local scheduled = {}
+
+            UIManager.scheduleIn = function(self, delay, callback)
+                table.insert(scheduled, callback)
+            end
+
+            plugin.ui.getCurrentPage = function() return 10 end
+            plugin:continueWithFetch(50)
+            assert.is_true(plugin.bg_fetch_active)
+
+            -- Simulate reader UI closing completely mid-flight
+            plugin.ui = nil
+
+            local callback = table.remove(scheduled, 1)
+            assert.is_not_nil(callback)
+
+            local ok, err = pcall(callback)
+            assert.is_true(ok)
+            assert.is_nil(err)
+            assert.is_false(plugin.bg_fetch_active)
+
+            UIManager.scheduleIn = old_schedule
+        end)
     end)
 
     describe("finalizeXRayData", function()

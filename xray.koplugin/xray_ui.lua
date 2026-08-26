@@ -959,7 +959,7 @@ function M:showCharacters()
     UIManager:show(self.char_menu)
 
     UIManager:scheduleIn(0.3, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         if self.pending_duplicate_review and self.pending_duplicate_review.characters and #self.pending_duplicate_review.characters > 0 then
             local pairs = self:filterValidDuplicatePairs(self.characters, self.pending_duplicate_review.characters)
             self.pending_duplicate_review.characters = nil
@@ -2143,7 +2143,7 @@ function M:walkDuplicatePairs(list, list_name, pairs_found)
                             local wait_msg = InfoMessage:new{ text = self.loc:t("merging_smartly") or "Merging...", timeout = 120 }
                             UIManager:show(wait_msg)
                             UIManager:scheduleIn(0.1, function()
-                                if self.destroyed then return end
+                                if self.destroyed or not self.ui or not self.ui.document then return end
                                 if self.ai_helper then self.ai_helper:setTrapWidget(wait_msg) end
                                 local ai_desc = self.ai_helper:mergeDescriptionsWithAI(p_desc, s_desc)
                                 if self.ai_helper then self.ai_helper:resetTrapWidget() end
@@ -2246,7 +2246,7 @@ function M:showAIFindDuplicatesFlow(list, list_name, entity_label)
     UIManager:show(wait_msg)
 
     UIManager:scheduleIn(0.1, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         local pairs_found, err_code, err_msg = self.ai_helper:findDuplicates(
             title, author, list, entity_label, reading_percent, dup_book_text
         )
@@ -2294,7 +2294,7 @@ function M:showMergeFlow(list, list_name)
                                 UIManager:show(wait_msg)
                                 
                                 UIManager:scheduleIn(0.1, function()
-                                    if self.destroyed then return end
+                                    if self.destroyed or not self.ui or not self.ui.document then return end
                                     local ai_merged_desc = nil
                                     if self.ai_helper and self.ai_helper:hasApiKey() then
                                         local sec_item = nil
@@ -2732,7 +2732,7 @@ function M:showLocations()
     UIManager:show(self.loc_menu)
 
     UIManager:scheduleIn(0.3, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         if self.pending_duplicate_review and self.pending_duplicate_review.locations and #self.pending_duplicate_review.locations > 0 then
             local pairs = self:filterValidDuplicatePairs(self.locations, self.pending_duplicate_review.locations)
             self.pending_duplicate_review.locations = nil
@@ -5429,7 +5429,7 @@ function M:checkSeriesContext()
     if self._unit_scan_in_progress then
         self:log("XRayPlugin: Series: checkSeriesContext: unit scan in progress, deferring series check")
         UIManager:scheduleIn(5, function()
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then return end
             self:checkSeriesContext()
         end)
         return
@@ -5544,11 +5544,7 @@ function M:checkSeriesContext()
     local poll_count = 0
     local max_polls = 150 -- 5 minutes at 2s intervals
     local function pollDetect()
-        if self.destroyed then
-            pcall(function() os.remove(result_file) end)
-            return
-        end
-        if not self.ui or not self.ui.document then
+        if self.destroyed or not self.ui or not self.ui.document then
             pcall(function() os.remove(result_file) end)
             return
         end

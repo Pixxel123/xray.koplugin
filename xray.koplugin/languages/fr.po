@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Fr\n"
+"Language-Team: French\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -819,7 +819,7 @@ msgstr "Récupérer plus de termes"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Obtenir/Actualiser le contexte de la série"
+msgstr "Récupérer / Rafraîchir Series Context"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Statut et validation des clés API"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Le serveur Wi-Fi local n'est pas pris en charge sur les appareils Kindle en raison des restrictions du pare-feu du système d'exploitation. Veuillez utiliser Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Connectez votre smartphone/PC au même réseau Wi-Fi.\n2. Scannez ce QR code ou visitez :\n\n%s\n\n3. Collez votre clé API et appuyez sur Enregistrer."
@@ -1627,15 +1631,15 @@ msgstr "Pour commencer, choisissez comment vous souhaitez connecter votre clé A
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Comment configurer les clés API via un fichier texte :\n\n1. Créez un fichier nommé 'xray_key.txt' sur votre appareil ou ordinateur.\n2. Placez-le dans votre dossier KOReader (ex. koreader/ ou koreader/settings/).\n3. Ajoutez votre clé à l'intérieur sur une seule ligne :\n   • Gemini : gemini = VOTRE_CLE (ou collez directement la clé)\n   • OpenAI : openai = sk-...\n   • DeepSeek / Claude : deepseek = ..., claude = ...\n4. Appuyez sur 'Importer maintenant' ci-dessous pour charger vos clés.\n\nConfig manuelle : Vous pouvez aussi modifier koreader/plugins/xray.koplugin/xray_config.lua."
+msgstr "Vous pouvez configurer vos clés API sans taper en déposant un fichier texte sur votre appareil :\n\n1. Créez un fichier nommé 'xray_key.txt' dans votre dossier KOReader.\n2. Insérez votre clé (ex. 'gemini: AQ...' ou juste la clé).\n3. Appuyez sur 'Importer maintenant' ci-dessous pour la charger."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "Scanner le QR pour voir le guide wiki de config API"
+msgstr "Scanner le QR code pour voir le guide wiki d'utilisation avancée"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "Configuration par fichier texte..."
+msgstr "Configuration via fichier texte"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

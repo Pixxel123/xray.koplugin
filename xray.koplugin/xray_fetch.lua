@@ -471,7 +471,7 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
     end
 
     UIManager:scheduleIn(0.5, function()
-        if is_cancelled or self.destroyed then clearFetchState(); return end
+        if is_cancelled or self.destroyed or not self.ui or not self.ui.document then clearFetchState(); return end
         if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
 
         local current_page = self.ui:getCurrentPage()
@@ -1078,7 +1078,7 @@ function M:finalizeXRayData(final_book_data, title, author, book_text, is_update
     end
 
     UIManager:scheduleIn(1, function()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         local reading_percent = 100
         if self.ui and self.ui.document and self.ui.document.getPageCount and current_page then
             local page_count = self.ui.document:getPageCount()
@@ -1128,7 +1128,7 @@ function M:runPostFetchDuplicateCheck(title, author, reading_percent, is_silent)
     if self._unit_scan_in_progress then
         self:log("XRayPlugin: Deferring duplicate check because unit scan is in progress")
         UIManager:scheduleIn(5, function()
-            if self.destroyed then return end
+            if self.destroyed or not self.ui or not self.ui.document then return end
             self:runPostFetchDuplicateCheck(title, author, reading_percent, is_silent)
         end)
         return
@@ -1165,7 +1165,7 @@ function M:runPostFetchDuplicateCheck(title, author, reading_percent, is_silent)
         local poll_count = 0
         local max_polls = 150 -- 5 minutes at 2s intervals
         local function poll()
-            if self.destroyed then
+            if self.destroyed or not self.ui or not self.ui.document then
                 pcall(function() os.remove(result_file) end)
                 return
             end
@@ -1231,7 +1231,7 @@ function M:runPostFetchDuplicateCheck(title, author, reading_percent, is_silent)
                         self:log("XRayPlugin: Stored " .. tostring(has_chars and #char_pairs or 0) .. " char and " .. tostring(has_locs and #loc_pairs or 0) .. " loc duplicate pairs for later review")
                     else
                         UIManager:scheduleIn(0.5, function()
-                            if self.destroyed then return end
+                            if self.destroyed or not self.ui or not self.ui.document then return end
                             if has_chars then
                                 self:showAIFindDuplicatesFlow(self.characters, "characters",
                                     self.loc:t("entity_label_characters") or "characters")
@@ -2000,7 +2000,7 @@ function M:fetchSeriesContext(is_silent, init_wait_dialog, cancel_ref)
             showProgress(step_idx, #missing_books, current_book.title)
 
             UIManager:scheduleIn(0.5, function()
-                if is_cancelled or self.destroyed then return end
+                if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
 
                 local context = {
                     series_name = series_info.name,

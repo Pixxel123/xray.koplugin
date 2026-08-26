@@ -2372,7 +2372,7 @@ function XRayPlugin:triggerBookTypeDetection()
             local pid = self.ai_helper:detectBookTypeAsync(title, author, series, description, result_file)
             if pid then
                 local function pollResult()
-                    if self.destroyed then return end
+                    if self.destroyed or not self.ui or not self.ui.document then return end
                     local res = self.ai_helper:checkAsyncResult(result_file, pid)
                     if res == nil then
                         UIManager:scheduleIn(1, pollResult)
@@ -2417,7 +2417,7 @@ function XRayPlugin:triggerBookTypeDetection()
             local pid = self.ai_helper:detectBookTypeAsync(title, author, series, description, result_file)
             if pid then
                 local function pollResult()
-                    if self.destroyed then return end
+                    if self.destroyed or not self.ui or not self.ui.document then return end
                     local res = self.ai_helper:checkAsyncResult(result_file, pid)
                     if res == nil then
                         UIManager:scheduleIn(1, pollResult)
@@ -2457,7 +2457,7 @@ function XRayPlugin:triggerBookTypeDetection()
     end
 
     local function pollResult()
-        if self.destroyed then return end
+        if self.destroyed or not self.ui or not self.ui.document then return end
         local res = self.ai_helper:checkAsyncResult(result_file, pid)
         if res == nil then
             UIManager:scheduleIn(1, pollResult)

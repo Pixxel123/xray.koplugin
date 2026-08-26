@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Sr\n"
+"Language-Team: Serbian\n"
 "Language: sr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -819,7 +819,7 @@ msgstr "Преузми више термина"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Preuzmi / osveži kontekst serijala"
+msgstr "Preuzmi / Osveži kontekst serijala"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Статус и верификација API кључева"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Lokalni Wi-Fi server nije podržan na Kindle uređajima zbog ograničenja požarnog zida operativnog sistema. Koristite Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Повежите телефон/рачунар на исти Wi-Fi.\n2. Скенирајте овај QR код или посетите:\n\n%s\n\n3. Налепите API кључ и додирните Сачувај."
@@ -1627,11 +1631,11 @@ msgstr "За почетак, изаберите како желите да по�
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Kako konfigurisati API ključeve putem tekstualne datoteke:\n\n1. Napravite datoteku pod nazivom 'xray_key.txt' na vašem uređaju ili računaru.\n2. Postavite je u vaš KOReader direktorijum (npr. koreader/ ili koreader/settings/).\n3. Dodajte vaš ključ unutra u jednom redu:\n   • Gemini: gemini = VAŠ_KLJUČ (ili jednostavno zalepite sirovi ključ)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Dodirnite 'Uvezi sada' ispod da biste učitali ključeve.\n\nRučna konfiguracija: Možete takođe urediti koreader/plugins/xray.koplugin/xray_config.lua."
+msgstr "Kako konfigurisati API ključeve putem tekstualne datoteke:\n\n1. Napravite datoteku pod nazivom 'xray_key.txt' na vašem uređaju ili računaru.\n2. Postavite je u vaš KOReader fasciklu (npr. koreader/ ili koreader/settings/).\n3. Dodajte vaš ključ unutra u jednom redu:\n   • Gemini: gemini = VAŠ_KLJUČ (ili jednostavno nalepite sirovi ključ)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Dodirnite 'Uvezi sada' ispod da biste učitali ključeve.\n\nRučna konfiguracija: Možete takođe urediti koreader/plugins/xray.koplugin/xray_config.lua."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "Skenirajte QR kod za prikaz wiki vodiča za podešavanje API ključa"
+msgstr "Skenirajte QR kod za vodič za podešavanje API ključa na viki stranici"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"

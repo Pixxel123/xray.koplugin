@@ -1193,6 +1193,9 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "API Key Status & Validation"
 
+msgid "web_setup_local_unsupported"
+msgstr "Local Wi-Fi server is not supported on Kindle devices due to OS firewall restrictions. Please use Cloud Relay."
+
 msgid "web_setup_msg"
 msgstr "1. Connect your phone/PC to the same Wi-Fi.\n2. Scan this QR code or visit:\n\n%s\n\n3. Paste your API key and tap Save."
 

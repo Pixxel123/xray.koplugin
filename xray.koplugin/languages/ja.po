@@ -819,7 +819,7 @@ msgstr "用語を追加取得"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "シリーズのコンテキストを取得/更新"
+msgstr "シリーズ情報を取得/更新"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "APIキーの状態と検証"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "OSのファイアウォール制限のため、KindleデバイスではローカルWi-Fiサーバーがサポートされていません。Cloud Relayを使用してください。"
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. スマホ/PCを同じWi-Fiに接続してください。\n2. このQRコードをスキャンするか以下にアクセスしてください:\n\n%s\n\n3. APIキーを貼り付けて「保存」をタップします。"
@@ -1627,15 +1631,15 @@ msgstr "開始するには、APIキーの設定方法を選択してください
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "テキストファイルによるAPIキーの設定方法:\n\n1. デバイスまたはPC上に「xray_key.txt」という名前のファイルを作成します。\n2. KOReaderフォルダー（例: koreader/ または koreader/settings/）に配置します。\n3. ファイル内に1行でキーを追加します:\n   • Gemini: gemini = キー (またはキーのみをそのまま貼り付け)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. 下の「今すぐインポート」をタップしてキーを読み込みます。\n\n手動設定: koreader/plugins/xray.koplugin/xray_config.lua を直接編集することもできます。"
+msgstr "端末にテキストファイルを配置することで、文字入力なしでAPIキーを設定できます:\n\n1. KOReaderディレクトリに 'xray_key.txt' という名前のファイルを作成。\n2. キーを記述 (例: 'gemini: AQ...' またはキーのみ)。\n3. 下の「今すぐインポート」をタップして読み込み。"
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "QRコードをスキャンしてAPIキー設定のWikiガイドを表示"
+msgstr "QRコードをスキャンして詳細設定ガイドを表示"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "設定とテキストファイルの設定..."
+msgstr "設定ファイルおよびテキストファイルの設定"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

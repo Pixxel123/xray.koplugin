@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Zh_cn\n"
+"Language-Team: Chinese (Simplified)\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "API 密钥状态与验证"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "由于操作系统防火墙限制，Kindle 设备不支持本地 Wi-Fi 服务器。请使用 Cloud Relay（云端中继）。"
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. 将手机/电脑连接到同一 Wi-Fi 网络。\n2. 扫描此二维码或访问：\n\n%s\n\n3. 粘贴 API 密钥并点击保存。"
@@ -1627,7 +1631,7 @@ msgstr "要开始使用，请选择连接 API 密钥的方式："
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "如何通过文本文件配置 API 密钥：\n\n1. 在设备或电脑上创建名为“xray_key.txt”的文件。\n2. 将其放置在 KOReader 文件夹中（例如 koreader/ 或 koreader/settings/）。\n3. 在单行中添加您的密钥：\n   • Gemini: gemini = 您的密钥（或直接粘贴原始密钥）\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. 点击下方的“立即导入”以加载密钥。\n\n手动配置：您也可以直接编辑 koreader/plugins/xray.koplugin/xray_config.lua。"
+msgstr "如何通过文本文件配置 API 密钥：\n\n1. 在您的设备或电脑上创建一个名为 'xray_key.txt' 的文件。\n2. 将其放入 KOReader 文件夹中（例如 koreader/ 或 koreader/settings/）。\n3. 在单行中添加您的密钥：\n   • Gemini: gemini = 您的密钥 (或直接粘贴原始密钥)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. 点击下方的“立即导入”以加载密钥。\n\n手动配置：您也可以直接编辑 koreader/plugins/xray.koplugin/xray_config.lua。"
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
@@ -1635,7 +1639,7 @@ msgstr "扫描二维码查看 API 密钥设置 Wiki 指南"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "配置文件及文本设置..."
+msgstr "配置文件与文本文件设置..."
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

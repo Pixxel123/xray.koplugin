@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Id\n"
+"Language-Team: Indonesian\n"
 "Language: id\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -819,7 +819,7 @@ msgstr "Ambil Istilah Lainnya"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Ambil / Perbarui Konteks Seri"
+msgstr "Ambil / Segarkan Konteks Seri"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Status & Validasi Kunci API"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Server Wi-Fi lokal tidak didukung pada perangkat Kindle karena pembatasan firewall sistem operasi. Silakan gunakan Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Sambungkan ponsel/PC Anda ke Wi-Fi yang sama.\n2. Pindai kode QR ini atau kunjungi:\n\n%s\n\n3. Tempel kunci API dan ketuk Simpan."
@@ -1627,15 +1631,15 @@ msgstr "Untuk memulai, pilih cara Anda ingin menghubungkan kunci API Anda:"
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Cara mengonfigurasi kunci API via file teks:\n\n1. Buat file bernama 'xray_key.txt' di perangkat atau komputer Anda.\n2. Letakkan di folder KOReader Anda (misalnya koreader/ atau koreader/settings/).\n3. Tambahkan kunci Anda di dalamnya dalam satu baris:\n   • Gemini: gemini = KUNCI_ANDA (atau cukup tempel kunci mentah)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Ketuk 'Impor Sekarang' di bawah untuk memuat kunci Anda.\n\nKonfig Manual: Anda juga dapat mengedit koreader/plugins/xray.koplugin/xray_config.lua."
+msgstr "Anda dapat mengatur kunci API tanpa mengetik dengan menaruh berkas teks di perangkat:\n\n1. Buat berkas bernama 'xray_key.txt' di direktori KOReader Anda.\n2. Masukkan kunci Anda (misalnya 'gemini: AQ...' atau kuncinya saja).\n3. Ketuk 'Impor Sekarang' di bawah untuk mendeteksi dan memuatnya."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "Pindai QR untuk melihat panduan wiki Pengaturan Kunci API"
+msgstr "Pindai QR untuk melihat panduan wiki Penggunaan Lanjutan"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "Pengaturan Konfig & File Teks..."
+msgstr "Penyiapan Konfigurasi & Berkas Teks"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

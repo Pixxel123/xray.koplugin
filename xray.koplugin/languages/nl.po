@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Nl\n"
+"Language-Team: Dutch\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -819,7 +819,7 @@ msgstr "Meer termen ophalen"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Serie-context ophalen / vernieuwen"
+msgstr "Seriecontext ophalen / vernieuwen"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "API-sleutelstatus & validatie"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Lokale Wi-Fi-server wordt niet ondersteund op Kindle-apparaten vanwege firewallbeperkingen van het besturingssysteem. Gebruik Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Verbind je telefoon/pc met dezelfde wifi.\n2. Scan deze QR-code of ga naar:\n\n%s\n\n3. Plak je API-sleutel en tik op Opslaan."
@@ -1627,15 +1631,15 @@ msgstr "Kies om te beginnen hoe u uw API-sleutel wilt verbinden:"
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Hoe API-sleutels te configureren via tekstbestand:\n\n1. Maak een bestand genaamd 'xray_key.txt' aan op je apparaat of computer.\n2. Plaats het in je KOReader-map (bijv. koreader/ of koreader/settings/).\n3. Voeg je sleutel toe op één enkele regel:\n   • Gemini: gemini = JE_SLEUTEL (of plak gewoon de ruwe sleutel)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Tik hieronder op 'Nu importeren' om je sleutels te laden.\n\nHandmatige configuratie: Je kunt ook koreader/plugins/xray.koplugin/xray_config.lua bewerken."
+msgstr "U kunt API-sleutels instellen zonder typen door een tekstbestand op uw apparaat te plaatsen:\n\n1. Maak een bestand met de naam 'xray_key.txt' in uw KOReader-map.\n2. Plaats uw sleutel erin (bijv. 'gemini: AQ...' of alleen de sleutel).\n3. Tik hieronder op 'Nu importeren' om te laden."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "Scan QR voor de wiki-gids voor API-sleutelinstelling"
+msgstr "Scan QR om de wiki-gids voor geavanceerd gebruik te bekijken"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "Configuratie & tekstbestand instellen..."
+msgstr "Configuratie & tekstbestand instellen"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

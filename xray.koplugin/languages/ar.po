@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Ar\n"
+"Language-Team: Arabic\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "حالة والتحقق من مفاتيح API"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "خادم Wi-Fi المحلي غير مدعوم على أجهزة Kindle بسبب قيود الجدار الناري لنظام التشغيل. يُرجى استخدام Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. اتصل بنفس شبكة Wi-Fi على هاتفك/حاسوبك.\n2. امسح رمز QR هذا أو زر:\n\n%s\n\n3. الصق مفتاح API واضغط حفظ."
@@ -1627,15 +1631,15 @@ msgstr "للبدء، اختر كيف ترغب في توصيل مفتاح API ا�
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "كيفية تهيئة مفاتيح API عبر ملف نصي:\n\n1. أنشئ ملفًا باسم 'xray_key.txt' على جهازك أو حاسوبك.\n2. ضعه في مجلد KOReader (مثل koreader/ أو koreader/settings/).\n3. أضف مفتاحك بداخله في سطر واحد:\n   • Gemini: gemini = YOUR_KEY (أو الصق المفتاح مباشرة)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. اضغط على 'استيراد الآن' أدناه لتحميل مفاتيحك.\n\nالتكوين اليدوي: يمكنك أيضًا تعديل koreader/plugins/xray.koplugin/xray_config.lua."
+msgstr "يمكنك تهيئة مفاتيح API دون الحاجة إلى الكتابة عن طريق وضع ملف نصي على جهازك:\n\n1. أنشئ ملفًا باسم 'xray_key.txt' في دليل KOReader.\n2. ضع مفتاحك بداخله (مثل 'gemini: AQ...' أو المفتاح فقط).\n3. اضغط على 'استيراد الآن' أدناه للتحميل التلقائي."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "امسح رمز QR لعرض دليل إعداد مفتاح API في الويكي"
+msgstr "امسح رمز الاستجابة السريعة لعرض دليل الويكي للاستخدام المتقدم"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "إعداد التكوين وملف النص..."
+msgstr "إعداد ملف التهيئة والنص"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

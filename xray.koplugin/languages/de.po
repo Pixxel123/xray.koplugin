@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: De\n"
+"Language-Team: German\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -819,7 +819,7 @@ msgstr "Weitere Begriffe abrufen"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Serien-Kontext abrufen / aktualisieren"
+msgstr "Series Context abrufen / aktualisieren"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "API-Schlüssel-Status & Validierung"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Lokaler WLAN-Server wird auf Kindle-Geräten aufgrund von Betriebssystem-Firewall-Einschränkungen nicht unterstützt. Bitte verwenden Sie Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Verbinden Sie Ihr Smartphone/PC mit demselben WLAN.\n2. Scannen Sie diesen QR-Code oder öffnen Sie:\n\n%s\n\n3. Fügen Sie Ihren API-Schlüssel ein und tippen Sie auf Speichern."
@@ -1627,15 +1631,15 @@ msgstr "Wählen Sie zu Beginn, wie Sie Ihren API-Schlüssel verbinden möchten:"
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "So konfigurieren Sie API-Schlüssel über eine Textdatei:\n\n1. Erstellen Sie eine Datei namens 'xray_key.txt' auf Ihrem Gerät oder Computer.\n2. Platzieren Sie diese in Ihrem KOReader-Ordner (z. B. koreader/ oder koreader/settings/).\n3. Fügen Sie Ihren Schlüssel in einer einzelnen Zeile ein:\n   • Gemini: gemini = IHR_SCHLÜSSEL (oder einfach den Schlüssel einfügen)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Tippen Sie unten auf 'Jetzt importieren', um Ihre Schlüssel zu laden.\n\nManuelle Konfiguration: Sie können auch koreader/plugins/xray.koplugin/xray_config.lua bearbeiten."
+msgstr "Sie können API-Schlüssel ohne Tippen einrichten, indem Sie eine Textdatei auf Ihrem Gerät ablegen:\n\n1. Erstellen Sie eine Datei namens 'xray_key.txt' im KOReader-Verzeichnis.\n2. Fügen Sie Ihren Schlüssel ein (z. B. 'gemini: AQ...' oder nur den Schlüssel).\n3. Tippen Sie unten auf 'Jetzt importieren', um den Schlüssel zu laden."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "QR-Code scannen, um die Anleitung zur API-Schlüssel-Einrichtung im Wiki anzuzeigen"
+msgstr "QR-Code scannen für die Wiki-Anleitung zur erweiterten Nutzung"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "Konfiguration & Textdatei-Einrichtung..."
+msgstr "Konfiguration & Textdatei-Einrichtung"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

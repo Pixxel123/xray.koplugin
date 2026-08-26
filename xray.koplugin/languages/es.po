@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Es\n"
+"Language-Team: Spanish\n"
 "Language: es\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -819,7 +819,7 @@ msgstr "Obtener más términos"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Obtener/Actualizar contexto de la serie"
+msgstr "Obtener / Actualizar contexto de la serie"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Estado y validación de claves API"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "El servidor Wi-Fi local no es compatible con dispositivos Kindle debido a restricciones del cortafuegos del sistema operativo. Por favor, usa Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Conecta tu móvil/PC a la misma red Wi-Fi.\n2. Escanea este código QR o visita:\n\n%s\n\n3. Pega tu clave API y pulsa Guardar."
@@ -1627,15 +1631,15 @@ msgstr "Para comenzar, elija cómo desea conectar su clave de API:"
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Cómo configurar las claves API mediante un archivo de texto:\n\n1. Crea un archivo llamado 'xray_key.txt' en tu dispositivo u ordenador.\n2. Colócalo en la carpeta de KOReader (p. ej. koreader/ o koreader/settings/).\n3. Añade tu clave dentro en una sola línea:\n   • Gemini: gemini = TU_CLAVE (o simplemente pega la clave directamente)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Toca 'Importar ahora' abajo para cargar tus claves.\n\nConfiguración manual: También puedes editar koreader/plugins/xray.koplugin/xray_config.lua."
+msgstr "Puede configurar claves de API sin escribir colocando un archivo de texto en su dispositivo:\n\n1. Cree un archivo llamado 'xray_key.txt' en el directorio de KOReader.\n2. Inserte su clave (p. ej. 'gemini: AQ...' o simplemente la clave).\n3. Toque 'Importar ahora' a continuación para detectarla y cargarla."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "Escanea el QR para ver la guía wiki de configuración de API"
+msgstr "Escanear QR para ver la guía wiki de uso avanzado"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "Configuración por archivo de texto..."
+msgstr "Configuración mediante archivo de texto"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

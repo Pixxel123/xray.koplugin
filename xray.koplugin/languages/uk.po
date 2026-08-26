@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Uk\n"
+"Language-Team: Ukrainian\n"
 "Language: uk\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Статус та валідація ключів API"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Локальний Wi-Fi сервер не підтримується на пристроях Kindle через обмеження брандмауера ОС. Будь ласка, використовуйте Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Підключіть телефон/ПК до тієї ж мережі Wi-Fi.\n2. Відскануйте цей QR-код або перейдіть за адресою:\n\n%s\n\n3. Вставте ключ API та натисніть Зберегти."
@@ -1627,15 +1631,15 @@ msgstr "Для початку виберіть спосіб підключенн
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Як налаштувати ключі API через текстовий файл:\n\n1. Створіть файл з назвою 'xray_key.txt' на вашому пристрої або комп'ютері.\n2. Помістіть його у папку KOReader (наприклад, koreader/ або koreader/settings/).\n3. Додайте свій ключ одним рядком:\n   • Gemini: gemini = ВАШ_КЛЮЧ (або просто вставте ключ)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Натисніть 'Імпортувати зараз' нижче, щоб завантажити ключі.\n\nРучне налаштування: Ви також можете відредагувати koreader/plugins/xray.koplugin/xray_config.lua."
+msgstr "Як налаштувати ключі API через текстовий файл:\n\n1. Створіть файл з назвою 'xray_key.txt' на пристрої або комп'ютері.\n2. Помістіть його в папку KOReader (наприклад, koreader/ або koreader/settings/).\n3. Додайте свій ключ одним рядком:\n   • Gemini: gemini = ВАШ_КЛЮЧ (або просто вставте чистий ключ)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Натисніть 'Імпортувати зараз' нижче, щоб завантажити ключі.\n\nРучне налаштування: Ви також можете відредагувати koreader/plugins/xray.koplugin/xray_config.lua."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "Скануйте QR для перегляду інструкції з налаштування API в Wiki"
+msgstr "Скануйте QR-код для перегляду інструкції з налаштування ключів API у wiki"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "Налаштування конфіг-файлу..."
+msgstr "Налаштування конфігурації та текстового файлу..."
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

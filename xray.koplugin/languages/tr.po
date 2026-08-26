@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Tr\n"
+"Language-Team: Turkish\n"
 "Language: tr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -819,7 +819,7 @@ msgstr "Daha Fazla Terim Getir"
 
 # en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Seri Bağlamını Al / Yenile"
+msgstr "Seri Bağlamını Getir / Yenile"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "API Anahtarı Durumu ve Doğrulama"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "İşletim sistemi güvenlik duvarı kısıtlamaları nedeniyle Kindle cihazlarında yerel Wi-Fi sunucusu desteklenmemektedir. Lütfen Cloud Relay kullanın."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Telefonunuzu/PC'nizi aynı Wi-Fi ağına bağlayın.\n2. Bu QR kodunu tarayın veya şu adrese gidin:\n\n%s\n\n3. API anahtarınızı yapıştırıp Kaydet'e dokunun."
@@ -1627,11 +1631,11 @@ msgstr "Başlamak için API anahtarınızı nasıl bağlamak istediğinizi seçi
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Metin dosyasıyla API anahtarları nasıl yapılandırılır:\n\n1. Cihazınızda veya bilgisayarınızda 'xray_key.txt' adlı bir dosya oluşturun.\n2. Dosyayı KOReader klasörünüze yerleştirin (örn. koreader/ veya koreader/settings/).\n3. Anahtarınızı tek bir satır halinde ekleyin:\n   • Gemini: gemini = ANAHTARINIZ (veya doğrudan ham anahtarı yapıştırın)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Anahtarlarınızı yüklemek için aşağıdan 'Şimdi İçe Aktar' seçeneğine dokunun.\n\nManuel Yapılandırma: Ayrıca koreader/plugins/xray.koplugin/xray_config.lua dosyasını da düzenleyebilirsiniz."
+msgstr "API anahtarlarını metin dosyasıyla yapılandırma:\n\n1. Cihazınızda veya bilgisayarınızda 'xray_key.txt' adında bir dosya oluşturun.\n2. Bu dosyayı KOReader klasörünüze yerleştirin (ör. koreader/ veya koreader/settings/).\n3. Anahtarınızı tek bir satıra ekleyin:\n   • Gemini: gemini = ANAHTARINIZ (veya doğrudan anahtarı yapıştırın)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Anahtarlarınızı yüklemek için aşağıdan 'Şimdi İçe Aktar' seçeneğine dokunun.\n\nManuel Yapılandırma: koreader/plugins/xray.koplugin/xray_config.lua dosyasını da düzenleyebilirsiniz."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "API Anahtarı Kurulum wiki kılavuzunu görüntülemek için QR kodunu tarayın"
+msgstr "API Anahtarı Kurulumu wiki kılavuzunu görüntülemek için QR kodunu tarayın"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"

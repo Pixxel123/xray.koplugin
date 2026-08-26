@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language-Team: Pl\n"
+"Language-Team: Polish\n"
 "Language: pl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1589,6 +1589,10 @@ msgstr "???"
 msgid "validate_keys_title"
 msgstr "Status i walidacja kluczy API"
 
+# en-hash: df59c9aeac50ab85bc1945555592cf8a
+msgid "web_setup_local_unsupported"
+msgstr "Lokalny serwer Wi-Fi nie jest obsługiwany na urządzeniach Kindle ze względu na ograniczenia zapory sieciowej systemu operacyjnego. Użyj Cloud Relay."
+
 # en-hash: 94eeb39559330226a1d0c942718547ea
 msgid "web_setup_msg"
 msgstr "1. Połącz telefon/PC z tą samą siecią Wi-Fi.\n2. Zeskanuj ten kod QR lub wejdź na:\n\n%s\n\n3. Wklej klucz API i dotknij Zapisz."
@@ -1627,15 +1631,15 @@ msgstr "Aby rozpocząć, wybierz sposób połączenia klucza API:"
 
 # en-hash: b6b5dc2a0846b328e444266fa87d26ec
 msgid "welcome_file_guide_desc"
-msgstr "Jak skonfigurować klucze API za pomocą pliku tekstowego:\n\n1. Utwórz plik o nazwie 'xray_key.txt' na urządzeniu lub komputerze.\n2. Umieść go w folderze KOReader (np. koreader/ lub koreader/settings/).\n3. Dodaj swój klucz w jednym wierszu:\n   • Gemini: gemini = TWÓJ_KLUCZ (lub po prostu wklej sam klucz)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Stuknij 'Importuj teraz' poniżej, aby wczytać klucze.\n\nRęczna konfiguracja: Możesz także edytować koreader/plugins/xray.koplugin/xray_config.lua."
+msgstr "Możesz skonfigurować klucze API bez pisania, umieszczając plik tekstowy na urządzeniu:\n\n1. Utwórz plik o nazwie 'xray_key.txt' w katalogu KOReader.\n2. Wklej swój klucz (np. 'gemini: AQ...' lub sam klucz).\n3. Dotknij 'Importuj teraz' poniżej, aby go załadować."
 
 # en-hash: 6db5d8a713e37567f7785261dc00ae74
 msgid "welcome_file_guide_scan"
-msgstr "Zeskanuj kod QR, aby zobaczyć przewodnik konfiguracyjny API"
+msgstr "Zeskanuj kod QR, aby wyświetlić przewodnik wiki po zaawansowanym użyciu"
 
 # en-hash: c832496ce43a8a4c1465b7089b7ba5b6
 msgid "welcome_file_guide_title"
-msgstr "Konfiguracja z pliku tekstowego..."
+msgstr "Konfiguracja i plik tekstowy"
 
 # en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
 msgid "welcome_headline"

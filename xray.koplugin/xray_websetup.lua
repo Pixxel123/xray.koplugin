@@ -54,6 +54,15 @@ local WebSetup = {
     poll_count = 0,
 }
 
+-- Check if device supports inbound local HTTP server (Kindle OS iptables blocks inbound connections)
+function WebSetup:isLocalServerSupported()
+    local ok_dev, Device = pcall(require, "device")
+    if ok_dev and Device and Device.isKindle and Device:isKindle() then
+        return false
+    end
+    return true
+end
+
 -- Simple HTTPS/HTTP Request Helper
 local function httpRequest(url, method, headers, request_body, timeout)
     timeout = timeout or 10
@@ -220,8 +229,12 @@ function WebSetup:startCloudRelay(ai_helper, loc, ui_callback)
 
         if not ok or code ~= 200 or not resp_text then
             logErr("WebSetup: Failed to create session on worker (" .. tostring(code) .. "): " .. tostring(resp_text))
+            local msg = "Could not reach Cloud Relay (" .. tostring(code or "Network error") .. "). Check your Wi-Fi connection."
+            if self:isLocalServerSupported() then
+                msg = "Could not reach Cloud Relay (" .. tostring(code or "Network error") .. "). Check your Wi-Fi or try Local Wi-Fi mode."
+            end
             UIManager:show(InfoMessage:new{
-                text = "Could not reach Cloud Relay (" .. tostring(code or "Network error") .. "). Check your Wi-Fi or try Local Wi-Fi mode.",
+                text = msg,
                 timeout = 5
             })
             return false
@@ -341,25 +354,28 @@ function WebSetup:startCloudRelay(ai_helper, loc, ui_callback)
 
         local vg = VerticalGroup:new(vg_components)
 
+        local action_buttons = {}
+        if self:isLocalServerSupported() then
+            table.insert(action_buttons, {
+                text = (loc and loc:t("menu_setup_local")) or "Local Wi-Fi (Offline LAN)",
+                callback = function()
+                    self:stop()
+                    self:startLocalServer(ai_helper, loc, ui_callback)
+                end,
+            })
+        end
+        table.insert(action_buttons, {
+            text = (loc and loc:t("cancel")) or "Cancel",
+            is_enter_default = true,
+            callback = function()
+                self:stop()
+            end,
+        })
+
         self.dialog = ButtonDialog:new{
             _added_widgets = { vg },
             buttons = {
-                {
-                    {
-                        text = (loc and loc:t("menu_setup_local")) or "Local Wi-Fi (Offline LAN)",
-                        callback = function()
-                            self:stop()
-                            self:startLocalServer(ai_helper, loc, ui_callback)
-                        end,
-                    },
-                    {
-                        text = (loc and loc:t("cancel")) or "Cancel",
-                        is_enter_default = true,
-                        callback = function()
-                            self:stop()
-                        end,
-                    }
-                }
+                action_buttons
             }
         }
 
@@ -746,6 +762,14 @@ end
 
 function WebSetup:startLocalServer(ai_helper, loc, ui_callback)
     local ok_run, result = pcall(function()
+        if not self:isLocalServerSupported() then
+            UIManager:show(InfoMessage:new{
+                text = (loc and loc:t("web_setup_local_unsupported")) or "Local Wi-Fi server is not supported on Kindle devices due to OS firewall restrictions. Please use Cloud Relay.",
+                timeout = 5
+            })
+            return false
+        end
+
         self.ai_helper = ai_helper
         self.loc = loc
         self.ui_callback = ui_callback

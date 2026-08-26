@@ -1,0 +1,679 @@
+-- xray_image_viewer.lua — Custom Fullscreen Interactive Map & Image Viewer for KOReader X-Ray
+-- Continuous 360° rotation, smooth pinch/scroll zoom, bounded drag-to-pan via CanvasContainer,
+-- right-aligned toolbar, and always-on-top overlay.
+
+local UIManager = require("ui/uimanager")
+local Widget = require("ui/widget/widget")
+local InputContainer = require("ui/widget/container/inputcontainer")
+local FrameContainer = require("ui/widget/container/framecontainer")
+local CenterContainer = require("ui/widget/container/centercontainer")
+local LeftContainer = require("ui/widget/container/leftcontainer")
+local RightContainer = require("ui/widget/container/rightcontainer")
+local OverlapGroup = require("ui/widget/overlapgroup")
+local HorizontalGroup = require("ui/widget/horizontalgroup")
+local HorizontalSpan = require("ui/widget/horizontalspan")
+local VerticalGroup = require("ui/widget/verticalgroup")
+local VerticalSpan = require("ui/widget/verticalspan")
+local TextWidget = require("ui/widget/textwidget")
+local ImageWidget = require("ui/widget/imagewidget")
+local Font = require("ui/font")
+local Geom = require("ui/geometry")
+local GestureRange = require("ui/gesturerange")
+local Blitbuffer = require("ffi/blitbuffer")
+local Device = require("device")
+local Screen = Device.screen
+local ok_ds, DataStorage = pcall(require, "datastorage")
+local ok_ffiu, ffiutil = pcall(require, "ffi/util")
+
+local plugin_path = ((...) or ""):match("(.-)[^%.]+$") or ""
+local theme = require(plugin_path .. "xray_theme")
+
+local function sc(val)
+    return (Screen and Screen.scaleBySize and Screen:scaleBySize(val)) or val
+end
+
+-- Custom canvas container widget that applies bounded realtime pan offsets during paintTo
+local CanvasContainer = Widget:extend{
+    pan_x = 0,
+    pan_y = 0,
+}
+
+function CanvasContainer:getSize()
+    return { w = self.width or Screen:getWidth(), h = self.height or Screen:getHeight() }
+end
+
+function CanvasContainer:paintTo(bb, x, y)
+    self.dimen = Geom:new{ x = x, y = y, w = self.width or Screen:getWidth(), h = self.height or Screen:getHeight() }
+    local child = self[1]
+    if child then
+        local ox = x + math.floor(self.pan_x or 0)
+        local oy = y + math.floor(self.pan_y or 0)
+        child:paintTo(bb, ox, oy)
+    end
+end
+
+-- Fast binary header parser for PNG, JPEG, and GIF dimensions
+local function getImageDimensions(file_path)
+    if not file_path then return nil, nil end
+    local f = io.open(file_path, "rb")
+    if not f then return nil, nil end
+    local header = f:read(32)
+    if not header or #header < 8 then
+        f:close()
+        return nil, nil
+    end
+
+    -- PNG: bytes 17-24 (width, height in big-endian)
+    if header:sub(1, 8) == "\137PNG\r\n\26\n" then
+        local w1, w2, w3, w4, h1, h2, h3, h4 = header:byte(17, 24)
+        f:close()
+        if w1 and h4 then
+            local w = (w1 * 16777216) + (w2 * 65536) + (w3 * 256) + w4
+            local h = (h1 * 16777216) + (h2 * 65536) + (h3 * 256) + h4
+            return w, h
+        end
+        return nil, nil
+    end
+
+    -- GIF: bytes 7-10 (width, height in little-endian)
+    if header:sub(1, 3) == "GIF" then
+        local w1, w2, h1, h2 = header:byte(7, 10)
+        f:close()
+        if w1 and h2 then
+            local w = w1 + (w2 * 256)
+            local h = h1 + (h2 * 256)
+            return w, h
+        end
+        return nil, nil
+    end
+
+    -- JPEG: scan for SOF0/SOF2 marker
+    if header:byte(1) == 0xFF and header:byte(2) == 0xD8 then
+        f:seek("set", 2)
+        while true do
+            local marker_data = f:read(4)
+            if not marker_data or #marker_data < 4 then break end
+            local m1, m2 = marker_data:byte(1, 2)
+            if m1 ~= 0xFF then break end
+            local len = marker_data:byte(3) * 256 + marker_data:byte(4)
+            if (m2 >= 0xC0 and m2 <= 0xC3) or (m2 >= 0xC5 and m2 <= 0xC7) or (m2 >= 0xC9 and m2 <= 0xCB) or (m2 >= 0xCD and m2 <= 0xCF) then
+                local sof = f:read(5)
+                f:close()
+                if sof and #sof >= 5 then
+                    local h = sof:byte(2) * 256 + sof:byte(3)
+                    local w = sof:byte(4) * 256 + sof:byte(5)
+                    return w, h
+                end
+                break
+            else
+                f:seek("cur", len - 2)
+            end
+        end
+    end
+
+    f:close()
+    return nil, nil
+end
+
+local _asset_path_cache = {}
+local function getAssetPath(filename)
+    if _asset_path_cache[filename] then
+        return _asset_path_cache[filename]
+    end
+    local info = debug.getinfo(1, "S")
+    local file_dir = (info and info.source and info.source:match("^@?(.*[/\\])")) or ""
+    local data_dir = (ok_ds and DataStorage and DataStorage.getDataDir and DataStorage:getDataDir()) or ""
+    local settings_dir = (ok_ds and DataStorage and DataStorage.getSettingsDir and DataStorage:getSettingsDir()) or ""
+
+    local candidates = {
+        file_dir .. "assets/" .. filename,
+        file_dir .. "../assets/" .. filename,
+        "plugins/xray.koplugin/assets/" .. filename,
+        "./plugins/xray.koplugin/assets/" .. filename,
+        data_dir .. "/plugins/xray.koplugin/assets/" .. filename,
+        settings_dir .. "/plugins/xray.koplugin/assets/" .. filename,
+    }
+    for _, path in ipairs(candidates) do
+        local f = io.open(path, "r")
+        if f then
+            f:close()
+            if ok_ffiu and ffiutil and ffiutil.realpath then
+                local rp = ffiutil.realpath(path)
+                if rp then path = rp end
+            end
+            _asset_path_cache[filename] = path
+            return path
+        end
+    end
+    return "plugins/xray.koplugin/assets/" .. filename
+end
+
+local function makeTapItem(frame, callback)
+    local item = InputContainer:new{ frame }
+    function item:getSize()
+        return (frame and frame.getSize and frame:getSize()) or { w = frame.width or 0, h = frame.height or 0 }
+    end
+    function item:paintTo(bb, x, y)
+        local fsize = (frame and frame.getSize and frame:getSize()) or { w = frame.width or 0, h = frame.height or 0 }
+        self.dimen = Geom:new{ x = x, y = y, w = fsize.w or 0, h = fsize.h or 0 }
+        frame:paintTo(bb, x, y)
+    end
+    item.ges_events = {
+        Tap = {
+            GestureRange:new{
+                ges = "tap",
+                range = function()
+                    return item.dimen or Geom:new{ x = -1, y = -1, w = 1, h = 1 }
+                end
+            }
+        }
+    }
+    item.onTap = function()
+        if callback then pcall(callback) end
+        return true
+    end
+    return item
+end
+
+local function createIconButton(opts)
+    opts = opts or {}
+    local icon_size = opts.size or sc(20)
+    local icon_widget
+    if opts.text_icon then
+        icon_widget = CenterContainer:new{
+            dimen = Geom:new{ w = opts.width or (icon_size + sc(12)), h = opts.height or (icon_size + sc(12)) },
+            TextWidget:new{
+                text = opts.text_icon,
+                face = Font:getFace("cfont", opts.text_size or 18),
+                bold = true,
+                fgcolor = Blitbuffer.COLOR_BLACK,
+            }
+        }
+    else
+        icon_widget = CenterContainer:new{
+            dimen = Geom:new{ w = opts.width or (icon_size + sc(12)), h = opts.height or (icon_size + sc(12)) },
+            ImageWidget:new{
+                file = getAssetPath(opts.icon),
+                width = icon_size,
+                height = icon_size,
+                scale_factor = 0,
+                is_icon = true,
+                alpha = true,
+            }
+        }
+    end
+    local frame = FrameContainer:new{
+        padding = 0,
+        bordersize = opts.bordersize or sc(1),
+        color = Blitbuffer.COLOR_DARK_GRAY,
+        background = Blitbuffer.COLOR_WHITE,
+        radius = sc(4),
+        width = opts.width or (icon_size + sc(12)),
+        height = opts.height or (icon_size + sc(12)),
+        icon_widget,
+    }
+    return makeTapItem(frame, opts.callback)
+end
+
+local ZOOM_STEPS = { 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0 }
+
+local ImageViewer = InputContainer:extend{
+    plugin = nil,
+    image_entry = nil,
+    file_path = nil,
+    rotation_angle = 0, -- 0, 90, 180, 270
+    zoom_level = 1.0,   -- 1.0 (fit), 1.25, 1.5, 2.0, 2.5, 3.0, 4.0
+    pan_x = 0,
+    pan_y = 0,
+    show_toolbar = true,
+    inverted = false,
+}
+
+function ImageViewer:init()
+    self.sw = Screen:getWidth()
+    self.sh = Screen:getHeight()
+    self.dimen = Geom:new{ x = 0, y = 0, w = self.sw, h = self.sh }
+
+    local full_range = Geom:new{ x = 0, y = 0, w = self.sw, h = self.sh }
+
+    self.ges_events = {
+        Tap = { GestureRange:new{ ges = "tap", range = full_range } },
+        DoubleTap = { GestureRange:new{ ges = "double_tap", range = full_range } },
+        Pinch = { GestureRange:new{ ges = "pinch", range = full_range } },
+        Spread = { GestureRange:new{ ges = "spread", range = full_range } },
+        Hold = { GestureRange:new{ ges = "hold", range = full_range } },
+        HoldRelease = { GestureRange:new{ ges = "hold_release", range = full_range } },
+        Pan = { GestureRange:new{ ges = "pan", range = full_range } },
+        PanRelease = { GestureRange:new{ ges = "pan_release", range = full_range } },
+    }
+
+    self.key_events = {
+        ZoomIn = { { "+" }, { "=" }, { "KP_Add" } },
+        ZoomOut = { { "-" }, { "_" }, { "KP_Subtract" } },
+        PanLeft = { { "Left" } },
+        PanRight = { { "Right" } },
+        PanUp = { { "Up" } },
+        PanDown = { { "Down" } },
+        Rotate = { { "r" }, { "R" } },
+        Close = { { "Escape" }, { "Back" }, { "q" } },
+    }
+
+    self:buildUI()
+end
+
+function ImageViewer:paintTo(bb, x, y)
+    self.dimen = Geom:new{ x = x, y = y, w = self.sw, h = self.sh }
+    if self[1] then
+        self[1]:paintTo(bb, x, y)
+    end
+end
+
+-- Clamp panning so the image can never be dragged off the screen
+function ImageViewer:clampPan()
+    local toolbar_h = sc(48)
+    local viewport_h = self.sh - toolbar_h
+    local is_sideways = (self.rotation_angle == 90 or self.rotation_angle == 270)
+    local target_w = is_sideways and viewport_h or self.sw
+    local target_h = is_sideways and self.sw or viewport_h
+
+    local max_pan_x = math.floor(target_w * math.max(1.0, self.zoom_level) * 0.8)
+    local max_pan_y = math.floor(target_h * math.max(1.0, self.zoom_level) * 0.8)
+
+    self.pan_x = math.max(-max_pan_x, math.min(max_pan_x, self.pan_x or 0))
+    self.pan_y = math.max(-max_pan_y, math.min(max_pan_y, self.pan_y or 0))
+end
+
+function ImageViewer:onTap(arg, ges)
+    self._last_pan_pos = nil
+    -- Tapping the image surface does nothing (does NOT rotate)
+    return true
+end
+
+function ImageViewer:onDoubleTap(arg, ges)
+    self._last_pan_pos = nil
+    if self.zoom_level > 1.05 then
+        self.zoom_level = 1.0
+        self.pan_x = 0
+        self.pan_y = 0
+    else
+        self.zoom_level = 2.0
+    end
+    self:clampPan()
+    self:buildUI()
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function ImageViewer:onPinch(arg, ges)
+    self._last_pan_pos = nil
+    if ges and ges.relative_scale then
+        local new_zoom = self.zoom_level * ges.relative_scale
+        self.zoom_level = math.max(1.0, math.min(4.5, new_zoom))
+        self:clampPan()
+        self:buildUI()
+        UIManager:setDirty(self, "ui")
+        return true
+    end
+end
+
+function ImageViewer:onSpread(arg, ges)
+    return self:onPinch(arg, ges)
+end
+
+function ImageViewer:onZoomIn()
+    self._last_pan_pos = nil
+    local current_idx = 1
+    for i, z in ipairs(ZOOM_STEPS) do
+        if math.abs(self.zoom_level - z) < 0.05 then
+            current_idx = i
+            break
+        end
+    end
+    if current_idx < #ZOOM_STEPS then
+        self.zoom_level = ZOOM_STEPS[current_idx + 1]
+        self:clampPan()
+        self:buildUI()
+        UIManager:setDirty(self, "ui")
+    end
+end
+
+function ImageViewer:onZoomOut()
+    self._last_pan_pos = nil
+    local current_idx = 1
+    for i, z in ipairs(ZOOM_STEPS) do
+        if math.abs(self.zoom_level - z) < 0.05 then
+            current_idx = i
+            break
+        end
+    end
+    if current_idx > 1 then
+        self.zoom_level = ZOOM_STEPS[current_idx - 1]
+        self:clampPan()
+        self:buildUI()
+        UIManager:setDirty(self, "ui")
+    end
+end
+
+function ImageViewer:onPanLeft()
+    self.pan_x = self.pan_x + sc(50)
+    self:clampPan()
+    if self.canvas_container then self.canvas_container.pan_x = self.pan_x end
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function ImageViewer:onPanRight()
+    self.pan_x = self.pan_x - sc(50)
+    self:clampPan()
+    if self.canvas_container then self.canvas_container.pan_x = self.pan_x end
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function ImageViewer:onPanUp()
+    self.pan_y = self.pan_y + sc(50)
+    self:clampPan()
+    if self.canvas_container then self.canvas_container.pan_y = self.pan_y end
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function ImageViewer:onPanDown()
+    self.pan_y = self.pan_y - sc(50)
+    self:clampPan()
+    if self.canvas_container then self.canvas_container.pan_y = self.pan_y end
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function ImageViewer:onRotate()
+    self._last_pan_pos = nil
+    -- Clockwise 90° rotation (matches rotate-cw.svg icon direction)
+    self.rotation_angle = ((self.rotation_angle or 0) + 270) % 360
+    self.pan_x = 0
+    self.pan_y = 0
+    self:clampPan()
+    self:buildUI()
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function ImageViewer:onHold(arg, ges)
+    if ges and ges.pos then
+        self._last_pan_pos = { x = ges.pos.x, y = ges.pos.y }
+    end
+    return true
+end
+
+function ImageViewer:onPan(arg, ges)
+    if not ges then return end
+
+    -- 1. Mouse wheel zoom handling
+    if ges.from_mousewheel or ges.mousewheel_direction then
+        local delta = 0
+        if ges.mousewheel_direction then
+            delta = ges.mousewheel_direction
+        elseif ges.relative and ges.relative.y then
+            delta = (ges.relative.y > 0 and 1 or -1)
+        end
+        if delta > 0 then
+            self:onZoomIn()
+        elseif delta < 0 then
+            self:onZoomOut()
+        end
+        return true
+    end
+
+    -- 2. Smooth 1:1 Touch Drag Panning (Wander-free, Glitch-free)
+    local dx = 0
+    local dy = 0
+    if ges.pos then
+        if self._last_pan_pos then
+            dx = ges.pos.x - self._last_pan_pos.x
+            dy = ges.pos.y - self._last_pan_pos.y
+        end
+        self._last_pan_pos = { x = ges.pos.x, y = ges.pos.y }
+    end
+
+    -- Filter out anomalous large single-frame jump spikes
+    local max_single_step = sc(80)
+    if math.abs(dx) > max_single_step or math.abs(dy) > max_single_step then
+        return true
+    end
+
+    if dx ~= 0 or dy ~= 0 then
+        self.pan_x = (self.pan_x or 0) + dx
+        self.pan_y = (self.pan_y or 0) + dy
+        self:clampPan()
+        if self.canvas_container then
+            self.canvas_container.pan_x = self.pan_x
+            self.canvas_container.pan_y = self.pan_y
+        end
+        UIManager:setDirty(self, "ui")
+        return true
+    end
+end
+
+function ImageViewer:onHoldRelease(arg, ges)
+    self._last_pan_pos = nil
+    return true
+end
+
+function ImageViewer:onPanRelease(arg, ges)
+    self._last_pan_pos = nil
+    return true
+end
+
+function ImageViewer:buildUI()
+    local sw = self.sw
+    local sh = self.sh
+    local p = self.plugin
+    local img = self.image_entry or {}
+
+    -- ── 1. Top Controls Toolbar (Right-Aligned, Fixed Height) ─────────────────
+    local btn_size = sc(20)
+    local btn_pad = sc(4)
+    local btn_gap = sc(6)
+    local num_btns = 6
+    local btn_frame_w = sc(32)
+    local actions_total_w = (btn_frame_w * num_btns) + (btn_gap * (num_btns - 1))
+
+    local rotate_btn = createIconButton{
+        icon = "rotate-cw.svg",
+        size = btn_size,
+        padding = btn_pad,
+        padding_h = btn_pad,
+        callback = function()
+            self:onRotate()
+        end,
+    }
+
+    local zoom_in_btn = createIconButton{
+        icon = "zoom-in.svg",
+        size = btn_size,
+        padding = btn_pad,
+        padding_h = btn_pad,
+        callback = function()
+            self:onZoomIn()
+        end,
+    }
+
+    local zoom_out_btn = createIconButton{
+        icon = "zoom-out.svg",
+        size = btn_size,
+        padding = btn_pad,
+        padding_h = btn_pad,
+        callback = function()
+            self:onZoomOut()
+        end,
+    }
+
+    local night_btn = createIconButton{
+        icon = "moon.svg",
+        size = btn_size,
+        padding = btn_pad,
+        padding_h = btn_pad,
+        callback = function()
+            self.inverted = not self.inverted
+            self:buildUI()
+            UIManager:setDirty(self, "ui")
+        end,
+    }
+
+    local menu_btn = createIconButton{
+        text_icon = "⋮",
+        text_size = 18,
+        width = btn_frame_w,
+        height = btn_frame_w,
+        callback = function()
+            if p and p.showImageActions then
+                p:showImageActions(img)
+            end
+        end,
+    }
+
+    local close_btn = createIconButton{
+        icon = "x.svg",
+        size = btn_size,
+        padding = btn_pad,
+        padding_h = btn_pad,
+        callback = function()
+            self:close()
+        end,
+    }
+
+    local header_actions = HorizontalGroup:new{
+        align = "center",
+        rotate_btn,
+        HorizontalSpan:new{ width = btn_gap },
+        zoom_in_btn,
+        HorizontalSpan:new{ width = btn_gap },
+        zoom_out_btn,
+        HorizontalSpan:new{ width = btn_gap },
+        night_btn,
+        HorizontalSpan:new{ width = btn_gap },
+        menu_btn,
+        HorizontalSpan:new{ width = btn_gap },
+        close_btn,
+    }
+
+    local title_max_w = sw - sc(28) - actions_total_w - sc(12)
+
+    local display_title = (img.title or "Image")
+    if img.page then
+        display_title = display_title .. " · p. " .. tostring(img.page)
+    end
+    if self.rotation_angle > 0 then
+        display_title = display_title .. " (" .. tostring(self.rotation_angle) .. "°)"
+    end
+    if self.zoom_level > 1.05 then
+        display_title = display_title .. " [" .. string.format("%.1fx", self.zoom_level) .. "]"
+    end
+
+    local title_label = TextWidget:new{
+        text = (img.is_favorite and "★ " or "") .. display_title,
+        face = Font:getFace("cfont", 16),
+        bold = true,
+        fgcolor = Blitbuffer.COLOR_BLACK,
+        max_width = title_max_w,
+    }
+
+    local toolbar_h = sc(48)
+    local viewport_h = sh - toolbar_h
+    self.viewport_h = viewport_h
+
+    local top_bar_row = OverlapGroup:new{
+        dimen = Geom:new{ w = sw - sc(20), h = sc(34) },
+        LeftContainer:new{
+            dimen = Geom:new{ w = title_max_w, h = sc(34) },
+            title_label,
+        },
+        RightContainer:new{
+            dimen = Geom:new{ w = actions_total_w, h = sc(34) },
+            header_actions,
+        },
+    }
+
+    local toolbar_widget = FrameContainer:new{
+        padding = sc(6),
+        padding_h = sc(10),
+        bordersize = sc(1),
+        color = Blitbuffer.COLOR_BLACK,
+        background = Blitbuffer.COLOR_WHITE,
+        radius = sc(4),
+        width = sw,
+        height = toolbar_h,
+        top_bar_row,
+    }
+
+    -- ── 2. Full-Screen Image Viewport with Custom CanvasContainer ─────────────
+    local is_sideways = (self.rotation_angle == 90 or self.rotation_angle == 270)
+    local target_w = is_sideways and viewport_h or sw
+    local target_h = is_sideways and sw or viewport_h
+
+    local base_w = math.floor(target_w * self.zoom_level)
+    local base_h = math.floor(target_h * self.zoom_level)
+
+    local image_widget = ImageWidget:new{
+        file = self.file_path,
+        width = base_w,
+        height = base_h,
+        rotation_angle = self.rotation_angle,
+        scale_factor = 0,
+        invert = self.inverted,
+        alpha = true,
+    }
+
+    self.canvas_container = CanvasContainer:new{
+        width = sw,
+        height = viewport_h,
+        rotation_angle = self.rotation_angle,
+        pan_x = self.pan_x,
+        pan_y = self.pan_y,
+        image_widget,
+    }
+
+    local image_surface = FrameContainer:new{
+        padding = 0,
+        bordersize = 0,
+        background = self.inverted and Blitbuffer.COLOR_BLACK or Blitbuffer.COLOR_WHITE,
+        width = sw,
+        height = viewport_h,
+        self.canvas_container,
+    }
+
+    -- ── 3. Assemble Non-Overlapping Structured Layout (Toolbar ALWAYS on Top) ─
+    local image_layer = FrameContainer:new{
+        padding = 0,
+        bordersize = 0,
+        background = self.inverted and Blitbuffer.COLOR_BLACK or Blitbuffer.COLOR_WHITE,
+        width = sw,
+        height = sh,
+        VerticalGroup:new{
+            align = "left",
+            VerticalSpan:new{ width = toolbar_h },
+            image_surface,
+        }
+    }
+
+    self[1] = FrameContainer:new{
+        padding = 0,
+        bordersize = 0,
+        background = self.inverted and Blitbuffer.COLOR_BLACK or Blitbuffer.COLOR_WHITE,
+        width = sw,
+        height = sh,
+        OverlapGroup:new{
+            image_layer,
+            toolbar_widget,
+        }
+    }
+end
+
+function ImageViewer:close()
+    if self.plugin and self.plugin.active_image_viewer == self then
+        self.plugin.active_image_viewer = nil
+    end
+    UIManager:close(self, "ui")
+end
+
+return ImageViewer

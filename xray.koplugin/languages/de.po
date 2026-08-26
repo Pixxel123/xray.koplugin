@@ -161,6 +161,14 @@ msgstr "Belletristik"
 msgid "book_type_nonfiction"
 msgstr "Sachbuch"
 
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "Schlüssel löschen"
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "Alle Schlüssel löschen"
+
 # en-hash: 36bb6559696dc9124986ae120515984f
 msgid "btn_paste"
 msgstr "Einfügen"
@@ -193,6 +201,10 @@ msgstr "Kein Charakter gefunden, der auf '%s' passt"
 msgid "close"
 msgstr "Schließen"
 
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "Verbindung über Smartphone / PC"
+
 # en-hash: 3441bb13db3b069cccbba18579ae99f2
 msgid "config_default_gemini"
 msgstr "  Standard (Gemini)"
@@ -208,6 +220,14 @@ msgstr "GESETZT"
 # en-hash: 70d9be9b139893aa6c69b5e77e614311
 msgid "confirm"
 msgstr "Confirm"
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "Sind Sie sicher, dass Sie alle konfigurierten API-Schlüssel und benutzerdefinierten Endpunkte löschen möchten?\n\nDadurch werden alle gespeicherten Schlüssel von diesem Gerät entfernt."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "Den konfigurierten API-Schlüssel für %s löschen?"
 
 # en-hash: 9cfefed8fb9497baa5cd519d7d2bb5d7
 msgid "current_language"
@@ -441,6 +461,86 @@ msgstr "Erwähnungen finden"
 msgid "full_book_option"
 msgstr "Vollständiger Buch-Modus"
 
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "Geben Sie Ihren kostenlosen Gemini-Schlüssel aus Google AI Studio ein (beginnt mit AQ. oder AIzaSy...):"
+
+# en-hash: 782d6b28dce4e5d0b2ac92142c6624ba
+msgid "img_action_favorite"
+msgstr "Zu Favoriten hinzufügen"
+
+# en-hash: afc4f81fda38554e400945c2e92443a5
+msgid "img_action_goto_page"
+msgstr "Zur Buchseite springen"
+
+# en-hash: b0b93c2b610b4e094395ed6b498f4e45
+msgid "img_action_hide"
+msgstr "Bild ausblenden / ignorieren"
+
+# en-hash: 53d7c03bd4c078c7f1ef8e2ef8363095
+msgid "img_action_rename"
+msgstr "Umbenennen / Beschriften"
+
+# en-hash: c15c3f043dd13716a1500143934e919b
+msgid "img_action_save_series"
+msgstr "In Serien-Referenzen speichern"
+
+# en-hash: 4f9b5fa08f2ef86fdc5d0ceefc271981
+msgid "img_action_unfavorite"
+msgstr "Aus Favoriten entfernen"
+
+# en-hash: 3a98d08bfbe19be2cf6b914aba5acc75
+msgid "img_action_unhide"
+msgstr "Bild einblenden"
+
+# en-hash: 2a3132bad0e9c327e1ad645d21aa0997
+msgid "img_action_view"
+msgstr "Vollbild anzeigen (Zoomen & Verschieben)"
+
+# en-hash: fe63191987f62b9e4806e376671ed335
+msgid "img_extract_failed"
+msgstr "Bilddatei konnte nicht extrahiert werden."
+
+# en-hash: 95407637295cd7c30378be19be6e36cb
+msgid "img_no_images"
+msgstr "Keine Bilder für diesen Tab/Filter gefunden.\n\nBilder werden aus dem Buch extrahiert oder gescannt..."
+
+# en-hash: 2bea7b6d66811b50767c7b22f81fb2c2
+msgid "img_rename_title"
+msgstr "Bildbezeichnung umbenennen"
+
+# en-hash: 393c3f5ea8ad35c02691d507bdbb31b0
+msgid "img_reveal"
+msgstr "Aufdecken"
+
+# en-hash: b76c4051f659ad5db0a10e311842b43d
+msgid "img_saved_to_series"
+msgstr "In Serien-Karten gespeichert."
+
+# en-hash: 646ef4f9024779f1a04ee945deffb8d5
+msgid "img_spoiler_confirm"
+msgstr "Dieses Bild erscheint auf Seite %d (nach Ihrem aktuellen Lesefortschritt). Bild aufdecken?"
+
+# en-hash: 4d6cd14fe65f452c65f7feae90b8467d
+msgid "img_spoiler_locked"
+msgstr "Spoiler-geschützt"
+
+# en-hash: b1c94ca2fbc3e78fc30069c8d0f01680
+msgid "img_tab_all"
+msgstr "Alle"
+
+# en-hash: d78986947356ddd37b43d57df289dee9
+msgid "img_tab_favorites"
+msgstr "Favoriten"
+
+# en-hash: 9d948e617b083222afc868add2f50ec2
+msgid "img_tab_series"
+msgstr "Serien"
+
+# en-hash: 911af7aa209e00b49f3d6fd2afa92564
+msgid "img_untitled"
+msgstr "Ohne Titel"
+
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"
 msgstr "Keine xray_key.txt Datei im Speicher-Stammverzeichnis oder Einstellungsverzeichnis gefunden."
@@ -448,6 +548,10 @@ msgstr "Keine xray_key.txt Datei im Speicher-Stammverzeichnis oder Einstellungsv
 # en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
 msgid "import_file_success"
 msgstr "%d API-Schlüssel erfolgreich aus %s importiert!"
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "API-Schlüssel gespeichert!"
 
 # en-hash: 46d812c9b950c3de4557b539f7c32634
 msgid "key_status_err"
@@ -460,6 +564,10 @@ msgstr "[--] Nicht konfiguriert"
 # en-hash: 36fb433675bfba1852e2bc20f946afb9
 msgid "key_status_ok"
 msgstr "[OK] Verbunden (%d ms)"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "Alle API-Schlüssel gelöscht."
 
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
@@ -536,6 +644,10 @@ msgstr "Aktiviert"
 # en-hash: f2cb4c8134446083c3d2859f02c963f6
 msgid "linked_entries_setting_desc"
 msgstr "Verknüpfte Einträge verbindet automatisch Charaktere, Orte und historische Personen, wenn sie in den Beschreibungen der jeweils anderen erwähnt werden.\n\nWenn Sie dies deaktivieren, wird die Schaltfläche 'Verknüpfte Einträge' in den Detaildialogen ausgeblendet."
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "Verbindung über lokales WLAN"
 
 # en-hash: db644ab64bb392cf0d28dfd9cc2c0372
 msgid "log_empty"
@@ -649,6 +761,10 @@ msgstr "Book Mode"
 msgid "menu_characters"
 msgstr "Charaktere"
 
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "Alle API-Schlüssel löschen..."
+
 # en-hash: 06f4f7bd90b1c8a0145d18ee55c265c4
 msgid "menu_clear_cache"
 msgstr "Cache leeren"
@@ -660,6 +776,10 @@ msgstr "Logs löschen"
 # en-hash: edcf008bae916e157620688fbff8d980
 msgid "menu_clear_series_cache"
 msgstr "Serien-Cache leeren"
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "%s-Schlüssel löschen..."
 
 # en-hash: 5c4a6c4395765ab86fc49b6c957525d9
 msgid "menu_content_fetch_settings"
@@ -697,9 +817,9 @@ msgstr "Weitere Charaktere abrufen"
 msgid "menu_fetch_more_terms"
 msgstr "Weitere Begriffe abrufen"
 
-# en-hash: 6230c4dd24ba41dff51eb292727348fe
+# en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Series Context abrufen / aktualisieren"
+msgstr "Serien-Kontext abrufen / aktualisieren"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -708,6 +828,10 @@ msgstr "Frequenz"
 # en-hash: 60b01aa51c38e7a952d2760bf1584915
 msgid "menu_historical_figures"
 msgstr "Historische Personen"
+
+# en-hash: 073096c9e6fbe0599a7c64e0e7a665cb
+msgid "menu_images"
+msgstr "Bilder & Karten"
 
 # en-hash: 31a20a82ddb0aada27aab20c1352115f
 msgid "menu_import_file"
@@ -753,9 +877,21 @@ msgstr "Sekundäres KI-Modell"
 msgid "menu_series_context"
 msgstr "Reihen-Kontext"
 
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "API-Schlüssel von Smartphone / PC einrichten"
+
 # en-hash: f4f70727dc34561dfde1a3c529b6205c
 msgid "menu_settings"
 msgstr "Einstellungen"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "Cloud-Relay (Empfohlen — funktioniert überall)"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "Lokales WLAN (Offline-LAN)"
 
 # en-hash: 31d109d162629f8d0cfc8ce8316c0567
 msgid "menu_terms"
@@ -804,6 +940,10 @@ msgstr "Protokoll anzeigen"
 # en-hash: 464b65f46044b81b6b95485f1d38ccfa
 msgid "menu_web_setup"
 msgstr "API-Schlüssel über Smartphone / PC einrichten (QR-Code)"
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "Willkommen & Schnelleinrichtung..."
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -965,6 +1105,10 @@ msgstr "Die KI hat %d mögliche(s) Duplikat(e) aus dem letzten Abruf gefunden. J
 msgid "plugin_description"
 msgstr "Verbessern Sie Ihr Leseerlebnis mit KI-gestützter Buchanalyse, genau wie Amazon Kindle X-Ray!"
 
+# en-hash: 14230d11143a03f4330c6433d5032a9d
+msgid "prev"
+msgstr "Zurück"
+
 # en-hash: 136dbfc383f7b6799dbdcb4b37c65d13
 msgid "quick_menu_title"
 msgstr "X-Ray-Schnellmenü"
@@ -1072,6 +1216,10 @@ msgstr "── Vorherige Bücher ──"
 # en-hash: 38a1412b98e409d6f6a0b2464c62fa08
 msgid "series_prior_label"
 msgstr "[Vorherige]"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "%s-API-Schlüssel gelöscht."
 
 # en-hash: 72ef2b9b6965d078e3c7f95487a82d1c
 msgid "skip"
@@ -1457,6 +1605,86 @@ msgstr "API-Schlüssel für %s empfangen und gespeichert!"
 msgid "web_setup_title"
 msgstr "Über Smartphone / PC verbinden"
 
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "Später fragen"
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "Weiter"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "Nicht mehr fragen"
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "Jetzt importieren"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "Wählen Sie zu Beginn, wie Sie Ihren API-Schlüssel verbinden möchten:"
+
+# en-hash: b6b5dc2a0846b328e444266fa87d26ec
+msgid "welcome_file_guide_desc"
+msgstr "So konfigurieren Sie API-Schlüssel über eine Textdatei:\n\n1. Erstellen Sie eine Datei namens 'xray_key.txt' auf Ihrem Gerät oder Computer.\n2. Platzieren Sie diese in Ihrem KOReader-Ordner (z. B. koreader/ oder koreader/settings/).\n3. Fügen Sie Ihren Schlüssel in einer einzelnen Zeile ein:\n   • Gemini: gemini = IHR_SCHLÜSSEL (oder einfach den Schlüssel einfügen)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Tippen Sie unten auf 'Jetzt importieren', um Ihre Schlüssel zu laden.\n\nManuelle Konfiguration: Sie können auch koreader/plugins/xray.koplugin/xray_config.lua bearbeiten."
+
+# en-hash: 6db5d8a713e37567f7785261dc00ae74
+msgid "welcome_file_guide_scan"
+msgstr "QR-Code scannen, um die Anleitung zur API-Schlüssel-Einrichtung im Wiki anzuzeigen"
+
+# en-hash: c832496ce43a8a4c1465b7089b7ba5b6
+msgid "welcome_file_guide_title"
+msgstr "Konfiguration & Textdatei-Einrichtung..."
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "KI-Anbieter einrichten"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "Keine Datei xray_key.txt im KOReader-Verzeichnis gefunden."
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "Eigene Endpunkte, OpenAI, DeepSeek, Claude oder OpenRouter konfigurieren."
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "Alle Anbieter-Einstellungen öffnen"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "Tippen oder fügen Sie Ihren API-Schlüssel über die Bildschirmtastatur ein."
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "Schlüssel auf dem E-Reader eingeben"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "Schlüssel automatisch aus xray_key.txt importieren oder Wiki-Anleitung ansehen."
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "Per Textdatei (xray_key.txt) oder Konfiguration importieren"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "QR-Code scannen, um Ihren Schlüssel online per Cloud Relay oder lokalem WLAN einzugeben."
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "Vom Smartphone / PC festlegen (Empfohlen)"
+
+# en-hash: 741987eccc2e46095fdd70cf9377e31e
+msgid "welcome_select_provider"
+msgstr "KI-Anbieter auswählen"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "WILLKOMMEN BEI X-RAY"
+
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
 msgstr "Deaktiviert"
@@ -1473,156 +1701,3 @@ msgstr "Fügt eine 'X-Ray'-Schaltfläche zu Wörterbuch- und Auswahlmenüs für 
 msgid "yes"
 msgstr "Ja"
 
-
-# en-hash: c1cd902a55171a323ff6504b0dfdb405
-msgid "menu_set_keys_device"
-msgstr "API-Schlüssel von Smartphone / PC einrichten"
-
-# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
-msgid "menu_setup_cloud"
-msgstr "Cloud-Relay (Empfohlen — funktioniert überall)"
-
-# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
-msgid "menu_setup_local"
-msgstr "Lokales WLAN (Offline-LAN)"
-
-# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
-msgid "cloud_setup_title"
-msgstr "Verbindung über Smartphone / PC"
-
-# en-hash: 08ea860427184895725e398c5ef821b1
-msgid "local_setup_title"
-msgstr "Verbindung über lokales WLAN"
-
-# en-hash: b88c7d8b4f064676524e945ceb6fc35c
-msgid "welcome_tag"
-msgstr "WILLKOMMEN BEI X-RAY"
-
-# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
-msgid "welcome_headline"
-msgstr "KI-Anbieter einrichten"
-
-# en-hash: bcaef36c11aa1e80a9357b990991575e
-msgid "welcome_desc"
-msgstr "Wählen Sie zu Beginn, wie Sie Ihren API-Schlüssel verbinden möchten:"
-
-# en-hash: f5d12f602967b00beea3f12412fcb3a2
-msgid "welcome_opt_phone_title"
-msgstr "Vom Smartphone / PC festlegen (Empfohlen)"
-
-# en-hash: 0b8604ae3471a584cb27ba990fb656d9
-msgid "welcome_opt_phone_desc"
-msgstr "QR-Code scannen, um Ihren Schlüssel online per Cloud Relay oder lokalem WLAN einzugeben."
-
-# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
-msgid "welcome_opt_ereader_title"
-msgstr "Schlüssel auf dem E-Reader eingeben"
-
-# en-hash: 39f6b18d9eef21577906958535c0e9ed
-msgid "welcome_opt_ereader_desc"
-msgstr "Tippen oder fügen Sie Ihren API-Schlüssel über die Bildschirmtastatur ein."
-
-# en-hash: 5e2364ee83d001f6721276c20925e78e
-msgid "welcome_opt_file_title"
-msgstr "Per Textdatei (xray_key.txt) oder Konfiguration importieren"
-
-# en-hash: c3c978de8a982902e76b01a8bc5a996b
-msgid "welcome_opt_file_desc"
-msgstr "Schlüssel automatisch aus xray_key.txt importieren oder Wiki-Anleitung ansehen."
-
-# en-hash: 4c25c9a50a911c95509525f745eb9a6a
-msgid "welcome_opt_all_title"
-msgstr "Alle Anbieter-Einstellungen öffnen"
-
-# en-hash: 7464eef1919692978bb13f0aab065f20
-msgid "welcome_opt_all_desc"
-msgstr "Eigene Endpunkte, OpenAI, DeepSeek, Claude oder OpenRouter konfigurieren."
-
-# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
-msgid "welcome_action_continue"
-msgstr "Weiter"
-
-# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
-msgid "welcome_action_skip"
-msgstr "Vorläufig überspringen"
-
-# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
-msgid "welcome_file_guide_title"
-msgstr "Konfiguration & Textdatei-Einrichtung"
-
-# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
-msgid "welcome_file_guide_desc"
-msgstr "Sie können API-Schlüssel ohne Tippen einrichten, indem Sie eine Textdatei auf Ihrem Gerät ablegen:\n\n1. Erstellen Sie eine Datei namens 'xray_key.txt' im KOReader-Verzeichnis.\n2. Fügen Sie Ihren Schlüssel ein (z. B. 'gemini: AQ...' oder nur den Schlüssel).\n3. Tippen Sie unten auf 'Jetzt importieren', um den Schlüssel zu laden."
-
-# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
-msgid "welcome_btn_import_now"
-msgstr "Jetzt importieren"
-
-# en-hash: f307ec8cddbe39ac8784564076e583ae
-msgid "welcome_no_file_found"
-msgstr "Keine Datei xray_key.txt im KOReader-Verzeichnis gefunden."
-
-# en-hash: a7c2b2011b7d2850cb512d993e312e49
-msgid "menu_welcome_quick_setup"
-msgstr "Willkommen & Schnelleinrichtung..."
-
-# en-hash: 3845eb0df76becd72ddfa51233992d18
-msgid "menu_gemini_key"
-msgstr "Google Gemini API-Schlüssel"
-
-# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
-msgid "gemini_key_hint"
-msgstr "Geben Sie Ihren kostenlosen Gemini-Schlüssel aus Google AI Studio ein (beginnt mit AQ. oder AIzaSy...):"
-
-# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
-msgid "key_saved"
-msgstr "API-Schlüssel gespeichert!"
-
-# en-hash: d842d358ea8d0d431df1113c927b3629
-msgid "menu_clear_all_keys"
-msgstr "Alle API-Schlüssel löschen..."
-
-# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
-msgid "confirm_clear_all_keys"
-msgstr "Sind Sie sicher, dass Sie alle konfigurierten API-Schlüssel und benutzerdefinierten Endpunkte löschen möchten?\n\nDadurch werden alle gespeicherten Schlüssel von diesem Gerät entfernt."
-
-# en-hash: 9cf1692949f390c46b8cfb9d074674b2
-msgid "btn_clear_keys"
-msgstr "Alle Schlüssel löschen"
-
-# en-hash: 27828475d7e3158c09df57d723b02ba4
-msgid "keys_cleared"
-msgstr "Alle API-Schlüssel gelöscht."
-
-# en-hash: ebdd9cc3e307ed530b80afc1b698a302
-msgid "menu_clear_single_key"
-msgstr "%s-Schlüssel löschen..."
-
-# en-hash: dd6eee404e54eafd92e56d09cb4848f3
-msgid "confirm_clear_single_key"
-msgstr "Den konfigurierten API-Schlüssel für %s löschen?"
-
-# en-hash: 7deeb207a3f824e059410b7f6f118e60
-msgid "btn_clear_key"
-msgstr "Schlüssel löschen"
-
-# en-hash: 4307bc48de0a1f321210a63396bea390
-msgid "single_key_cleared"
-msgstr "%s-API-Schlüssel gelöscht."
-
-# en-hash: ad608bec35300c1dbb0180723f2f6b9f
-msgid "welcome_action_ask_later"
-msgstr "Später fragen"
-
-# en-hash: 10577dd8e9aef1c7097268c665a5f46e
-msgid "welcome_action_dont_ask"
-msgstr "Nicht mehr fragen"
-
-# en-hash: 47df1620e012b20c174af13225cc4a36
-msgid "welcome_file_guide_scan"
-msgstr "QR-Code scannen für die Wiki-Anleitung zur erweiterten Nutzung"
-
-
-
-msgid "welcome_select_provider"
-msgstr "KI-Anbieter auswählen"

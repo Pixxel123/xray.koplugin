@@ -147,7 +147,7 @@ msgstr "Modalità Prenota salvata!"
 
 # en-hash: 9ea3cd79552afa39d886f96f4b101991
 msgid "book_type_about"
-msgstr "Il tipo di libro determina quale strategia di estrazione dell'IA viene utilizzata e quali funzionalità sono disponibili.\n\n- Narrativa: si concentra su narrativa, personaggi e sequenza temporale della trama.\n- Saggistica: si concentra su termini, concetti e figure storiche.\n\n\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Rilevamento automatico\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" consentirà all'IA di decidere dopo il primo recupero.\n\n[B]Nota:[/B] Questa impostazione è salvata [B]per libro[/B]. Una scelta personalizzata prevale sul rilevamento automatico o sulle impostazioni globali."
+msgstr "Il tipo di libro determina quale strategia di estrazione dell'IA viene utilizzata e quali funzionalità sono disponibili.\n\n- Narrativa: si concentra su narrativa, personaggi e sequenza temporale della trama.\n- Saggistica: si concentra su termini, concetti e figure storiche.\n\n\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Rilevamento automatico\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" consentirà all'IA di decidere dopo il primo recupero.\n\n[B]Nota:[/B] Questa impostazione è salvata [B]per libro[/B]. Una scelta personalizzata prevale sul rilevamento automatico o sulle impostazioni globali."
 
 # en-hash: e67731741de13a0fcd235ea7630e8ebc
 msgid "book_type_auto"
@@ -160,6 +160,14 @@ msgstr "Fictional"
 # en-hash: 314bf1da631aba7851556f01b79c3fef
 msgid "book_type_nonfiction"
 msgstr "Saggistica"
+
+# en-hash: 7deeb207a3f824e059410b7f6f118e60
+msgid "btn_clear_key"
+msgstr "Cancella chiave"
+
+# en-hash: 9cf1692949f390c46b8cfb9d074674b2
+msgid "btn_clear_keys"
+msgstr "Cancella tutte le chiavi"
 
 # en-hash: 36bb6559696dc9124986ae120515984f
 msgid "btn_paste"
@@ -193,6 +201,10 @@ msgstr "Nessun carattere trovato corrispondente a '%s'"
 msgid "close"
 msgstr "Vicino"
 
+# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
+msgid "cloud_setup_title"
+msgstr "Connetti via smartphone / PC"
+
 # en-hash: 3441bb13db3b069cccbba18579ae99f2
 msgid "config_default_gemini"
 msgstr "Predefinito (Gemelli)"
@@ -208,6 +220,14 @@ msgstr "IMPOSTATO"
 # en-hash: 70d9be9b139893aa6c69b5e77e614311
 msgid "confirm"
 msgstr "Confirm"
+
+# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
+msgid "confirm_clear_all_keys"
+msgstr "Sei sicuro di voler cancellare tutte le chiavi API configurate e gli endpoint personalizzati?\n\nQuesto rimuoverà tutte le chiavi salvate da questo dispositivo."
+
+# en-hash: dd6eee404e54eafd92e56d09cb4848f3
+msgid "confirm_clear_single_key"
+msgstr "Cancellare la chiave API configurata per %s?"
 
 # en-hash: 9cfefed8fb9497baa5cd519d7d2bb5d7
 msgid "current_language"
@@ -255,7 +275,7 @@ msgstr "Configurazione API personalizzata %d salvata."
 
 # en-hash: 0bec527ee74be1c3e327221a74853bca
 msgid "desc_len_about_chars"
-msgstr "DESCRIZIONI DEI PERSONAGGI\n\n• Breve (~80 caratteri): nome, ruolo e una breve nota.\n• Predefinito (~200 caratteri): analisi standard.\n• Dettagliato (~350 caratteri): studio approfondito del personaggio con tratti e motivazioni.\n• Molto dettagliato (~500 caratteri): analisi approfondita.\n\nTRADE-OFF\nDescrizioni più lunghe → meno caratteri restituiti durante i recuperi iniziali/completi. Le successive esecuzioni di \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera altro\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" non sono influenzate."
+msgstr "DESCRIZIONI DEI PERSONAGGI\n\n• Breve (~80 caratteri): nome, ruolo e una breve nota.\n• Predefinito (~200 caratteri): analisi standard.\n• Dettagliato (~350 caratteri): studio approfondito del personaggio con tratti e motivazioni.\n• Molto dettagliato (~500 caratteri): analisi approfondita.\n\nTRADE-OFF\nDescrizioni più lunghe → meno caratteri restituiti durante i recuperi iniziali/completi. Le successive esecuzioni di \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera altro\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" non sono influenzate."
 
 # en-hash: d286e548e835ec6e3280b7af6bd717bc
 msgid "desc_len_about_hist"
@@ -441,6 +461,86 @@ msgstr "Trova menzioni"
 msgid "full_book_option"
 msgstr "Modalità libro completo"
 
+# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
+msgid "gemini_key_hint"
+msgstr "Inserisci la tua chiave gratuita Gemini da Google AI Studio (inizia con AQ. o AIzaSy...):"
+
+# en-hash: 782d6b28dce4e5d0b2ac92142c6624ba
+msgid "img_action_favorite"
+msgstr "Aggiungi ai preferiti"
+
+# en-hash: afc4f81fda38554e400945c2e92443a5
+msgid "img_action_goto_page"
+msgstr "Vai alla pagina nel libro"
+
+# en-hash: b0b93c2b610b4e094395ed6b498f4e45
+msgid "img_action_hide"
+msgstr "Nascondi / Ignora immagine"
+
+# en-hash: 53d7c03bd4c078c7f1ef8e2ef8363095
+msgid "img_action_rename"
+msgstr "Rinomina / Etichetta"
+
+# en-hash: c15c3f043dd13716a1500143934e919b
+msgid "img_action_save_series"
+msgstr "Salva nei riferimenti della serie"
+
+# en-hash: 4f9b5fa08f2ef86fdc5d0ceefc271981
+msgid "img_action_unfavorite"
+msgstr "Rimuovi dai preferiti"
+
+# en-hash: 3a98d08bfbe19be2cf6b914aba5acc75
+msgid "img_action_unhide"
+msgstr "Mostra immagine"
+
+# en-hash: 2a3132bad0e9c327e1ad645d21aa0997
+msgid "img_action_view"
+msgstr "Visualizza a schermo intero (Zoom e Pan)"
+
+# en-hash: fe63191987f62b9e4806e376671ed335
+msgid "img_extract_failed"
+msgstr "Impossibile estrarre il file immagine."
+
+# en-hash: 95407637295cd7c30378be19be6e36cb
+msgid "img_no_images"
+msgstr "Nessuna immagine trovata per questa scheda/filtro.\n\nEstrazione o scansione delle immagini dal libro..."
+
+# en-hash: 2bea7b6d66811b50767c7b22f81fb2c2
+msgid "img_rename_title"
+msgstr "Rinomina etichetta immagine"
+
+# en-hash: 393c3f5ea8ad35c02691d507bdbb31b0
+msgid "img_reveal"
+msgstr "Mostra"
+
+# en-hash: b76c4051f659ad5db0a10e311842b43d
+msgid "img_saved_to_series"
+msgstr "Salvato nelle mappe della serie."
+
+# en-hash: 646ef4f9024779f1a04ee945deffb8d5
+msgid "img_spoiler_confirm"
+msgstr "Questa immagine appare a pagina %d (oltre il tuo progresso attuale). Mostrare l'immagine?"
+
+# en-hash: 4d6cd14fe65f452c65f7feae90b8467d
+msgid "img_spoiler_locked"
+msgstr "Protetto da spoiler"
+
+# en-hash: b1c94ca2fbc3e78fc30069c8d0f01680
+msgid "img_tab_all"
+msgstr "Tutte"
+
+# en-hash: d78986947356ddd37b43d57df289dee9
+msgid "img_tab_favorites"
+msgstr "Preferiti"
+
+# en-hash: 9d948e617b083222afc868add2f50ec2
+msgid "img_tab_series"
+msgstr "Serie"
+
+# en-hash: 911af7aa209e00b49f3d6fd2afa92564
+msgid "img_untitled"
+msgstr "Senza titolo"
+
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"
 msgstr "Nessun file xray_key.txt trovato nella root di memoria o nella cartella impostazioni."
@@ -448,6 +548,10 @@ msgstr "Nessun file xray_key.txt trovato nella root di memoria o nella cartella 
 # en-hash: 7a40718b9edbd414f46df5dd7d9d96b2
 msgid "import_file_success"
 msgstr "Importate con successo %d chiave/i API da %s!"
+
+# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
+msgid "key_saved"
+msgstr "Chiave API salvata!"
 
 # en-hash: 46d812c9b950c3de4557b539f7c32634
 msgid "key_status_err"
@@ -460,6 +564,10 @@ msgstr "[--] Non configurato"
 # en-hash: 36fb433675bfba1852e2bc20f946afb9
 msgid "key_status_ok"
 msgstr "[OK] Connesso (%d ms)"
+
+# en-hash: 27828475d7e3158c09df57d723b02ba4
+msgid "keys_cleared"
+msgstr "Tutte le chiavi API sono state cancellate."
 
 # en-hash: 9ab81f57823f6aeb02362291f23883e6
 msgid "label_aliases"
@@ -535,7 +643,11 @@ msgstr "Abilitato"
 
 # en-hash: f2cb4c8134446083c3d2859f02c963f6
 msgid "linked_entries_setting_desc"
-msgstr "Le voci collegate collegano automaticamente personaggi, luoghi e figure storiche quando sono menzionati nelle rispettive descrizioni.\n\nDisabilitando questa opzione si nasconderà il pulsante \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Voci collegate\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" dalle finestre di dialogo dei dettagli."
+msgstr "Le voci collegate collegano automaticamente personaggi, luoghi e figure storiche quando sono menzionati nelle rispettive descrizioni.\n\nDisabilitando questa opzione si nasconderà il pulsante \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Voci collegate\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" dalle finestre di dialogo dei dettagli."
+
+# en-hash: 08ea860427184895725e398c5ef821b1
+msgid "local_setup_title"
+msgstr "Connetti via Wi-Fi locale"
 
 # en-hash: db644ab64bb392cf0d28dfd9cc2c0372
 msgid "log_empty"
@@ -607,7 +719,7 @@ msgstr "Scansione in corso... %1 di %2 capitoli"
 
 # en-hash: b9cb4acd779a0494cd5de4f263626662
 msgid "mentions_setting_desc"
-msgstr "La scansione delle menzioni ti consente di trovare ogni occorrenza di un personaggio o di un luogo nel libro. Ciò avviene automaticamente in background per garantire che il lettore rimanga reattivo.\n\nDisabilitando questa opzione si nasconderà il pulsante \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Trova menzioni\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"."
+msgstr "La scansione delle menzioni ti consente di trovare ogni occorrenza di un personaggio o di un luogo nel libro. Ciò avviene automaticamente in background per garantire che il lettore rimanga reattivo.\n\nDisabilitando questa opzione si nasconderà il pulsante \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Trova menzioni\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"."
 
 # en-hash: 2c126ee6ce85ef471a3a0e096c78b724
 msgid "mentions_setting_title"
@@ -649,6 +761,10 @@ msgstr "Tipo di libro"
 msgid "menu_characters"
 msgstr "Caratteri"
 
+# en-hash: d842d358ea8d0d431df1113c927b3629
+msgid "menu_clear_all_keys"
+msgstr "Cancella tutte le chiavi API..."
+
 # en-hash: 06f4f7bd90b1c8a0145d18ee55c265c4
 msgid "menu_clear_cache"
 msgstr "Cancella cache"
@@ -660,6 +776,10 @@ msgstr "Cancella registri"
 # en-hash: edcf008bae916e157620688fbff8d980
 msgid "menu_clear_series_cache"
 msgstr "Svuota cache serie"
+
+# en-hash: ebdd9cc3e307ed530b80afc1b698a302
+msgid "menu_clear_single_key"
+msgstr "Cancella chiave %s..."
 
 # en-hash: 5c4a6c4395765ab86fc49b6c957525d9
 msgid "menu_content_fetch_settings"
@@ -697,9 +817,9 @@ msgstr "Ottieni più personaggi"
 msgid "menu_fetch_more_terms"
 msgstr "Ottieni più termini"
 
-# en-hash: 6230c4dd24ba41dff51eb292727348fe
+# en-hash: f0d29ae92c638538610d26014bda7269
 msgid "menu_fetch_series_context"
-msgstr "Recupera/Aggiorna contesto serie"
+msgstr "Recupera / Aggiorna contesto serie"
 
 # en-hash: 7cf395303ce3665a9834721d4b748e4b
 msgid "menu_frequency"
@@ -708,6 +828,10 @@ msgstr "Frequenza"
 # en-hash: 60b01aa51c38e7a952d2760bf1584915
 msgid "menu_historical_figures"
 msgstr "Figure storiche"
+
+# en-hash: 073096c9e6fbe0599a7c64e0e7a665cb
+msgid "menu_images"
+msgstr "Immagini e mappe"
 
 # en-hash: 31a20a82ddb0aada27aab20c1352115f
 msgid "menu_import_file"
@@ -753,9 +877,21 @@ msgstr "Modello di intelligenza artificiale secondaria"
 msgid "menu_series_context"
 msgstr "Contesto della serie"
 
+# en-hash: c1cd902a55171a323ff6504b0dfdb405
+msgid "menu_set_keys_device"
+msgstr "Imposta chiave API da smartphone / PC"
+
 # en-hash: f4f70727dc34561dfde1a3c529b6205c
 msgid "menu_settings"
 msgstr "Impostazioni"
+
+# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
+msgid "menu_setup_cloud"
+msgstr "Relay Cloud (Consigliato — funziona ovunque)"
+
+# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
+msgid "menu_setup_local"
+msgstr "Wi-Fi locale (LAN offline)"
 
 # en-hash: 31d109d162629f8d0cfc8ce8316c0567
 msgid "menu_terms"
@@ -804,6 +940,10 @@ msgstr "Visualizza registro"
 # en-hash: 464b65f46044b81b6b95485f1d38ccfa
 msgid "menu_web_setup"
 msgstr "Imposta chiave API da smartphone / PC (codice QR)"
+
+# en-hash: a7c2b2011b7d2850cb512d993e312e49
+msgid "menu_welcome_quick_setup"
+msgstr "Benvenuto e configurazione rapida..."
 
 # en-hash: 0863526e514d88cd2d00b39f8dda0920
 msgid "menu_xray"
@@ -915,11 +1055,11 @@ msgstr "Nessun duplicato trovato."
 
 # en-hash: 064105ef9b1bca475059078013cc4a4b
 msgid "no_historical_data"
-msgstr "Ancora nessun dato sulle figure storiche.\n\nUtilizza prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati a raggi X\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\".\n\nL'intelligenza artificiale rileverà le figure storiche\nreali menzionate nel libro."
+msgstr "Ancora nessun dato sulle figure storiche.\n\nUtilizza prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati a raggi X\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\".\n\nL'intelligenza artificiale rileverà le figure storiche\nreali menzionate nel libro."
 
 # en-hash: 4d0e58f2c49ca238a05d2a92486d3d70
 msgid "no_location_data"
-msgstr "Nessun dato sulla posizione ancora. Utilizzare prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati radiografici\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"."
+msgstr "Nessun dato sulla posizione ancora. Utilizzare prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati radiografici\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"."
 
 # en-hash: 6c32701ae234f6a1c3a03e18d89bd1e1
 msgid "no_merges_performed"
@@ -935,11 +1075,11 @@ msgstr "Nessuna serie rilevata per questo libro."
 
 # en-hash: 29503d301d509e5cfea9e97daffa9e79
 msgid "no_terms_data"
-msgstr "Nessun dato sui termini ancora. Utilizzare prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati radiografici\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"."
+msgstr "Nessun dato sui termini ancora. Utilizzare prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati radiografici\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"."
 
 # en-hash: 0c8a85db22b4a3eadf95fe1a55f00c63
 msgid "no_timeline_data"
-msgstr "Ancora nessun dato sulla sequenza temporale.\n\nUtilizza prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati a raggi X\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\".\n\nL'AI mostrerà gli eventi chiave in\nordine cronologico."
+msgstr "Ancora nessun dato sulla sequenza temporale.\n\nUtilizza prima \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"Recupera dati a raggi X\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\".\n\nL'AI mostrerà gli eventi chiave in\nordine cronologico."
 
 # en-hash: e0aa021e21dddbd6d8cecec71e9cf564
 msgid "ok"
@@ -965,6 +1105,10 @@ msgstr "L'intelligenza artificiale ha trovato %d possibili duplicati dall'ultimo
 msgid "plugin_description"
 msgstr "Trasforma la tua esperienza di lettura con l'analisi dei libri basata sull'intelligenza artificiale, proprio come Amazon Kindle X-Ray!"
 
+# en-hash: 14230d11143a03f4330c6433d5032a9d
+msgid "prev"
+msgstr "Prec."
+
 # en-hash: 136dbfc383f7b6799dbdcb4b37c65d13
 msgid "quick_menu_title"
 msgstr "Menu rapido dei raggi X"
@@ -979,7 +1123,7 @@ msgstr "Reason"
 
 # en-hash: 1ec7919a887b228482b4fd9a80fcd324
 msgid "reasoning_about"
-msgstr "Controlla la profondità del \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"pensiero\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" per i modelli di ragionamento:\n\n• Non impostato: nessuna istruzione specifica inviata; il modello utilizza le sue impostazioni predefinite interne.\n• Basso: estrazione rapida ed economica per libri semplici.\n• Medio: profondità bilanciata per la maggior parte delle narrazioni.\n• Alto: analisi dettagliata per reti di personaggi complesse.\n\nSi applica a: GPT-5.x (o1/o3/gpt-5), Claude (sonetto/opus/haiku) e Gemini 2.5+.\n\nNota: DeepSeek V4 funziona intrinsecamente: questa impostazione non ha alcun effetto su di esso."
+msgstr "Controlla la profondità del \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"pensiero\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" per i modelli di ragionamento:\n\n• Non impostato: nessuna istruzione specifica inviata; il modello utilizza le sue impostazioni predefinite interne.\n• Basso: estrazione rapida ed economica per libri semplici.\n• Medio: profondità bilanciata per la maggior parte delle narrazioni.\n• Alto: analisi dettagliata per reti di personaggi complesse.\n\nSi applica a: GPT-5.x (o1/o3/gpt-5), Claude (sonetto/opus/haiku) e Gemini 2.5+.\n\nNota: DeepSeek V4 funziona intrinsecamente: questa impostazione non ha alcun effetto su di esso."
 
 # en-hash: 655d20c1ca69519ca647684edbb2db35
 msgid "reasoning_high"
@@ -1072,6 +1216,10 @@ msgstr "── Libri precedenti ──"
 # en-hash: 38a1412b98e409d6f6a0b2464c62fa08
 msgid "series_prior_label"
 msgstr "[Precedente]"
+
+# en-hash: 4307bc48de0a1f321210a63396bea390
+msgid "single_key_cleared"
+msgstr "Chiave API %s cancellata."
 
 # en-hash: 72ef2b9b6965d078e3c7f95487a82d1c
 msgid "skip"
@@ -1457,6 +1605,86 @@ msgstr "Chiave API per %s ricevuta e salvata!"
 msgid "web_setup_title"
 msgstr "Connetti via smartphone / PC"
 
+# en-hash: ad608bec35300c1dbb0180723f2f6b9f
+msgid "welcome_action_ask_later"
+msgstr "Chiedi più tardi"
+
+# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
+msgid "welcome_action_continue"
+msgstr "Continua"
+
+# en-hash: 10577dd8e9aef1c7097268c665a5f46e
+msgid "welcome_action_dont_ask"
+msgstr "Non chiedere più"
+
+# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
+msgid "welcome_btn_import_now"
+msgstr "Importa ora"
+
+# en-hash: bcaef36c11aa1e80a9357b990991575e
+msgid "welcome_desc"
+msgstr "Per iniziare, scegli come desideri connettere la tua chiave API:"
+
+# en-hash: b6b5dc2a0846b328e444266fa87d26ec
+msgid "welcome_file_guide_desc"
+msgstr "Come configurare le chiavi API tramite file di testo:\n\n1. Crea un file chiamato 'xray_key.txt' sul tuo dispositivo o computer.\n2. Posizionalo nella cartella di KOReader (es. koreader/ o koreader/settings/).\n3. Aggiungi la chiave all'interno su una singola riga:\n   • Gemini: gemini = CHIAVE (o incolla la chiave grezza)\n   • OpenAI: openai = sk-...\n   • DeepSeek / Claude: deepseek = ..., claude = ...\n4. Tocca 'Importa ora' in basso per caricare le chiavi.\n\nConfig. manuale: Puoi anche modificare koreader/plugins/xray.koplugin/xray_config.lua."
+
+# en-hash: 6db5d8a713e37567f7785261dc00ae74
+msgid "welcome_file_guide_scan"
+msgstr "Scansiona QR per la guida wiki sulla configurazione API"
+
+# en-hash: c832496ce43a8a4c1465b7089b7ba5b6
+msgid "welcome_file_guide_title"
+msgstr "Configurazione e file di testo..."
+
+# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
+msgid "welcome_headline"
+msgstr "Configura provider IA"
+
+# en-hash: f307ec8cddbe39ac8784564076e583ae
+msgid "welcome_no_file_found"
+msgstr "Nessun file xray_key.txt trovato nella directory di KOReader."
+
+# en-hash: 7464eef1919692978bb13f0aab065f20
+msgid "welcome_opt_all_desc"
+msgstr "Configura endpoint personalizzati, OpenAI, DeepSeek, Claude o OpenRouter."
+
+# en-hash: 4c25c9a50a911c95509525f745eb9a6a
+msgid "welcome_opt_all_title"
+msgstr "Apri tutte le impostazioni dei provider"
+
+# en-hash: 39f6b18d9eef21577906958535c0e9ed
+msgid "welcome_opt_ereader_desc"
+msgstr "Digita o incolla la chiave API usando la tastiera sullo schermo."
+
+# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
+msgid "welcome_opt_ereader_title"
+msgstr "Inserisci chiave sull'e-reader"
+
+# en-hash: c3c978de8a982902e76b01a8bc5a996b
+msgid "welcome_opt_file_desc"
+msgstr "Importa automaticamente da xray_key.txt o consulta la guida wiki."
+
+# en-hash: 5e2364ee83d001f6721276c20925e78e
+msgid "welcome_opt_file_title"
+msgstr "Importa da file di testo (xray_key.txt) o configurazione"
+
+# en-hash: 0b8604ae3471a584cb27ba990fb656d9
+msgid "welcome_opt_phone_desc"
+msgstr "Scansiona un codice QR per inserire la chiave tramite Cloud Relay o Wi-Fi locale."
+
+# en-hash: f5d12f602967b00beea3f12412fcb3a2
+msgid "welcome_opt_phone_title"
+msgstr "Imposta da Telefono / PC (Consigliato)"
+
+# en-hash: 741987eccc2e46095fdd70cf9377e31e
+msgid "welcome_select_provider"
+msgstr "Seleziona Provider IA"
+
+# en-hash: b88c7d8b4f064676524e945ceb6fc35c
+msgid "welcome_tag"
+msgstr "BENVENUTO IN X-RAY"
+
 # en-hash: b9f5c797ebbf55adccdd8539a65a0241
 msgid "xray_disabled_label"
 msgstr "Disabilitato"
@@ -1467,162 +1695,9 @@ msgstr "Abilitato"
 
 # en-hash: aa3045baed0aad489f96655b14b671ac
 msgid "xray_mode_desc"
-msgstr "Aggiunge un pulsante \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"X-Ray\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" al dizionario e ai menu di selezione per ricerche istantanee."
+msgstr "Aggiunge un pulsante \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"X-Ray\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" al dizionario e ai menu di selezione per ricerche istantanee."
 
 # en-hash: 93cba07454f06a4a960172bbd6e2a435
 msgid "yes"
 msgstr "SÌ"
 
-
-# en-hash: c1cd902a55171a323ff6504b0dfdb405
-msgid "menu_set_keys_device"
-msgstr "Imposta chiave API da smartphone / PC"
-
-# en-hash: 476ca4e2e359e5560dc4ab4ead44725c
-msgid "menu_setup_cloud"
-msgstr "Relay Cloud (Consigliato — funziona ovunque)"
-
-# en-hash: cce94c5e2e1e515981d108a91b9a2bdc
-msgid "menu_setup_local"
-msgstr "Wi-Fi locale (LAN offline)"
-
-# en-hash: 400a15f44cdb7cf1b903d40d661c98c4
-msgid "cloud_setup_title"
-msgstr "Connetti via smartphone / PC"
-
-# en-hash: 08ea860427184895725e398c5ef821b1
-msgid "local_setup_title"
-msgstr "Connetti via Wi-Fi locale"
-
-# en-hash: b88c7d8b4f064676524e945ceb6fc35c
-msgid "welcome_tag"
-msgstr "BENVENUTO IN X-RAY"
-
-# en-hash: 7e19e3d6ef015d76a93fc39fa78555a2
-msgid "welcome_headline"
-msgstr "Configura provider IA"
-
-# en-hash: bcaef36c11aa1e80a9357b990991575e
-msgid "welcome_desc"
-msgstr "Per iniziare, scegli come desideri connettere la tua chiave API:"
-
-# en-hash: f5d12f602967b00beea3f12412fcb3a2
-msgid "welcome_opt_phone_title"
-msgstr "Imposta da Telefono / PC (Consigliato)"
-
-# en-hash: 0b8604ae3471a584cb27ba990fb656d9
-msgid "welcome_opt_phone_desc"
-msgstr "Scansiona un codice QR per inserire la chiave tramite Cloud Relay o Wi-Fi locale."
-
-# en-hash: 3fa00ffac23d281a564a8d36a33c5c33
-msgid "welcome_opt_ereader_title"
-msgstr "Inserisci chiave sull'e-reader"
-
-# en-hash: 39f6b18d9eef21577906958535c0e9ed
-msgid "welcome_opt_ereader_desc"
-msgstr "Digita o incolla la chiave API usando la tastiera sullo schermo."
-
-# en-hash: 5e2364ee83d001f6721276c20925e78e
-msgid "welcome_opt_file_title"
-msgstr "Importa da file di testo (xray_key.txt) o configurazione"
-
-# en-hash: c3c978de8a982902e76b01a8bc5a996b
-msgid "welcome_opt_file_desc"
-msgstr "Importa automaticamente da xray_key.txt o consulta la guida wiki."
-
-# en-hash: 4c25c9a50a911c95509525f745eb9a6a
-msgid "welcome_opt_all_title"
-msgstr "Apri tutte le impostazioni dei provider"
-
-# en-hash: 7464eef1919692978bb13f0aab065f20
-msgid "welcome_opt_all_desc"
-msgstr "Configura endpoint personalizzati, OpenAI, DeepSeek, Claude o OpenRouter."
-
-# en-hash: a0bfb8e59e6c13fc8d990781f77694fe
-msgid "welcome_action_continue"
-msgstr "Continua"
-
-# en-hash: eb08c9b171c3413283a2b7e3a7add1aa
-msgid "welcome_action_skip"
-msgstr "Salta per ora"
-
-# en-hash: 888299e9c38e37daa3b6a3abca1d1dc5
-msgid "welcome_file_guide_title"
-msgstr "Configurazione via file di testo"
-
-# en-hash: 20d09ed1fdfacd5a85eee5a7b356c81d
-msgid "welcome_file_guide_desc"
-msgstr "Puoi configurare le chiavi API senza digitare inserendo un file di testo sul tuo dispositivo:\n\n1. Crea un file denominato 'xray_key.txt' nella directory di KOReader.\n2. Inserisci la chiave (es. 'gemini: AQ...' o solo la chiave).\n3. Tocca 'Importa ora' in basso per caricarla."
-
-# en-hash: b9709e1b50c06ed39df03fa0b90d40ab
-msgid "welcome_btn_import_now"
-msgstr "Importa ora"
-
-# en-hash: f307ec8cddbe39ac8784564076e583ae
-msgid "welcome_no_file_found"
-msgstr "Nessun file xray_key.txt trovato nella directory di KOReader."
-
-# en-hash: a7c2b2011b7d2850cb512d993e312e49
-msgid "menu_welcome_quick_setup"
-msgstr "Benvenuto e configurazione rapida..."
-
-# en-hash: 3845eb0df76becd72ddfa51233992d18
-msgid "menu_gemini_key"
-msgstr "Chiave API Google Gemini"
-
-# en-hash: 224900ca5b99a949b6fe8a5c0360f5ff
-msgid "gemini_key_hint"
-msgstr "Inserisci la tua chiave gratuita Gemini da Google AI Studio (inizia con AQ. o AIzaSy...):"
-
-# en-hash: 7fc7ee757e25b4fa21f3c74e888e9103
-msgid "key_saved"
-msgstr "Chiave API salvata!"
-
-# en-hash: d842d358ea8d0d431df1113c927b3629
-msgid "menu_clear_all_keys"
-msgstr "Cancella tutte le chiavi API..."
-
-# en-hash: af56aa659f5ec4ce42bb02c3b75dd111
-msgid "confirm_clear_all_keys"
-msgstr "Sei sicuro di voler cancellare tutte le chiavi API configurate e gli endpoint personalizzati?\n\nQuesto rimuoverà tutte le chiavi salvate da questo dispositivo."
-
-# en-hash: 9cf1692949f390c46b8cfb9d074674b2
-msgid "btn_clear_keys"
-msgstr "Cancella tutte le chiavi"
-
-# en-hash: 27828475d7e3158c09df57d723b02ba4
-msgid "keys_cleared"
-msgstr "Tutte le chiavi API sono state cancellate."
-
-# en-hash: ebdd9cc3e307ed530b80afc1b698a302
-msgid "menu_clear_single_key"
-msgstr "Cancella chiave %s..."
-
-# en-hash: dd6eee404e54eafd92e56d09cb4848f3
-msgid "confirm_clear_single_key"
-msgstr "Cancellare la chiave API configurata per %s?"
-
-# en-hash: 7deeb207a3f824e059410b7f6f118e60
-msgid "btn_clear_key"
-msgstr "Cancella chiave"
-
-# en-hash: 4307bc48de0a1f321210a63396bea390
-msgid "single_key_cleared"
-msgstr "Chiave API %s cancellata."
-
-# en-hash: ad608bec35300c1dbb0180723f2f6b9f
-msgid "welcome_action_ask_later"
-msgstr "Chiedi più tardi"
-
-# en-hash: 10577dd8e9aef1c7097268c665a5f46e
-msgid "welcome_action_dont_ask"
-msgstr "Non chiedere più"
-
-# en-hash: 47df1620e012b20c174af13225cc4a36
-msgid "welcome_file_guide_scan"
-msgstr "Scansiona il QR per visualizzare la guida wiki di utilizzo avanzato"
-
-
-
-msgid "welcome_select_provider"
-msgstr "Seleziona Provider IA"

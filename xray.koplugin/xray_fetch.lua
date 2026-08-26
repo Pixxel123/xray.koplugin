@@ -492,6 +492,7 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
     end
 
     cancelActiveRequest = function(reason)
+        if is_cancelled then return end
         is_cancelled = true
         if request_pid and self.ai_helper and self.ai_helper.cancelAsyncChild then
             self.ai_helper:cancelAsyncChild(request_pid)
@@ -686,8 +687,9 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
             local request_started_at = os.time()
             local request_timeout = 600
             local function poll()
-                if is_cancelled or self.destroyed then
-                    cancelActiveRequest(self.destroyed and "Fetch stopped because plugin was destroyed" or "Fetch cancelled")
+                if is_cancelled then return end
+                if self.destroyed then
+                    cancelActiveRequest("Fetch stopped because plugin was destroyed")
                     return
                 end
                 if not self.ui or not self.ui.document then

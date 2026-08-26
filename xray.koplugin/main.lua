@@ -290,7 +290,11 @@ function XRayPlugin:onExit()
 end
 
 function XRayPlugin:onSuspend()
-    self:cancelActiveAIRequest("Fetch cancelled because the device suspended")
+    if self.cancelActiveAIRequest then
+        self:cancelActiveAIRequest("Fetch cancelled because the device suspended")
+    elseif self.ai_helper then
+        self.ai_helper:cancelAsyncChild()
+    end
 end
 
 -- Builds the X-Ray button spec for the dict popup.
@@ -658,7 +662,7 @@ function XRayPlugin:triggerBackgroundMergeFetch(chapter_title)
         -- Foreground requests own the single async child slot and its global
         -- cancel handler. Do not consume the background cooldown or disturb
         -- that ownership while one is active.
-        if self._active_ai_cancel or self.ai_helper._async_child_pid then
+        if self._active_ai_cancel or (self.ai_helper and self.ai_helper._async_child_pid) then
             self:log("XRayPlugin: Skipping background fetch because another AI request is active")
             return
         end

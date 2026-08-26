@@ -337,5 +337,31 @@ describe("xray_chapteranalyzer", function()
             assert.are.equal("Some Kind of Coward", titles[1])
             assert.are.equal("The Heroes", titles[2])
         end)
+
+        it("safely invokes getCurrentPage as a method when resolving current_page", function()
+            local called_with_self = false
+            local ui = {
+                document = {
+                    getToc = function()
+                        return {
+                            { title = "Chapter 1", page = 5 },
+                        }
+                    end,
+                    getPageText = function() return "Chapter 1 text content" end
+                },
+                getCurrentPage = function(self_arg)
+                    if self_arg then called_with_self = true end
+                    return 10
+                end
+            }
+
+            local ok, err = pcall(function()
+                analyzer:getDetailedChapterSamples(ui, 100, 60000, false)
+            end)
+
+            assert.is_true(ok)
+            assert.is_nil(err)
+            assert.is_true(called_with_self)
+        end)
     end)
 end)

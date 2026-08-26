@@ -711,14 +711,16 @@ function ChapterAnalyzer:getDetailedChapterSamples(ui, max_chapters, total_limit
             -- The fetch pipeline resolves the page once and passes it through.
             -- Do not mix that value with view/rolling state, which can use a
             -- different pagination coordinate system for reflowable books.
-        elseif ui.getCurrentPage and ui.getCurrentPage() then
-            current_page = ui:getCurrentPage()
+        elseif type(ui.getCurrentPage) == "function" then
+            local ok, pg = pcall(function() return ui:getCurrentPage() end)
+            if ok and pg then current_page = pg end
         elseif ui.view and ui.view.state and ui.view.state.page then
             current_page = ui.view.state.page
         elseif ui.rolling and ui.rolling.current_page then
             current_page = ui.rolling.current_page
-        elseif ui.paging and ui.paging.getCurrentPage then
-            current_page = ui.paging:getCurrentPage()
+        elseif ui.paging and type(ui.paging.getCurrentPage) == "function" then
+            local ok, pg = pcall(function() return ui.paging:getCurrentPage() end)
+            if ok and pg then current_page = pg end
         end
     end
     

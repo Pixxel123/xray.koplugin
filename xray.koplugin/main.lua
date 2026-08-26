@@ -257,7 +257,11 @@ function XRayPlugin:_buildXRayDictButton(dict_popup_arg)
             if not self.xray_mode_enabled then return end
             -- In new API, widget_instance is passed. In old API, use upvalue.
             local popup = widget_instance or dict_popup_arg
-            local text = popup and (popup.word or popup.text or popup.selection_text)
+            local raw_text = popup and (popup.word or popup.text or popup.selection_text)
+            if type(raw_text) == "table" then
+                raw_text = raw_text.text or raw_text.word or raw_text.selection_text
+            end
+            local text = (type(raw_text) == "string" and raw_text ~= "") and raw_text or nil
             local pos0 = popup and popup.pos0
             local pos1 = popup and popup.pos1
             
@@ -271,7 +275,7 @@ function XRayPlugin:_buildXRayDictButton(dict_popup_arg)
                 self.ui:handleEvent(Event:new("ClearSelection"))
             end
             
-            if text then
+            if text and self.lookup_manager then
                 self.lookup_manager:handleLookup(text, pos0, pos1)
             end
         end,

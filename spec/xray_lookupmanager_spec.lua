@@ -86,4 +86,13 @@ describe("xray_lookupmanager", function()
             assert.are.equal(100, results[1].score)
         end)
     end)
+
+    describe("handleLookup table text payloads", function()
+        it("unwraps table text payloads and looks up correctly", function()
+            local shown = false
+            plugin.showCharacterDetails = function() shown = true end
+            lm:handleLookup({ text = "John Watson" }, 1, 2)
+            assert.is_true(shown)
+        end)
+    end)
 end)

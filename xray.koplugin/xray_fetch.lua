@@ -2,7 +2,6 @@
 
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
-local ConfirmBox = require("ui/widget/confirmbox")
 local ButtonDialog = require("ui/widget/buttondialog")
 local logger = require("logger")
 local plugin_path = ((...) or ""):match("(.-)[^%.]+$") or ""
@@ -111,12 +110,15 @@ function M:fetchSingleWord(text, pos0, pos1)
             if self.showWelcomeCard then
                 self:showWelcomeCard()
             else
-                local ConfirmBox = require("ui/widget/confirmbox")
+                local ButtonDialog = require("ui/widget/buttondialog")
                 local title, text_msg = utils:getFriendlyError("error_api", "invalid api key", self.loc)
-                UIManager:show(ConfirmBox:new{                    text = title .. "\n\n" .. text_msg,
-                    ok_text = self.loc:t("ok") or "OK",
-                    cancel_text = nil
-                })
+                local err_dlg
+                err_dlg = ButtonDialog:new{
+                    title = title,
+                    text = text_msg,
+                    buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_dlg then UIManager:close(err_dlg) end end }}}
+                }
+                UIManager:show(err_dlg)
             end
             return
         end
@@ -229,12 +231,15 @@ function M:fetchSingleWord(text, pos0, pos1)
                 if self._active_ai_dialog == progress_msg then self._active_ai_dialog = nil end
                 if self._active_ai_cancel == cancelLookup then self._active_ai_cancel = nil end
                 self:log("XRayPlugin: Failed to start async lookup")
-                local ConfirmBox = require("ui/widget/confirmbox")
+                local ButtonDialog = require("ui/widget/buttondialog")
                 local title, text_msg = utils:getFriendlyError("error_api", "Failed to start background process", self.loc)
-                UIManager:show(ConfirmBox:new{                    text = title .. "\n\n" .. text_msg,
-                    ok_text = self.loc:t("ok") or "OK",
-                    cancel_text = nil
-                })
+                local err_dlg
+                err_dlg = ButtonDialog:new{
+                    title = title,
+                    text = text_msg,
+                    buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_dlg then UIManager:close(err_dlg) end end }}}
+                }
+                UIManager:show(err_dlg)
                 return
             end
 
@@ -257,24 +262,30 @@ function M:fetchSingleWord(text, pos0, pos1)
                         UIManager:scheduleIn(2, poll)
                     else
                         cancelLookup("Single word lookup timed out")
-                        local ConfirmBox = require("ui/widget/confirmbox")
+                        local ButtonDialog = require("ui/widget/buttondialog")
                         local title, text_msg = utils:getFriendlyError("error_timeout", nil, self.loc)
-                        UIManager:show(ConfirmBox:new{                            text = title .. "\n\n" .. text_msg,
-                            ok_text = self.loc:t("ok") or "OK",
-                            cancel_text = nil
-                        })
+                        local err_dlg
+                        err_dlg = ButtonDialog:new{
+                            title = title,
+                            text = text_msg,
+                            buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_dlg then UIManager:close(err_dlg) end end }}}
+                        }
+                        UIManager:show(err_dlg)
                     end
                 elseif data == false then
                     if progress_msg then UIManager:close(progress_msg) end
                     if self._active_ai_dialog == progress_msg then self._active_ai_dialog = nil end
                     if self._active_ai_cancel == cancelLookup then self._active_ai_cancel = nil end
                     self:log("XRayPlugin: Single word lookup failed: " .. tostring(p_err_msg))
-                    local ConfirmBox = require("ui/widget/confirmbox")
+                    local ButtonDialog = require("ui/widget/buttondialog")
                     local title, text_msg = utils:getFriendlyError(p_err_code, p_err_msg, self.loc)
-                    UIManager:show(ConfirmBox:new{                        text = title .. "\n\n" .. text_msg,
-                        ok_text = self.loc:t("ok") or "OK",
-                        cancel_text = nil
-                    })
+                    local err_dlg
+                    err_dlg = ButtonDialog:new{
+                        title = title,
+                        text = text_msg,
+                        buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_dlg then UIManager:close(err_dlg) end end }}}
+                    }
+                    UIManager:show(err_dlg)
                 else
                     if progress_msg then
                         UIManager:scheduleIn(0.1, function()
@@ -644,11 +655,15 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                     if not self.ai_helper:hasApiKey() and self.showWelcomeCard then
                         self:showWelcomeCard()
                     else
+                        local ButtonDialog = require("ui/widget/buttondialog")
                         local title, text = utils:getFriendlyError(err_code, err_msg, self.loc)
-                        UIManager:show(ConfirmBox:new{                            text = title .. "\n\n" .. text,
-                            ok_text = self.loc:t("ok") or "OK",
-                            cancel_text = nil
-                        })
+                        local err_box
+                        err_box = ButtonDialog:new{
+                            title = title,
+                            text = text,
+                            buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_box then UIManager:close(err_box) end end }}}
+                        }
+                        UIManager:show(err_box)
                     end
                 end
                 return
@@ -703,11 +718,15 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                     else
                         cancelActiveRequest("Fetch timed out")
                         if not is_silent then
+                            local ButtonDialog = require("ui/widget/buttondialog")
                             local title, text = utils:getFriendlyError("error_timeout", nil, self.loc)
-                            UIManager:show(ConfirmBox:new{                                text = title .. "\n\n" .. text,
-                                ok_text = self.loc:t("ok") or "OK",
-                                cancel_text = nil
-                            })
+                            local err_box
+                            err_box = ButtonDialog:new{
+                                title = title,
+                                text = text,
+                                buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_box then UIManager:close(err_box) end end }}}
+                            }
+                            UIManager:show(err_box)
                         end
                     end
                 elseif data == false then
@@ -715,11 +734,15 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                     finishActiveRequest()
                     self:log("XRayPlugin: Fetch failed: " .. tostring(p_err_msg))
                     if not is_silent then
+                        local ButtonDialog = require("ui/widget/buttondialog")
                         local title, text = utils:getFriendlyError(p_err_code, p_err_msg, self.loc)
-                        UIManager:show(ConfirmBox:new{                            text = title .. "\n\n" .. text,
-                            ok_text = self.loc:t("ok") or "OK",
-                            cancel_text = nil
-                        })
+                        local err_box
+                        err_box = ButtonDialog:new{
+                            title = title,
+                            text = text,
+                            buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_box then UIManager:close(err_box) end end }}}
+                        }
+                        UIManager:show(err_box)
                     end
                 else
                     if wait_msg then UIManager:close(wait_msg) end
@@ -1315,7 +1338,7 @@ function M:runPostFetchDuplicateCheck(title, author, reading_percent, is_silent)
     )
 end
 
-function M:fetchMoreCharacters()
+function M:fetchMoreEntities(entity_type)
     require("ui/network/manager"):runWhenOnline(function() 
         if self.destroyed or not self.ui or not self.ui.document then return end
         local doc_file = self.ui.document.file
@@ -1326,6 +1349,17 @@ function M:fetchMoreCharacters()
             self.ai_helper = AIHelper
             self.ai_helper:init(self.path)
         end
+        if not self.ai_helper:hasApiKey() then
+            local ButtonDialog = require("ui/widget/buttondialog")
+            local key_dlg
+            key_dlg = ButtonDialog:new{
+                title = self.loc:t("error_no_api_key") or "API Key Required",
+                buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if key_dlg then UIManager:close(key_dlg) end end }}}
+            }
+            UIManager:show(key_dlg)
+            return
+        end
+
         local props = self.ui.document:getProps() or {}
         local title = sanitizeMetadata(props.title)
         local author = sanitizeMetadata(props.authors)
@@ -1337,26 +1371,56 @@ function M:fetchMoreCharacters()
             reading_percent = 100
         end
         
-        local menu_to_close = self.char_menu
-        self.char_menu = nil
+        local is_terms = (entity_type == "terms")
+        local section_name = is_terms and "more_terms" or "more_characters"
+        local dialog_title_text = is_terms
+            and (self.loc:t("extracting_more_terms") or "Extracting additional terms...")
+            or  (self.loc:t("extracting_more_characters") or "Extracting additional characters...")
+
+        local menu_to_close = is_terms and self.terms_menu or self.char_menu
+        if is_terms then self.terms_menu = nil else self.char_menu = nil end
 
         local wait_msg
+        local request_pid
+        local result_file
         local is_cancelled = false
         local ButtonDialog = require("ui/widget/buttondialog")
+
+        local function cancelActiveRequest(reason)
+            if is_cancelled then return end
+            is_cancelled = true
+            if request_pid and self.ai_helper and self.ai_helper.cancelAsyncChild then
+                self.ai_helper:cancelAsyncChild(request_pid)
+            end
+            if result_file then
+                pcall(function() os.remove(result_file) end)
+            end
+            if wait_msg then
+                UIManager:close(wait_msg)
+            end
+            if self._active_ai_dialog == wait_msg then self._active_ai_dialog = nil end
+            if self._active_ai_cancel == cancelActiveRequest then self._active_ai_cancel = nil end
+            self:log("XRayPlugin: " .. (reason or "Fetch more cancelled"))
+        end
+
         wait_msg = ButtonDialog:new{
-            title = (self.loc:t("fetching_ai") or "Fetching AI...") .. "\n\n" .. (self.loc:t("extracting_more_characters") or "Extracting additional characters...") .. "\n\n" .. title,
+            title = dialog_title_text .. "\n\n" .. title,
             buttons = {{{
                 text = self.loc:t("cancel") or "Cancel",
                 callback = function()
-                    is_cancelled = true
-                    if wait_msg then UIManager:close(wait_msg) end
+                    cancelActiveRequest("Fetch cancelled by user")
                 end
             }}}
         }
+        self._active_ai_dialog = wait_msg
+        self._active_ai_cancel = cancelActiveRequest
         UIManager:show(wait_msg)
         
         UIManager:scheduleIn(0.5, function()
-            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
+            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
+                cancelActiveRequest("Fetch stopped because plugin was destroyed or document closed")
+                return
+            end
             if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
             
             -- EVEN SAMPLING: Divide the readable range into equal segments
@@ -1366,10 +1430,11 @@ function M:fetchMoreCharacters()
             local num_samples = 6
             
             -- Track call count to shift windows on each invocation
-            self.more_chars_call_count = (self.more_chars_call_count or 0) + 1
-            local call_num = self.more_chars_call_count
+            self.more_fetch_call_count = self.more_fetch_call_count or {}
+            self.more_fetch_call_count[entity_type] = (self.more_fetch_call_count[entity_type] or 0) + 1
+            local call_num = self.more_fetch_call_count[entity_type]
             local offset = (call_num - 1) * pages_per_sample
-            self:log("XRayPlugin: More chars call #" .. call_num .. " (offset: " .. offset .. " pages)")
+            self:log("XRayPlugin: More " .. entity_type .. " call #" .. call_num .. " (offset: " .. offset .. " pages)")
             
             -- Divide readable range into equal segments
             local readable_pages = math.max(1, current_page)
@@ -1394,234 +1459,191 @@ function M:fetchMoreCharacters()
                     local sample = self.chapter_analyzer:getTextFromPageRange(self.ui, sample_start, end_page, chars_per_sample)
                     if sample and #sample > 100 then
                         table.insert(text_parts, "[SECTION " .. (i + 1) .. "]\n" .. sample)
-                        self:log("XRayPlugin: More chars sample " .. (i + 1) .. " pages " .. sample_start .. "-" .. end_page .. ": " .. #sample .. " chars")
+                        self:log("XRayPlugin: More " .. entity_type .. " sample " .. (i + 1) .. " pages " .. sample_start .. "-" .. end_page .. ": " .. #sample .. " chars")
                     end
                 end
             end
             local book_text = table.concat(text_parts, "\n\n---\n\n")
             
             local exclude_list = {}
-            for _, char in ipairs(self.characters or {}) do
-                table.insert(exclude_list, char.name)
+            local source_list = is_terms and (self.terms or {}) or (self.characters or {})
+            for _, item in ipairs(source_list) do
+                if item.name then
+                    table.insert(exclude_list, item.name)
+                end
             end
             
             local context = { 
                 reading_percent = reading_percent, 
+                spoiler_free = reading_percent < 100,
                 filename = doc_file:match("([^/\\]+)$"), 
                 series = props.series or props.Series, 
                 book_text = book_text,
-                exclude_characters = table.concat(exclude_list, ", ")
+                exclude_characters = not is_terms and table.concat(exclude_list, ", ") or nil,
+                exclude_terms = is_terms and table.concat(exclude_list, ", ") or nil,
             }
             
-            self.ai_helper:setTrapWidget(wait_msg)
-            local more_data, error_code, error_msg = self.ai_helper:getMoreCharacters(title, author, nil, context)
-            self.ai_helper:resetTrapWidget()
-            
-            if wait_msg then UIManager:close(wait_msg) end
-            if is_cancelled or error_code == "USER_CANCELLED" or self.destroyed or not self.ui or not self.ui.document then return end
-            
-            if not more_data or not more_data.characters then
-                local utils = require(plugin_path .. "xray_utils")
-                local title, text = utils:getFriendlyError(error_code, error_msg, self.loc)
-                UIManager:show(ConfirmBox:new{
-                    text = title .. "\n\n" .. text,
-                    ok_text = self.loc:t("ok") or "OK",
-                    cancel_text = nil
-                })
+            local pid, res_file = self.ai_helper:startAIRequest(title, author, context, section_name)
+            if not pid then
+                if wait_msg then UIManager:close(wait_msg) end
+                if self._active_ai_dialog == wait_msg then self._active_ai_dialog = nil end
+                if self._active_ai_cancel == cancelActiveRequest then self._active_ai_cancel = nil end
+                local err_dlg
+                err_dlg = ButtonDialog:new{
+                    title = self.loc:t("error") or "Error",
+                    text = res_file or (self.loc:t("error_api") or "API Error"),
+                    buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_dlg then UIManager:close(err_dlg) end end }}}
+                }
+                UIManager:show(err_dlg)
                 return
             end
-            
-            local new_count = 0
-            for _, new_char in ipairs(more_data.characters) do
-                local found = false
-                for _, existing_char in ipairs(self.characters or {}) do
-                    if existing_char.name:lower() == new_char.name:lower() then
-                        found = true
-                        break
+            request_pid = pid
+            result_file = res_file
+
+            local request_started_at = os.time()
+            local request_timeout = 600
+            local function poll()
+                if is_cancelled then return end
+                if self.destroyed or not self.ui or not self.ui.document then
+                    cancelActiveRequest("Fetch stopped because plugin was destroyed or document closed")
+                    return
+                end
+                if os.time() - request_started_at > request_timeout then
+                    cancelActiveRequest("Fetch timed out")
+                    local to_dlg
+                    to_dlg = ButtonDialog:new{
+                        title = self.loc:t("error") or "Error",
+                        text = self.loc:t("error_timeout") or "Request timed out",
+                        buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if to_dlg then UIManager:close(to_dlg) end end }}}
+                    }
+                    UIManager:show(to_dlg)
+                    return
+                end
+                local res, err_code, err_msg = self.ai_helper:checkAsyncResult(result_file, request_pid)
+                if res == nil then
+                    UIManager:scheduleIn(1, poll)
+                else
+                    if self._active_ai_dialog == wait_msg then self._active_ai_dialog = nil end
+                    if self._active_ai_cancel == cancelActiveRequest then self._active_ai_cancel = nil end
+                    if wait_msg then UIManager:close(wait_msg) end
+                    pcall(function() os.remove(result_file) end)
+
+                    if not res or type(res) ~= "table" then
+                        local utils = require(plugin_path .. "xray_utils")
+                        local err_title, text = utils:getFriendlyError(err_code, err_msg, self.loc)
+                        local err_box
+                        err_box = ButtonDialog:new{
+                            title = err_title,
+                            text = text,
+                            buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_box then UIManager:close(err_box) end end }}}
+                        }
+                        UIManager:show(err_box)
+                        return
+                    end
+
+                    local items = is_terms and (res.terms or (not res.terms and res[1] and res)) or (res.characters or (not res.characters and res[1] and res))
+                    if not items then
+                        local utils = require(plugin_path .. "xray_utils")
+                        local err_title, text = utils:getFriendlyError(err_code, err_msg, self.loc)
+                        local err_box
+                        err_box = ButtonDialog:new{
+                            title = err_title,
+                            text = text,
+                            buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_box then UIManager:close(err_box) end end }}}
+                        }
+                        UIManager:show(err_box)
+                        return
+                    end
+
+                    local new_count = 0
+                    local target_list = is_terms and (self.terms or {}) or (self.characters or {})
+                    for _, new_item in ipairs(items) do
+                        if new_item.name then
+                            local found = false
+                            for _, existing_item in ipairs(target_list) do
+                                if (existing_item.name or ""):lower() == (new_item.name or ""):lower() then
+                                    found = true
+                                    break
+                                end
+                            end
+                            if not found then
+                                table.insert(target_list, new_item)
+                                new_count = new_count + 1
+                            end
+                        end
+                    end
+                    if is_terms then self.terms = target_list else self.characters = target_list end
+
+                    if is_terms then
+                        self.terms = self:deduplicateByName(self.terms, "name")
+                    end
+
+                    -- Re-sort by frequency based on the newly extracted samples
+                    if book_text and #book_text > 0 then
+                        if is_terms then
+                            self:sortDataByFrequency(self.terms, book_text, "name")
+                        else
+                            self:sortDataByFrequency(self.characters, book_text, "name")
+                        end
+                    end
+
+                    -- Save to cache
+                    if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
+                    if not self.book_data then
+                        self.book_data = self.cache_manager:loadCache(doc_file) or {}
+                    end
+                    local updated_data = self.book_data
+                    updated_data.book_title = title
+                    updated_data.author = author
+                    updated_data.characters = self.characters
+                    updated_data.historical_figures = self.historical_figures
+                    updated_data.locations = self.locations
+                    updated_data.terms = self.terms or updated_data.terms
+                    updated_data.book_type = self.book_type or updated_data.book_type
+                    updated_data.timeline = self.timeline or updated_data.timeline
+                    updated_data.author_info = self.author_info or updated_data.author_info
+
+                    self.cache_manager:asyncSaveCache(doc_file, updated_data)
+
+                    if not is_terms then
+                        local cur_p = self.ui and self.ui.getCurrentPage and self.ui:getCurrentPage() or 1
+                        local tot_p = self.ui and self.ui.document and self.ui.document.getPageCount and self.ui.document:getPageCount() or 1
+                        local r_pct = tot_p and tot_p > 0 and math.floor((cur_p / tot_p) * 100) or 100
+                        local sp_set = self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.spoiler_setting or "spoiler_free"
+                        if sp_set == "full_book" then r_pct = 100 end
+
+                        UIManager:scheduleIn(0.5, function()
+                            if self.destroyed or not self.ui or not self.ui.document then return end
+                            self:runPostFetchDuplicateCheck(title, author, r_pct, false)
+                        end)
+                    end
+
+                    local added_msg = is_terms
+                        and self.loc:t("msg_added_terms", new_count)
+                        or  self.loc:t("msg_added_characters", new_count)
+                    UIManager:show(InfoMessage:new{ text = added_msg, timeout = 3 })
+
+                    if menu_to_close then
+                        UIManager:close(menu_to_close)
+                    end
+                    if is_terms then
+                        self:showTerms()
+                    else
+                        self:showCharacters()
                     end
                 end
-                if not found then
-                    table.insert(self.characters, new_char)
-                    new_count = new_count + 1
-                end
             end
-            
-            -- Re-sort by frequency based on the newly extracted samples
-            if book_text and #book_text > 0 then
-                self:sortDataByFrequency(self.characters, book_text, "name")
-            end
-            
-            -- Save to cache
-            if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
-            if not self.book_data then
-                self.book_data = self.cache_manager:loadCache(doc_file) or {}
-            end
-            local updated_data = self.book_data
-            updated_data.book_title = title
-            updated_data.author = author
-            updated_data.characters = self.characters
-            updated_data.historical_figures = self.historical_figures
-            updated_data.locations = self.locations
-            updated_data.terms = self.terms or updated_data.terms
-            updated_data.book_type = self.book_type or updated_data.book_type
-            updated_data.timeline = self.timeline or updated_data.timeline
-            updated_data.author_info = self.author_info or updated_data.author_info
-            
-            self.cache_manager:asyncSaveCache(doc_file, updated_data)
-
-            local current_page = self.ui and self.ui.getCurrentPage and self.ui:getCurrentPage() or 1
-            local total_pages = self.ui and self.ui.document and self.ui.document.getPageCount and self.ui.document:getPageCount() or 1
-            local reading_percent = total_pages and total_pages > 0 and math.floor((current_page / total_pages) * 100) or 100
-            local spoiler_setting = self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.spoiler_setting or "spoiler_free"
-            if spoiler_setting == "full_book" then reading_percent = 100 end
-
-            UIManager:scheduleIn(0.5, function()
-                if self.destroyed or not self.ui or not self.ui.document then return end
-                self:runPostFetchDuplicateCheck(title, author, reading_percent, false)
-            end)
-            
-            local added_msg = self.loc:t("msg_added_characters", new_count)
-            UIManager:show(InfoMessage:new{ text = added_msg, timeout = 3 })
-
-            if menu_to_close then
-                UIManager:close(menu_to_close)
-            end
-            self:showCharacters()
+            UIManager:scheduleIn(1, poll)
         end)
     end)
 end
 
+function M:fetchMoreCharacters()
+    return self:fetchMoreEntities("characters")
+end
+
 function M:fetchMoreTerms()
-    require("ui/network/manager"):runWhenOnline(function()
-        if self.destroyed or not self.ui or not self.ui.document then return end
-        local doc_file = self.ui.document.file
-        if not doc_file then return end
-
-        if not self.ai_helper then
-            local AIHelper = require(plugin_path .. "xray_aihelper")
-            self.ai_helper = AIHelper
-            self.ai_helper:init(self.path)
-        end
-        if not self.ai_helper:hasApiKey() then
-            UIManager:show(InfoMessage:new{ text = self.loc:t("error_no_api_key"), timeout = 5 })
-            return
-        end
-
-        local props = self.ui.document:getProps() or {}
-        local title = sanitizeMetadata(props.title)
-        local author = sanitizeMetadata(props.authors)
-        local current_page = self.ui:getCurrentPage()
-        local reading_percent = math.floor((current_page / self.ui.document:getPageCount()) * 100)
-        local menu_to_close = self.terms_menu
-        self.terms_menu = nil
-        local is_cancelled = false
-        local ButtonDialog = require("ui/widget/buttondialog")
-
-        local wait_msg = ButtonDialog:new{
-            title = (self.loc:t("fetching_ai") or "Fetching AI...") .. "\n\n" .. (self.loc:t("extracting_more_terms") or "Extracting additional terms...") .. "\n\n" .. title,
-            buttons = {{{
-                text = self.loc:t("cancel") or "Cancel",
-                callback = function()
-                    is_cancelled = true
-                    if wait_msg then UIManager:close(wait_msg) end
-                end
-            }}}
-        }
-        UIManager:show(wait_msg)
-        
-        UIManager:scheduleIn(0.5, function()
-            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
-            
-            if not self.chapter_analyzer then
-                local ChapterAnalyzer = require(plugin_path .. "xray_chapteranalyzer")
-                self.chapter_analyzer = ChapterAnalyzer:new()
-            end
-            local book_text = self.chapter_analyzer:getTextForAnalysis(self.ui, 20000, nil, current_page)
-            local samples, chapter_titles = self.chapter_analyzer:getDetailedChapterSamples(self.ui, 200, 150000, reading_percent == 100, nil, nil, current_page)
-            local annots = self.chapter_analyzer:getAnnotationsForAnalysis(self.ui)
-            
-            if (not book_text or #book_text < 10) and not samples then
-                if wait_msg then UIManager:close(wait_msg) end
-                UIManager:show(InfoMessage:new{
-                    text = self.loc:t("error_extract_text") or "Error: Could not extract book text.",
-                    timeout = 5
-                })
-                return
-            end
-
-            local context = {
-                reading_percent = reading_percent,
-                spoiler_free = reading_percent < 100,
-                filename = doc_file:match("([^/\\]+)$"),
-                series = props.series or props.Series,
-                existing_terms = self.terms,
-                chapter_samples = samples,
-                chapter_titles = chapter_titles,
-                annotations = annots
-            }
-
-            self.ai_helper:setTrapWidget(wait_msg)
-            local result, error_code, error_msg = self.ai_helper:fetchMoreTerms(title, author, book_text, context)
-            self.ai_helper:resetTrapWidget()
-
-            if wait_msg then UIManager:close(wait_msg) end
-
-            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
-            
-            if not result then
-                local utils = require(plugin_path .. "xray_utils")
-                local err_title, err_text = utils:getFriendlyError(error_code, error_msg, self.loc)
-                UIManager:show(ConfirmBox:new{
-                    text = err_title .. "\n\n" .. err_text,
-                    ok_text = self.loc:t("ok") or "OK",
-                    cancel_text = nil
-                })
-                return
-            end
-            
-            local new_count = 0
-            for _, new_term in ipairs(result) do
-                local found = false
-                for _, existing in ipairs(self.terms) do
-                    if existing.name:lower() == new_term.name:lower() then
-                        found = true; break
-                    end
-                end
-                if not found then
-                    table.insert(self.terms, new_term)
-                    new_count = new_count + 1
-                end
-            end
-            
-            self.terms = self:deduplicateByName(self.terms, "name")
-            if book_text and #book_text > 0 then
-                self:sortDataByFrequency(self.terms, book_text, "name")
-            end
-            
-            if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
-            if not self.book_data then
-                self.book_data = self.cache_manager:loadCache(doc_file) or {}
-            end
-            local updated_data = self.book_data
-            updated_data.book_title = title
-            updated_data.author = author
-            updated_data.characters = self.characters
-            updated_data.historical_figures = self.historical_figures
-            updated_data.locations = self.locations
-            updated_data.terms = self.terms
-            updated_data.book_type = self.book_type or updated_data.book_type
-            updated_data.timeline = self.timeline or updated_data.timeline
-            updated_data.author_info = self.author_info or updated_data.author_info
-            
-            self.cache_manager:asyncSaveCache(doc_file, updated_data)
-            
-            local added_msg = self.loc:t("msg_added_terms", new_count)
-            UIManager:show(InfoMessage:new{ text = added_msg, timeout = 3 })
-
-            if menu_to_close then UIManager:close(menu_to_close) end
-            self:showTerms()
-        end)
-    end)
+    return self:fetchMoreEntities("terms")
 end
 
 function M:fetchAuthorInfo()
@@ -1634,25 +1656,61 @@ function M:fetchAuthorInfo()
         self.ai_helper = AIHelper
         self.ai_helper:init(self.path)
     end
+    if not self.ai_helper:hasApiKey() then
+        local ButtonDialog = require("ui/widget/buttondialog")
+        local key_dlg
+        key_dlg = ButtonDialog:new{
+            title = self.loc:t("error_no_api_key") or "API Key Required",
+            buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if key_dlg then UIManager:close(key_dlg) end end }}}
+        }
+        UIManager:show(key_dlg)
+        return
+    end
+
     local props = self.ui.document:getProps() or {}
     local title = sanitizeMetadata(props.title)
     local author = sanitizeMetadata(props.authors)
     local wait_msg
+    local request_pid
+    local result_file
     local is_cancelled = false
     local ButtonDialog = require("ui/widget/buttondialog")
+
+    local function cancelActiveRequest(reason)
+        if is_cancelled then return end
+        is_cancelled = true
+        if request_pid and self.ai_helper and self.ai_helper.cancelAsyncChild then
+            self.ai_helper:cancelAsyncChild(request_pid)
+        end
+        if result_file then
+            pcall(function() os.remove(result_file) end)
+        end
+        if wait_msg then
+            UIManager:close(wait_msg)
+        end
+        if self._active_ai_dialog == wait_msg then self._active_ai_dialog = nil end
+        if self._active_ai_cancel == cancelActiveRequest then self._active_ai_cancel = nil end
+        self:log("XRayPlugin: " .. (reason or "Author fetch cancelled"))
+    end
+
     wait_msg = ButtonDialog:new{
         title = (self.loc:t("fetching_author", "AI") or "Fetching Author...") .. "\n\n" .. title .. " - " .. author,
         buttons = {{{
             text = self.loc:t("cancel") or "Cancel",
             callback = function()
-                is_cancelled = true
-                if wait_msg then UIManager:close(wait_msg) end
+                cancelActiveRequest("Author fetch cancelled by user")
             end
         }}}
     }
+    self._active_ai_dialog = wait_msg
+    self._active_ai_cancel = cancelActiveRequest
     UIManager:show(wait_msg)
+
     UIManager:scheduleIn(0.5, function()
-        if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
+        if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
+            cancelActiveRequest("Author fetch stopped because plugin was destroyed or document closed")
+            return
+        end
         
         if not self.chapter_analyzer then
             local ChapterAnalyzer = require(plugin_path .. "xray_chapteranalyzer")
@@ -1661,46 +1719,93 @@ function M:fetchAuthorInfo()
         local book_text = self.chapter_analyzer:getTextForAnalysis(self.ui, 1000, nil, self.ui:getCurrentPage())
         local context = { book_text = book_text }
         
-        self.ai_helper:setTrapWidget(wait_msg)
-        local author_data, error_code, error_msg = self.ai_helper:getAuthorData(title, author, nil, context)
-        self.ai_helper:resetTrapWidget()
-        
-        if wait_msg then UIManager:close(wait_msg) end
-        if is_cancelled or error_code == "USER_CANCELLED" or self.destroyed or not self.ui or not self.ui.document then return end
-
-        if not author_data then
-            local title, text = utils:getFriendlyError(error_code, error_msg, self.loc)
-            UIManager:show(ConfirmBox:new{                text = title .. "\n\n" .. text,
-                ok_text = self.loc:t("ok") or "OK",
-                cancel_text = nil
-            })
+        local pid, res_file = self.ai_helper:startAIRequest(title, author, context, "author_only")
+        if not pid then
+            if wait_msg then UIManager:close(wait_msg) end
+            if self._active_ai_dialog == wait_msg then self._active_ai_dialog = nil end
+            if self._active_ai_cancel == cancelActiveRequest then self._active_ai_cancel = nil end
+            local err_dlg
+            err_dlg = ButtonDialog:new{
+                title = self.loc:t("error") or "Error",
+                text = res_file or (self.loc:t("error_api") or "API Error"),
+                buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_dlg then UIManager:close(err_dlg) end end }}}
+            }
+            UIManager:show(err_dlg)
             return
         end
-        self.author_info = { 
-            name = sanitizeMetadata(author_data.author or author), 
-            description = sanitizeMetadata(author_data.author_bio or self.loc:t("msg_no_bio") or "No biography available."), 
-            birthDate = sanitizeMetadata(author_data.author_birth or "---"), 
-            deathDate = sanitizeMetadata(author_data.author_death or "---") 
-        }
-        if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
-        if not self.book_data then
-            self.book_data = self.cache_manager:loadCache(doc_file) or {}
+        request_pid = pid
+        result_file = res_file
+
+        local request_started_at = os.time()
+        local request_timeout = 600
+        local function poll()
+            if is_cancelled then return end
+            if self.destroyed or not self.ui or not self.ui.document then
+                cancelActiveRequest("Author fetch stopped because plugin was destroyed or document closed")
+                return
+            end
+            if os.time() - request_started_at > request_timeout then
+                cancelActiveRequest("Author fetch timed out")
+                local to_dlg
+                to_dlg = ButtonDialog:new{
+                    title = self.loc:t("error") or "Error",
+                    text = self.loc:t("error_timeout") or "Request timed out",
+                    buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if to_dlg then UIManager:close(to_dlg) end end }}}
+                }
+                UIManager:show(to_dlg)
+                return
+            end
+            local res, err_code, err_msg = self.ai_helper:checkAsyncResult(result_file, request_pid)
+            if res == nil then
+                UIManager:scheduleIn(1, poll)
+            else
+                if self._active_ai_dialog == wait_msg then self._active_ai_dialog = nil end
+                if self._active_ai_cancel == cancelActiveRequest then self._active_ai_cancel = nil end
+                if wait_msg then UIManager:close(wait_msg) end
+                pcall(function() os.remove(result_file) end)
+
+                local author_data = (type(res) == "table" and (res.author_info or res)) or nil
+                if not author_data or not (author_data.author or author_data.name or author_data.author_bio or author_data.description) then
+                    local utils = require(plugin_path .. "xray_utils")
+                    local err_title, text = utils:getFriendlyError(err_code, err_msg, self.loc)
+                    local err_box
+                    err_box = ButtonDialog:new{
+                        title = err_title,
+                        text = text,
+                        buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_box then UIManager:close(err_box) end end }}}
+                    }
+                    UIManager:show(err_box)
+                    return
+                end
+
+                self.author_info = { 
+                    name = sanitizeMetadata(author_data.author or author_data.name or author), 
+                    description = sanitizeMetadata(author_data.author_bio or author_data.description or self.loc:t("msg_no_bio") or "No biography available."), 
+                    birthDate = sanitizeMetadata(author_data.author_birth or author_data.birthDate or "---"), 
+                    deathDate = sanitizeMetadata(author_data.author_death or author_data.deathDate or "---") 
+                }
+                if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
+                if not self.book_data then
+                    self.book_data = self.cache_manager:loadCache(doc_file) or {}
+                end
+                local cache = self.book_data
+                cache.author_info = self.author_info
+                cache.author = self.author_info.name
+                cache.author_bio = self.author_info.description
+                cache.author_birth = self.author_info.birthDate
+                cache.author_death = self.author_info.deathDate
+                
+                -- Store book_type if AI detected it during author fetch
+                if author_data.book_type then
+                    cache.book_type = author_data.book_type
+                    self.book_type = author_data.book_type
+                end
+                
+                self.cache_manager:asyncSaveCache(doc_file, cache)
+                self:showAuthorInfo()
+            end
         end
-        local cache = self.book_data
-        cache.author_info = self.author_info
-        cache.author = self.author_info.name
-        cache.author_bio = self.author_info.description
-        cache.author_birth = self.author_info.birthDate
-        cache.author_death = self.author_info.deathDate
-        
-        -- Store book_type if AI detected it during author fetch
-        if author_data.book_type then
-            cache.book_type = author_data.book_type
-            self.book_type = author_data.book_type
-        end
-        
-        self.cache_manager:asyncSaveCache(doc_file, cache)
-        self:showAuthorInfo()
+        UIManager:scheduleIn(1, poll)
     end)
 end
 
@@ -2033,7 +2138,12 @@ function M:fetchSeriesContext(is_silent, init_wait_dialog, cancel_ref)
                     callback = function()
                         is_cancelled = true
                         self:log("XRayPlugin: Series: User tapped Cancel on progress dialog.")
-                        if wait_msg then UIManager:close(wait_msg) end
+                        if wait_msg then
+                            if wait_msg.dismiss_callback then
+                                wait_msg.dismiss_callback()
+                            end
+                            UIManager:close(wait_msg)
+                        end
                     end
                 }}}
             }
@@ -2068,45 +2178,51 @@ function M:fetchSeriesContext(is_silent, init_wait_dialog, cancel_ref)
             showProgress(step_idx, #missing_books, current_book.title)
 
             UIManager:scheduleIn(0.5, function()
-                if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
+                coroutine.wrap(function()
+                    if is_cancelled or self.destroyed or not self.ui or not self.ui.document then return end
 
-                local context = {
-                    series_name = series_info.name,
-                    index = current_book.index
-                }
-                local prompt = self.ai_helper:createPrompt(current_book.title, current_book.author or author, context, "series_book_summary")
-                
-                self.ai_helper:setTrapWidget(wait_msg)
-                local result, err_code, err_msg = self.ai_helper:executeUnifiedRequest(prompt)
-                self.ai_helper:resetTrapWidget()
+                    local context = {
+                        series_name = series_info.name,
+                        index = current_book.index
+                    }
+                    local prompt = self.ai_helper:createPrompt(current_book.title, current_book.author or author, context, "series_book_summary")
+                    
+                    self.ai_helper:setTrapWidget(wait_msg)
+                    local result, err_code, err_msg = self.ai_helper:executeUnifiedRequest(prompt)
+                    self.ai_helper:resetTrapWidget()
 
-                if is_cancelled then return end
+                    if is_cancelled then return end
 
-                if not result then
-                    self:log("XRayPlugin: Series: Failed fetching book summary for " .. tostring(current_book.title) .. ", err_code=" .. tostring(err_code) .. ", err_msg=" .. tostring(err_msg))
-                    if wait_msg then UIManager:close(wait_msg) end
-                    if not is_silent then
-                        local err_title, err_text = utils:getFriendlyError(err_code, err_msg, self.loc)
-                        UIManager:show(ConfirmBox:new{                            text = err_title .. "\n\n" .. err_text,
-                            ok_text = self.loc:t("ok") or "OK",
-                            cancel_text = nil
-                        })
+                    if not result then
+                        self:log("XRayPlugin: Series: Failed fetching book summary for " .. tostring(current_book.title) .. ", err_code=" .. tostring(err_code) .. ", err_msg=" .. tostring(err_msg))
+                        if wait_msg then UIManager:close(wait_msg) end
+                        if not is_silent then
+                            local ButtonDialog = require("ui/widget/buttondialog")
+                            local err_title, err_text = utils:getFriendlyError(err_code, err_msg, self.loc)
+                            local err_box
+                            err_box = ButtonDialog:new{
+                                title = err_title,
+                                text = err_text,
+                                buttons = {{{ text = self.loc:t("ok") or "OK", callback = function() if err_box then UIManager:close(err_box) end end }}}
+                            }
+                            UIManager:show(err_box)
+                        end
+                        return
                     end
-                    return
-                end
 
-                self:log("XRayPlugin: Series: Fetched context for " .. tostring(current_book.title) .. ". Characters=" .. tostring(#(result.characters or {})) .. ", locations=" .. tostring(#(result.locations or {})) .. ", terms=" .. tostring(#(result.terms or {})) .. ", timeline=" .. tostring(#(result.timeline or {})))
+                    self:log("XRayPlugin: Series: Fetched context for " .. tostring(current_book.title) .. ". Characters=" .. tostring(#(result.characters or {})) .. ", locations=" .. tostring(#(result.locations or {})) .. ", terms=" .. tostring(#(result.terms or {})) .. ", timeline=" .. tostring(#(result.timeline or {})))
 
-                cache_data.books[current_book.index] = {
-                    title = current_book.title,
-                    author = current_book.author,
-                    characters = result.characters or {},
-                    locations = result.locations or {},
-                    terms = result.terms or {},
-                    timeline = result.timeline or {}
-                }
+                    cache_data.books[current_book.index] = {
+                        title = current_book.title,
+                        author = current_book.author,
+                        characters = result.characters or {},
+                        locations = result.locations or {},
+                        terms = result.terms or {},
+                        timeline = result.timeline or {}
+                    }
 
-                fetchNext(step_idx + 1)
+                    fetchNext(step_idx + 1)
+                end)()
             end)
         end
 

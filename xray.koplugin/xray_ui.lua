@@ -3,7 +3,6 @@ local util = require("util")
 
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
-local ConfirmBox = require("ui/widget/confirmbox")
 local ButtonDialog = require("ui/widget/buttondialog")
 local Menu = require("ui/widget/menu")
 local Screen = require("device").screen
@@ -967,19 +966,33 @@ function M:showCharacters()
             local pairs = self:filterValidDuplicatePairs(self.characters, self.pending_duplicate_review.characters)
             self.pending_duplicate_review.characters = nil
             if #pairs > 0 then
-                local ConfirmBox = require("ui/widget/confirmbox")
-                UIManager:show(ConfirmBox:new{                    text = string.format(
+                local ButtonDialog = require("ui/widget/buttondialog")
+                local prompt_dlg
+                prompt_dlg = ButtonDialog:new{
+                    title = string.format(
                         self.loc:t("pending_duplicates_prompt") or
                         "AI found %d possible duplicate character(s) from the last fetch. Review now?",
                         #pairs
                     ),
-                    ok_text     = self.loc:t("review") or "Review",
-                    cancel_text = self.loc:t("later")  or "Later",
-                    ok_callback = function()
-                        self:log("XRayPlugin: User chose to review pending " .. tostring(#pairs) .. " duplicate(s) for characters")
-                        self:walkDuplicatePairs(self.characters, "characters", pairs)
-                    end,
-                })
+                    buttons = {{
+                        {
+                            text = self.loc:t("later") or "Later",
+                            callback = function()
+                                UIManager:close(prompt_dlg)
+                            end,
+                        },
+                        {
+                            text = self.loc:t("review") or "Review",
+                            is_enter_default = true,
+                            callback = function()
+                                UIManager:close(prompt_dlg)
+                                self:log("XRayPlugin: User chose to review pending " .. tostring(#pairs) .. " duplicate(s) for characters")
+                                self:walkDuplicatePairs(self.characters, "characters", pairs)
+                            end,
+                        },
+                    }},
+                }
+                UIManager:show(prompt_dlg)
             end
         end
     end)
@@ -2152,14 +2165,16 @@ function M:walkDuplicatePairs(list, list_name, pairs_found)
                             local wait_msg = InfoMessage:new{ text = self.loc:t("merging_smartly") or "Merging...", timeout = 120 }
                             UIManager:show(wait_msg)
                             UIManager:scheduleIn(0.1, function()
-                                if self.destroyed or not self.ui or not self.ui.document then return end
-                                if self.ai_helper then self.ai_helper:setTrapWidget(wait_msg) end
-                                local ai_desc = self.ai_helper:mergeDescriptionsWithAI(p_desc, s_desc)
-                                if self.ai_helper then self.ai_helper:resetTrapWidget() end
-                                UIManager:close(wait_msg)
-                                self:mergeEntries(list, pair.primary, pair.secondary, ai_desc)
-                                merge_count = merge_count + 1
-                                processNextPair()
+                                coroutine.wrap(function()
+                                    if self.destroyed or not self.ui or not self.ui.document then return end
+                                    if self.ai_helper then self.ai_helper:setTrapWidget(wait_msg) end
+                                    local ai_desc = self.ai_helper:mergeDescriptionsWithAI(p_desc, s_desc)
+                                    if self.ai_helper then self.ai_helper:resetTrapWidget() end
+                                    UIManager:close(wait_msg)
+                                    self:mergeEntries(list, pair.primary, pair.secondary, ai_desc)
+                                    merge_count = merge_count + 1
+                                    processNextPair()
+                                end)()
                             end)
                         else
                             self:mergeEntries(list, pair.primary, pair.secondary, nil)
@@ -2280,7 +2295,6 @@ end
 
 function M:showMergeFlow(list, list_name)
     local ButtonDialog = require("ui/widget/buttondialog")
-    local ConfirmBox = require("ui/widget/confirmbox")
     local InfoMessage = require("ui/widget/infomessage")
     
     local primary_dialog, secondary_dialog
@@ -2295,78 +2309,91 @@ function M:showMergeFlow(list, list_name)
                     callback = function()
                         UIManager:close(secondary_dialog)
                         secondary_dialog = nil
-                        local confirm = ConfirmBox:new{                            text = string.format(
+                        local confirm
+                        confirm = ButtonDialog:new{
+                            title = string.format(
                                 self.loc:t("merge_confirm") or "Merge %s into %s? The secondary entry will be deleted and its aliases absorbed.",
                                 secondary_name, primary_item.name
                             ),
-                            ok_text = self.loc:t("yes") or "Yes",
-                            cancel_text = self.loc:t("close") or "Close",
-                            ok_callback = function()
-                                local wait_msg = InfoMessage:new{ text = self.loc:t("merging_smartly") or "Merging...", timeout = 120 }
-                                UIManager:show(wait_msg)
-                                
-                                UIManager:scheduleIn(0.1, function()
-                                    if self.destroyed or not self.ui or not self.ui.document then return end
-                                    local ai_merged_desc = nil
-                                    if self.ai_helper and self.ai_helper:hasApiKey() then
-                                        local sec_item = nil
-                                        for _, it in ipairs(list) do
-                                            if it.name == secondary_name then sec_item = it; break end
-                                        end
+                            buttons = {{
+                                {
+                                    text = self.loc:t("close") or "Close",
+                                    callback = function()
+                                        UIManager:close(confirm)
+                                    end,
+                                },
+                                {
+                                    text = self.loc:t("yes") or "Yes",
+                                    is_enter_default = true,
+                                    callback = function()
+                                        UIManager:close(confirm)
+                                        local wait_msg = InfoMessage:new{ text = self.loc:t("merging_smartly") or "Merging...", timeout = 120 }
+                                        UIManager:show(wait_msg)
                                         
-                                        if sec_item and primary_item.description and sec_item.description then
-                                            if self.ai_helper then self.ai_helper:setTrapWidget(wait_msg) end
-                                            ai_merged_desc = self.ai_helper:mergeDescriptionsWithAI(primary_item.description, sec_item.description)
-                                            if self.ai_helper then self.ai_helper:resetTrapWidget() end
-                                        end
-                                    end
-                                    
-                                    UIManager:close(wait_msg)
-                                    
-                                    if self:mergeEntries(list, primary_item.name, secondary_name, ai_merged_desc) then
-                                        -- Save cache: load existing, patch only the changed list
-                                        local doc_file = self.ui and self.ui.document and self.ui.document.file
-                                        if not self.cache_manager then
-                                            self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
-                                        end
-                                        if not self.book_data then
-                                            self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
-                                        end
-                                        local cache = self.book_data
-                                        if list_name == "characters" then
-                                            cache.characters = list
-                                        elseif list_name == "locations" then
-                                            cache.locations = list
-                                        end
-                                        if doc_file and self.cache_manager then
-                                            self.cache_manager:asyncSaveCache(doc_file, cache)
-                                        end
-                                        
-                                        -- Clear normalized lookup caches so the LookupManager rebuilds them
-                                        for _, it in ipairs(list) do
-                                            it._norm_name = nil
-                                            it._norm_aliases = nil
-                                        end
-                                        
-                                        UIManager:show(InfoMessage:new{
-                                            text = self.loc:t("merge_success") or "Entries merged successfully.",
-                                            timeout = 3
-                                        })
-                                        
-                                        -- Refresh the list menu
-                                        if list_name == "characters" then
-                                            self:showCharacters()
-                                        elseif list_name == "locations" then
-                                            self:showLocations()
-                                        end
-                                    else
-                                        UIManager:show(InfoMessage:new{
-                                            text = self.loc:t("merge_failed") or "Merge failed.",
-                                            timeout = 3
-                                        })
-                                    end
-                                end)
-                            end,
+                                        UIManager:scheduleIn(0.1, function()
+                                            if self.destroyed or not self.ui or not self.ui.document then return end
+                                            local ai_merged_desc = nil
+                                            if self.ai_helper and self.ai_helper:hasApiKey() then
+                                                local sec_item = nil
+                                                for _, it in ipairs(list) do
+                                                    if it.name == secondary_name then sec_item = it; break end
+                                                end
+                                                
+                                                if sec_item and primary_item.description and sec_item.description then
+                                                    if self.ai_helper then self.ai_helper:setTrapWidget(wait_msg) end
+                                                    ai_merged_desc = self.ai_helper:mergeDescriptionsWithAI(primary_item.description, sec_item.description)
+                                                    if self.ai_helper then self.ai_helper:resetTrapWidget() end
+                                                end
+                                            end
+                                            
+                                            UIManager:close(wait_msg)
+                                            
+                                            if self:mergeEntries(list, primary_item.name, secondary_name, ai_merged_desc) then
+                                                -- Save cache: load existing, patch only the changed list
+                                                local doc_file = self.ui and self.ui.document and self.ui.document.file
+                                                if not self.cache_manager then
+                                                    self.cache_manager = require(plugin_path .. "xray_cachemanager"):new()
+                                                end
+                                                if not self.book_data then
+                                                    self.book_data = (doc_file and self.cache_manager:loadCache(doc_file)) or {}
+                                                end
+                                                local cache = self.book_data
+                                                if list_name == "characters" then
+                                                    cache.characters = list
+                                                elseif list_name == "locations" then
+                                                    cache.locations = list
+                                                end
+                                                if doc_file and self.cache_manager then
+                                                    self.cache_manager:asyncSaveCache(doc_file, cache)
+                                                end
+                                                
+                                                -- Clear normalized lookup caches so the LookupManager rebuilds them
+                                                for _, it in ipairs(list) do
+                                                    it._norm_name = nil
+                                                    it._norm_aliases = nil
+                                                end
+                                                
+                                                UIManager:show(InfoMessage:new{
+                                                    text = self.loc:t("merge_success") or "Entries merged successfully.",
+                                                    timeout = 3
+                                                })
+                                                
+                                                -- Refresh the list menu
+                                                if list_name == "characters" then
+                                                    self:showCharacters()
+                                                elseif list_name == "locations" then
+                                                    self:showLocations()
+                                                end
+                                            else
+                                                UIManager:show(InfoMessage:new{
+                                                    text = self.loc:t("merge_failed") or "Merge failed.",
+                                                    timeout = 3
+                                                })
+                                            end
+                                        end)
+                                    end,
+                                },
+                            }},
                         }
                         UIManager:show(confirm)
                     end
@@ -2752,19 +2779,33 @@ function M:showLocations()
             local pairs = self:filterValidDuplicatePairs(self.locations, self.pending_duplicate_review.locations)
             self.pending_duplicate_review.locations = nil
             if #pairs > 0 then
-                local ConfirmBox = require("ui/widget/confirmbox")
-                UIManager:show(ConfirmBox:new{                    text = string.format(
+                local ButtonDialog = require("ui/widget/buttondialog")
+                local prompt_dlg
+                prompt_dlg = ButtonDialog:new{
+                    title = string.format(
                         self.loc:t("pending_duplicates_prompt") or
                         "AI found %d possible duplicate location(s) from the last fetch. Review now?",
                         #pairs
                     ),
-                    ok_text     = self.loc:t("review") or "Review",
-                    cancel_text = self.loc:t("later")  or "Later",
-                    ok_callback = function()
-                        self:log("XRayPlugin: User chose to review pending " .. tostring(#pairs) .. " duplicate(s) for locations")
-                        self:walkDuplicatePairs(self.locations, "locations", pairs)
-                    end,
-                })
+                    buttons = {{
+                        {
+                            text = self.loc:t("later") or "Later",
+                            callback = function()
+                                UIManager:close(prompt_dlg)
+                            end,
+                        },
+                        {
+                            text = self.loc:t("review") or "Review",
+                            is_enter_default = true,
+                            callback = function()
+                                UIManager:close(prompt_dlg)
+                                self:log("XRayPlugin: User chose to review pending " .. tostring(#pairs) .. " duplicate(s) for locations")
+                                self:walkDuplicatePairs(self.locations, "locations", pairs)
+                            end,
+                        },
+                    }},
+                }
+                UIManager:show(prompt_dlg)
             end
         end
     end)
@@ -2777,13 +2818,29 @@ function M:showAbout()
 
     local body = (meta.fullname or "X-Ray") .. " v" .. version .. "\n\n" .. description
 
-    UIManager:show(ConfirmBox:new{        text = body,        ok_text = self.loc:t("updater_check") or "Check for Updates",
-        cancel_text = self.loc:t("close") or "Close",
-        ok_callback = function()
-            local updater = require(plugin_path .. "xray_updater")
-            updater.checkForUpdates(self.loc, self.ai_helper.settings.beta_channel_enabled)
-        end,
-    })
+    local ButtonDialog = require("ui/widget/buttondialog")
+    local about_dlg
+    about_dlg = ButtonDialog:new{
+        title = body,
+        buttons = {{
+            {
+                text = self.loc:t("close") or "Close",
+                callback = function()
+                    UIManager:close(about_dlg)
+                end,
+            },
+            {
+                text = self.loc:t("updater_check") or "Check for Updates",
+                is_enter_default = true,
+                callback = function()
+                    UIManager:close(about_dlg)
+                    local updater = require(plugin_path .. "xray_updater")
+                    updater.checkForUpdates(self.loc, self.ai_helper.settings.beta_channel_enabled)
+                end,
+            },
+        }},
+    }
+    UIManager:show(about_dlg)
 end
 
 function M:clearCache()

@@ -15,6 +15,26 @@ end
 
 local M = {}
 
+function M:isRequestTimedOut(started_at, timeout_seconds)
+    return os.time() - started_at >= timeout_seconds
+end
+
+function M:cancelActiveAIRequest(reason)
+    if self._active_ai_cancel then
+        self._active_ai_cancel(reason or "AI request cancelled")
+    elseif self.ai_helper and self.ai_helper._async_child_pid then
+        self.ai_helper:cancelAsyncChild()
+    end
+    self._active_ai_cancel = nil
+    if self._active_ai_dialog then
+        UIManager:close(self._active_ai_dialog)
+        self._active_ai_dialog = nil
+    end
+    self._active_fetch_generation = nil
+    self.bg_fetch_active = false
+    self.bg_fetch_pending = false
+end
+
 local function sanitizeMetadata(val)
     if type(val) == "string" then return val
     elseif type(val) == "table" then return table.concat(val, ", ")
@@ -67,6 +87,10 @@ function M:fetchSingleWord(text, pos0, pos1)
 
     require("ui/network/manager"):runWhenOnline(function()
         if self.destroyed or not self.ui or not self.ui.document or not self.ui.getCurrentPage then return end
+
+        if self._active_ai_cancel or (self.ai_helper and self.ai_helper._async_child_pid) then
+            self:cancelActiveAIRequest("Previous AI request replaced by single word lookup")
+        end
         
         local current_page = self.ui:getCurrentPage()
         local total_pages = (type(self.ui.document.getPageCount) == "function" and self.ui.document:getPageCount()) or 1
@@ -90,14 +114,33 @@ function M:fetchSingleWord(text, pos0, pos1)
             return
         end
 
-        local ProgressBarDialog = require("ui/widget/progressbardialog")
-        local progress_msg = ProgressBarDialog:new{
+        local ButtonDialog = require("ui/widget/buttondialog")
+        local request_pid
+        local result_file
+        local is_cancelled = false
+        local progress_msg
+        local function cancelLookup(reason)
+            if is_cancelled then return end
+            is_cancelled = true
+            if request_pid and self.ai_helper and self.ai_helper.cancelAsyncChild then
+                self.ai_helper:cancelAsyncChild(request_pid)
+            end
+            if result_file then pcall(function() os.remove(result_file) end) end
+            if progress_msg then UIManager:close(progress_msg) end
+            if self._active_ai_dialog == progress_msg then self._active_ai_dialog = nil end
+            if self._active_ai_cancel == cancelLookup then self._active_ai_cancel = nil end
+            self:log("XRayPlugin: " .. (reason or "Single word lookup cancelled"))
+        end
+        progress_msg = ButtonDialog:new{
             title = self.loc:t("looking_up_msg", _truncateSafe(text, 30)),
-            text = text,
-            progress_max = 100,
-            dismissable = false,
-            refresh_time_seconds = 0.05,
+            text = text .. "\n\n" .. (self.loc:t("fetching_wait") or "This may take a moment.\nTap Cancel to stop."),
+            buttons = {{{
+                text = self.loc:t("cancel") or "Cancel",
+                callback = function() cancelLookup("Single word lookup cancelled by user") end,
+            }}},
         }
+        self._active_ai_dialog = progress_msg
+        self._active_ai_cancel = cancelLookup
         UIManager:show(progress_msg)
         UIManager:forceRePaint()
 
@@ -116,12 +159,8 @@ function M:fetchSingleWord(text, pos0, pos1)
             end
             if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
             
-            progress_msg:reportProgress(10)
-            
             -- 1. Distributed chapter samples (Start/Mid/End of each chapter up to current)
             local samples, chapter_titles = self.chapter_analyzer:getDetailedChapterSamples(self.ui, 100, 60000, limit_percent == 100, nil, nil, current_page)
-            
-            progress_msg:reportProgress(30)
             
             -- 2. Immediate book text (Previous and Current page for maximum context relevance)
             local end_page = self.chapter_analyzer:getEndPageForCurrentPage(self.ui, current_page)
@@ -138,8 +177,6 @@ function M:fetchSingleWord(text, pos0, pos1)
             end
             
             self:log("fetchSingleWord: extracted book_text length: " .. tostring(book_text and #book_text or 0))
-            
-            progress_msg:reportProgress(40)
             
             local context = {
                 reading_percent = limit_percent,
@@ -175,10 +212,12 @@ function M:fetchSingleWord(text, pos0, pos1)
                 self.ai_helper:cancelAsyncChild()
             end
 
-            local result_file = settings_xray_dir .. "/sw_fetch_" .. tostring(os.time()) .. ".json"
-            local request_pid = self.ai_helper:lookupSingleWordAsync(text, context, result_file)
+            result_file = settings_xray_dir .. "/sw_fetch_" .. tostring(os.time()) .. ".json"
+            request_pid = self.ai_helper:lookupSingleWordAsync(text, context, result_file)
             if not request_pid then
                 if progress_msg then UIManager:close(progress_msg) end
+                if self._active_ai_dialog == progress_msg then self._active_ai_dialog = nil end
+                if self._active_ai_cancel == cancelLookup then self._active_ai_cancel = nil end
                 self:log("XRayPlugin: Failed to start async lookup")
                 local ConfirmBox = require("ui/widget/confirmbox")
                 local title, text_msg = utils:getFriendlyError("error_api", "Failed to start background process", self.loc)
@@ -189,42 +228,25 @@ function M:fetchSingleWord(text, pos0, pos1)
                 return
             end
 
-            progress_msg:reportProgress(50)
-
-            local poll_count = 0
-            local max_polls = 150 -- 5 minutes at 2s intervals
-            local current_progress = 50
+            local request_started_at = os.time()
+            local request_timeout = 300
             local function poll()
+                if is_cancelled then return end
                 if self.destroyed or not self.ui or not self.ui.document then
-                    if progress_msg then UIManager:close(progress_msg) end
-                    if self.ai_helper and self.ai_helper.cancelAsyncChild then
-                        self.ai_helper:cancelAsyncChild(request_pid)
-                    end
-                    pcall(function() os.remove(result_file) end)
-                    self:log("XRayPlugin: Single word lookup cancelled or document/plugin unavailable")
+                    cancelLookup("Single word lookup cancelled because the document or plugin is unavailable")
                     return
                 end
-                
-                -- Simulate gradual progress while waiting for AI
-                if current_progress < 95 then
-                    current_progress = current_progress + 5
-                    if progress_msg then 
-                        progress_msg:reportProgress(current_progress)
-                    end
-                end
-                
-                poll_count = poll_count + 1
+
                 if not self.ai_helper or not self.ai_helper.checkAsyncResult then
-                    if progress_msg then UIManager:close(progress_msg) end
+                    cancelLookup("Single word lookup stopped because the AI helper is unavailable")
                     return
                 end
                 local data, p_err_code, p_err_msg = self.ai_helper:checkAsyncResult(result_file, request_pid)
                 if data == nil then
-                    if poll_count < max_polls then
+                    if not self:isRequestTimedOut(request_started_at, request_timeout) then
                         UIManager:scheduleIn(2, poll)
                     else
-                        if progress_msg then UIManager:close(progress_msg) end
-                        self:log("XRayPlugin: Single word lookup timed out")
+                        cancelLookup("Single word lookup timed out")
                         local ConfirmBox = require("ui/widget/confirmbox")
                         local title, text_msg = utils:getFriendlyError("error_timeout", nil, self.loc)
                         UIManager:show(ConfirmBox:new{                            text = title .. "\n\n" .. text_msg,
@@ -234,6 +256,8 @@ function M:fetchSingleWord(text, pos0, pos1)
                     end
                 elseif data == false then
                     if progress_msg then UIManager:close(progress_msg) end
+                    if self._active_ai_dialog == progress_msg then self._active_ai_dialog = nil end
+                    if self._active_ai_cancel == cancelLookup then self._active_ai_cancel = nil end
                     self:log("XRayPlugin: Single word lookup failed: " .. tostring(p_err_msg))
                     local ConfirmBox = require("ui/widget/confirmbox")
                     local title, text_msg = utils:getFriendlyError(p_err_code, p_err_msg, self.loc)
@@ -243,9 +267,10 @@ function M:fetchSingleWord(text, pos0, pos1)
                     })
                 else
                     if progress_msg then
-                        progress_msg:reportProgress(100)
                         UIManager:scheduleIn(0.1, function()
                             UIManager:close(progress_msg)
+                            if self._active_ai_dialog == progress_msg then self._active_ai_dialog = nil end
+                            if self._active_ai_cancel == cancelLookup then self._active_ai_cancel = nil end
                             self:_processSingleWordResult(data, text, book_text, current_page)
                         end)
                     else
@@ -386,6 +411,9 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
     local doc_file = self.ui.document.file
     if not doc_file then return end
 
+    if not is_silent and (self._active_ai_cancel or (self.ai_helper and self.ai_helper._async_child_pid)) then
+        self:cancelActiveAIRequest("Previous AI request replaced by manual fetch")
+    end
     self._fetch_generation = (self._fetch_generation or 0) + 1
     local fetch_generation = self._fetch_generation
     self._active_fetch_generation = fetch_generation
@@ -432,14 +460,18 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
     local is_cancelled = false
     local result_file
     local request_pid
+    local cancelActiveRequest
 
     local function finishActiveRequest()
         request_pid = nil
         result_file = nil
         clearFetchState()
+        if self._active_ai_dialog == wait_msg then self._active_ai_dialog = nil end
+        if self._active_ai_cancel == cancelActiveRequest then self._active_ai_cancel = nil end
     end
 
-    local function cancelActiveRequest(reason)
+    cancelActiveRequest = function(reason)
+        is_cancelled = true
         if request_pid and self.ai_helper and self.ai_helper.cancelAsyncChild then
             self.ai_helper:cancelAsyncChild(request_pid)
         end
@@ -449,6 +481,8 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
         finishActiveRequest()
         self:log("XRayPlugin: " .. reason)
     end
+
+    self._active_ai_cancel = cancelActiveRequest
 
     if not is_silent then
         local ButtonDialog = require("ui/widget/buttondialog")
@@ -467,11 +501,18 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                 end
             }}}
         }
+        self._active_ai_dialog = wait_msg
         UIManager:show(wait_msg)
     end
 
     UIManager:scheduleIn(0.5, function()
-        if is_cancelled or self.destroyed or not self.ui or not self.ui.document then clearFetchState(); return end
+        if is_cancelled then return end
+        if self.destroyed or not self.ui or not self.ui.document then
+            cancelActiveRequest(self.destroyed
+                and "Fetch stopped because plugin was destroyed"
+                or "Fetch stopped because the document was closed")
+            return
+        end
         if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
 
         local current_page = self.ui:getCurrentPage()
@@ -519,8 +560,14 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
         end
 
         UIManager:scheduleIn(0, function()
-            if is_cancelled or self.destroyed then clearFetchState(); return end
-            if not self.ui or not self.ui.document then clearFetchState(); return end
+            if is_cancelled or self.destroyed then
+                if not is_cancelled then cancelActiveRequest("Fetch stopped because plugin was destroyed") end
+                return
+            end
+            if not self.ui or not self.ui.document then
+                cancelActiveRequest("Fetch stopped because the document was closed")
+                return
+            end
 
             -- A cached page can outlive pagination changes or be ahead of the
             -- reader's current position. In that case an incremental XPointer
@@ -547,7 +594,7 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                 end
                 if not is_silent then UIManager:show(InfoMessage:new{ text = message, timeout = 5 }) end
                 self:log("XRayPlugin: Text extraction failed" .. (is_silent and " (silent)" or ""))
-                clearFetchState()
+                finishActiveRequest()
                 return
             end
 
@@ -570,7 +617,7 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
             if not req_params then
                 if wait_msg then UIManager:close(wait_msg) end
                 self:log("XRayPlugin: Failed to build request: " .. tostring(err_msg))
-                clearFetchState()
+                finishActiveRequest()
                 if not is_silent then
                     if not self.ai_helper:hasApiKey() and self.showWelcomeCard then
                         self:showWelcomeCard()
@@ -610,13 +657,13 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                 self:log("XRayPlugin: Failed to start async fetch")
                 pcall(function() os.remove(result_file) end)
                 result_file = nil
-                clearFetchState()
+                finishActiveRequest()
                 return
             end
             request_pid = started
 
-            local poll_count = 0
-            local max_polls = 300 -- 10 minutes at 2s intervals
+            local request_started_at = os.time()
+            local request_timeout = 600
             local function poll()
                 if is_cancelled or self.destroyed then
                     cancelActiveRequest(self.destroyed and "Fetch stopped because plugin was destroyed" or "Fetch cancelled")
@@ -626,10 +673,9 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                     cancelActiveRequest("Fetch stopped because the document was closed")
                     return
                 end
-                poll_count = poll_count + 1
                 local data, p_err_code, p_err_msg = self.ai_helper:checkAsyncResult(result_file, request_pid)
                 if data == nil then
-                    if poll_count < max_polls then
+                    if not self:isRequestTimedOut(request_started_at, request_timeout) then
                         UIManager:scheduleIn(2, poll)
                     else
                         if wait_msg then UIManager:close(wait_msg) end

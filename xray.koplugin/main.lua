@@ -288,8 +288,9 @@ function XRayPlugin:onExit()
     self:destroy()
 end
 
-
-
+function XRayPlugin:onSuspend()
+    self:cancelActiveAIRequest("Fetch cancelled because the device suspended")
+end
 
 -- Builds the X-Ray button spec for the dict popup.
 -- Used by both the new addToDictButtons API and the legacy onDictButtonsReady hook.
@@ -2643,4 +2644,3 @@ end
 -- Extracted functions are now loaded via mixins (xray_data, xray_ui, xray_fetch, xray_mentions)
 
 return XRayPlugin
-

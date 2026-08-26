@@ -21,8 +21,15 @@ end
 
 function M:cancelActiveAIRequest(reason)
     if self._active_ai_cancel then
-        self._active_ai_cancel(reason or "AI request cancelled")
-    elseif self.ai_helper and self.ai_helper._async_child_pid then
+        local ok, err = pcall(self._active_ai_cancel, reason or "AI request cancelled")
+        if not ok then
+            self:log("XRayPlugin: Active AI cancellation callback failed: " .. tostring(err))
+        end
+    end
+    -- The registered callback may be stale or may have failed before reaching
+    -- its owned child. A global lifecycle cancellation must not leave whatever
+    -- child the helper currently owns running.
+    if self.ai_helper and self.ai_helper._async_child_pid then
         self.ai_helper:cancelAsyncChild()
     end
     self._active_ai_cancel = nil
@@ -148,13 +155,15 @@ function M:fetchSingleWord(text, pos0, pos1)
         -- Second tick: start the actual work. This two-step approach ensures the progress
         -- bar borders are fully committed to screen before the CPU starts blocking.
         UIManager:scheduleIn(0.3, function()
-            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
-                if progress_msg then UIManager:close(progress_msg) end
+            if is_cancelled then return end
+            if self.destroyed or not self.ui or not self.ui.document then
+                cancelLookup("Single word lookup cancelled because the document or plugin is unavailable")
                 return
             end
             UIManager:scheduleIn(0.3, function()
-            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
-                if progress_msg then UIManager:close(progress_msg) end
+            if is_cancelled then return end
+            if self.destroyed or not self.ui or not self.ui.document then
+                cancelLookup("Single word lookup cancelled because the document or plugin is unavailable")
                 return
             end
             if not self.chapter_analyzer then self.chapter_analyzer = require(plugin_path .. "xray_chapteranalyzer"):new() end
@@ -202,8 +211,9 @@ function M:fetchSingleWord(text, pos0, pos1)
                 end
             end)
 
-            if is_cancelled or self.destroyed or not self.ui or not self.ui.document then
-                if progress_msg then UIManager:close(progress_msg) end
+            if is_cancelled then return end
+            if self.destroyed or not self.ui or not self.ui.document then
+                cancelLookup("Single word lookup cancelled because the document or plugin is unavailable")
                 return
             end
 
@@ -413,7 +423,13 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
     local doc_file = self.ui.document.file
     if not doc_file then return end
 
-    if not is_silent and (self._active_ai_cancel or (self.ai_helper and self.ai_helper._async_child_pid)) then
+    local has_active_request = self._active_ai_cancel
+        or (self.ai_helper and self.ai_helper._async_child_pid)
+    if is_silent and has_active_request then
+        self.bg_fetch_pending = false
+        self:log("XRayPlugin: Skipping background fetch because another AI request is active")
+        return
+    elseif not is_silent and has_active_request then
         self:cancelActiveAIRequest("Previous AI request replaced by manual fetch")
     end
     self._fetch_generation = (self._fetch_generation or 0) + 1
@@ -500,8 +516,6 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
             buttons = {{{
                 text = self.loc:t("cancel") or "Cancel",
                 callback = function()
-                    is_cancelled = true
-                    if wait_msg then UIManager:close(wait_msg) end
                     cancelActiveRequest("Fetch cancelled by user")
                 end
             }}}
@@ -683,7 +697,6 @@ function M:continueWithFetch(reading_percent, is_update, last_fetch_page, is_sil
                     if not self:isRequestTimedOut(request_started_at, request_timeout) then
                         UIManager:scheduleIn(2, poll)
                     else
-                        if wait_msg then UIManager:close(wait_msg) end
                         cancelActiveRequest("Fetch timed out")
                         if not is_silent then
                             local title, text = utils:getFriendlyError("error_timeout", nil, self.loc)

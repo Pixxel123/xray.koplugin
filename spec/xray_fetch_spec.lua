@@ -77,6 +77,24 @@ describe("xray_fetch", function()
 
             assert.is_true(cancelled)
         end)
+
+        it("still kills the helper child when a registered callback is stale", function()
+            local callback_called = false
+            local child_cancelled = false
+            plugin._active_ai_cancel = function() callback_called = true end
+            plugin.ai_helper = {
+                _async_child_pid = 88,
+                cancelAsyncChild = function(self)
+                    child_cancelled = true
+                    self._async_child_pid = nil
+                end,
+            }
+
+            plugin:cancelActiveAIRequest("device suspended")
+
+            assert.is_true(callback_called)
+            assert.is_true(child_cancelled)
+        end)
     end)
 
     describe("runPostFetchDuplicateCheck reader state", function()
@@ -134,6 +152,28 @@ describe("xray_fetch", function()
     end)
 
     describe("continueWithFetch cancellation", function()
+        it("does not let a silent fetch replace another request's cancel handler", function()
+            local original_cancel = function() end
+            local scheduled = false
+            local UIManager = require("ui/uimanager")
+            local old_schedule = UIManager.scheduleIn
+            UIManager.scheduleIn = function()
+                scheduled = true
+            end
+            plugin._active_ai_cancel = original_cancel
+            plugin.bg_fetch_pending = true
+
+            local ok, err = pcall(function()
+                plugin:continueWithFetch(50, true, nil, true)
+                assert.are.equal(original_cancel, plugin._active_ai_cancel)
+                assert.is_false(plugin.bg_fetch_pending)
+                assert.is_false(scheduled)
+            end)
+
+            UIManager.scheduleIn = old_schedule
+            if not ok then error(err) end
+        end)
+
         it("cancels the owned child and allows a new fetch before the old poll runs", function()
             local UIManager = require("ui/uimanager")
             local old_schedule = UIManager.scheduleIn

@@ -655,6 +655,14 @@ function XRayPlugin:triggerBackgroundMergeFetch(chapter_title)
             return
         end
 
+        -- Foreground requests own the single async child slot and its global
+        -- cancel handler. Do not consume the background cooldown or disturb
+        -- that ownership while one is active.
+        if self._active_ai_cancel or self.ai_helper._async_child_pid then
+            self:log("XRayPlugin: Skipping background fetch because another AI request is active")
+            return
+        end
+
         -- Cooldown check to prevent API spamming
         local cooldown = self.ai_helper.settings and self.ai_helper.settings.auto_fetch_cooldown or 300
         local now = os.time()

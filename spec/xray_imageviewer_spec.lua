@@ -20,6 +20,7 @@ describe("xray_imageviewer", function()
         }
         assert.are_not.equal(nil, viewer)
         assert.are_not.equal(nil, viewer[1])
+        -- zoom_level is set by getFitZoom() on init; for unreadable assets it returns 1.0
         assert.are.equal(1.0, viewer.zoom_level)
         assert.are.equal(0, viewer.rotation_angle)
     end)
@@ -58,10 +59,12 @@ describe("xray_imageviewer", function()
             image_entry = { id = "img1", title = "Map", page = 1 },
             file_path = "assets/map.svg",
         }
+        local fit_zoom = viewer:getFitZoom()
         viewer:onZoomIn()
-        assert.is_true(viewer.zoom_level > 1.0)
+        assert.is_true(viewer.zoom_level > fit_zoom)
         viewer:onZoomOut()
-        assert.are.equal(1.0, viewer.zoom_level)
+        -- Should return to fit_zoom (1.0 for unreadable asset files)
+        assert.are.equal(fit_zoom, viewer.zoom_level)
 
         viewer:onRotate()
         assert.are.equal(270, viewer.rotation_angle) -- 270 in KOReader equals 90° Clockwise

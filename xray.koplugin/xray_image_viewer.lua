@@ -234,6 +234,13 @@ function ImageViewer:init()
     self.sh = Screen:getHeight()
     self.dimen = Geom:new{ x = 0, y = 0, w = self.sw, h = self.sh }
 
+    -- Use saved rotation angle if explicitly set, otherwise default to 0° (natural orientation)
+    if self.image_entry and self.image_entry.rotation ~= nil then
+        self.rotation_angle = self.image_entry.rotation
+    else
+        self.rotation_angle = self.rotation_angle or 0
+    end
+
     local full_range = Geom:new{ x = 0, y = 0, w = self.sw, h = self.sh }
 
     self.ges_events = {
@@ -258,6 +265,12 @@ function ImageViewer:init()
         Close = { { "Escape" }, { "Back" }, { "q" } },
     }
 
+    -- Ensure zoom starts at fit-to-viewport for the current rotation
+    -- (important when opening an already-rotated image)
+    self.zoom_level = self:getFitZoom()
+    self.pan_x = 0
+    self.pan_y = 0
+
     self:buildUI()
 end
 
@@ -268,16 +281,46 @@ function ImageViewer:paintTo(bb, x, y)
     end
 end
 
--- Clamp panning so the image can never be dragged off the screen
+-- The minimum zoom that fits the whole image in the viewport.
+-- zoom_level=1.0 gives a box = viewport (with dim-swap for rotated images), which ImageWidget
+-- letterboxes to fill correctly. Sub-1.0 zoom would double-shrink the image unnecessarily.
+function ImageViewer:getFitZoom()
+    return 1.0
+end
+
+-- Clamp panning so the image can never be dragged fully off the screen.
 function ImageViewer:clampPan()
     local toolbar_h = sc(48)
     local viewport_h = self.sh - toolbar_h
     local is_sideways = (self.rotation_angle == 90 or self.rotation_angle == 270)
-    local target_w = is_sideways and viewport_h or self.sw
-    local target_h = is_sideways and self.sw or viewport_h
 
-    local max_pan_x = math.floor(target_w * math.max(1.0, self.zoom_level) * 0.8)
-    local max_pan_y = math.floor(target_h * math.max(1.0, self.zoom_level) * 0.8)
+    local vp_w = self.sw
+    local vp_h = viewport_h
+
+    local img_w, img_h = getImageDimensions(self.file_path)
+    local rot_w, rot_h
+    if is_sideways then
+        rot_w = img_h
+        rot_h = img_w
+    else
+        rot_w = img_w
+        rot_h = img_h
+    end
+
+    local rendered_w, rendered_h
+    if rot_w and rot_h and rot_w > 0 and rot_h > 0 then
+        local box_w = math.floor(vp_w * self.zoom_level)
+        local box_h = math.floor(vp_h * self.zoom_level)
+        local scale = math.min(box_w / rot_w, box_h / rot_h)
+        rendered_w = math.floor(rot_w * scale)
+        rendered_h = math.floor(rot_h * scale)
+    else
+        rendered_w = math.floor(vp_w * self.zoom_level)
+        rendered_h = math.floor(vp_h * self.zoom_level)
+    end
+
+    local max_pan_x = math.max(0, math.floor((rendered_w - vp_w) / 2))
+    local max_pan_y = math.max(0, math.floor((rendered_h - vp_h) / 2))
 
     self.pan_x = math.max(-max_pan_x, math.min(max_pan_x, self.pan_x or 0))
     self.pan_y = math.max(-max_pan_y, math.min(max_pan_y, self.pan_y or 0))
@@ -291,8 +334,9 @@ end
 
 function ImageViewer:onDoubleTap(arg, ges)
     self._last_pan_pos = nil
-    if self.zoom_level > 1.05 then
-        self.zoom_level = 1.0
+    local fit_zoom = self:getFitZoom()
+    if self.zoom_level > fit_zoom + 0.05 then
+        self.zoom_level = fit_zoom
         self.pan_x = 0
         self.pan_y = 0
     else
@@ -307,8 +351,9 @@ end
 function ImageViewer:onPinch(arg, ges)
     self._last_pan_pos = nil
     if ges and ges.relative_scale then
+        local fit_zoom = self:getFitZoom()
         local new_zoom = self.zoom_level * ges.relative_scale
-        self.zoom_level = math.max(1.0, math.min(4.5, new_zoom))
+        self.zoom_level = math.max(fit_zoom, math.min(4.5, new_zoom))
         self:clampPan()
         self:buildUI()
         UIManager:setDirty(self, "ui")
@@ -322,15 +367,28 @@ end
 
 function ImageViewer:onZoomIn()
     self._last_pan_pos = nil
+    local fit_zoom = self:getFitZoom()
+    -- Build effective zoom steps: fit_zoom (if sub-1) + all standard steps >= fit_zoom
+    local steps = {}
+    if fit_zoom < 0.99 then
+        table.insert(steps, fit_zoom)
+    end
+    for _, z in ipairs(ZOOM_STEPS) do
+        if z >= fit_zoom - 0.01 then  -- include fit_zoom-level entries too
+            table.insert(steps, z)
+        end
+    end
+    if #steps == 0 then steps = ZOOM_STEPS end
+
     local current_idx = 1
-    for i, z in ipairs(ZOOM_STEPS) do
+    for i, z in ipairs(steps) do
         if math.abs(self.zoom_level - z) < 0.05 then
             current_idx = i
             break
         end
     end
-    if current_idx < #ZOOM_STEPS then
-        self.zoom_level = ZOOM_STEPS[current_idx + 1]
+    if current_idx < #steps then
+        self.zoom_level = steps[current_idx + 1]
         self:clampPan()
         self:buildUI()
         UIManager:setDirty(self, "ui")
@@ -339,15 +397,28 @@ end
 
 function ImageViewer:onZoomOut()
     self._last_pan_pos = nil
+    local fit_zoom = self:getFitZoom()
+    -- Build effective zoom steps: fit_zoom (if sub-1) + all standard steps >= fit_zoom
+    local steps = {}
+    if fit_zoom < 0.99 then
+        table.insert(steps, fit_zoom)
+    end
+    for _, z in ipairs(ZOOM_STEPS) do
+        if z >= fit_zoom - 0.01 then  -- include fit_zoom-level entries too
+            table.insert(steps, z)
+        end
+    end
+    if #steps == 0 then steps = ZOOM_STEPS end
+
     local current_idx = 1
-    for i, z in ipairs(ZOOM_STEPS) do
+    for i, z in ipairs(steps) do
         if math.abs(self.zoom_level - z) < 0.05 then
             current_idx = i
             break
         end
     end
     if current_idx > 1 then
-        self.zoom_level = ZOOM_STEPS[current_idx - 1]
+        self.zoom_level = steps[current_idx - 1]
         self:clampPan()
         self:buildUI()
         UIManager:setDirty(self, "ui")
@@ -357,7 +428,7 @@ end
 function ImageViewer:onPanLeft()
     self.pan_x = self.pan_x + sc(50)
     self:clampPan()
-    if self.canvas_container then self.canvas_container.pan_x = self.pan_x end
+    if self.canvas_container then self.canvas_container.pan_x = (self._base_x or 0) + self.pan_x end
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -365,7 +436,7 @@ end
 function ImageViewer:onPanRight()
     self.pan_x = self.pan_x - sc(50)
     self:clampPan()
-    if self.canvas_container then self.canvas_container.pan_x = self.pan_x end
+    if self.canvas_container then self.canvas_container.pan_x = (self._base_x or 0) + self.pan_x end
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -373,7 +444,7 @@ end
 function ImageViewer:onPanUp()
     self.pan_y = self.pan_y + sc(50)
     self:clampPan()
-    if self.canvas_container then self.canvas_container.pan_y = self.pan_y end
+    if self.canvas_container then self.canvas_container.pan_y = (self._base_y or 0) + self.pan_y end
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -381,7 +452,7 @@ end
 function ImageViewer:onPanDown()
     self.pan_y = self.pan_y - sc(50)
     self:clampPan()
-    if self.canvas_container then self.canvas_container.pan_y = self.pan_y end
+    if self.canvas_container then self.canvas_container.pan_y = (self._base_y or 0) + self.pan_y end
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -390,6 +461,17 @@ function ImageViewer:onRotate()
     self._last_pan_pos = nil
     -- Clockwise 90° rotation (matches rotate-cw.svg icon direction)
     self.rotation_angle = ((self.rotation_angle or 0) + 270) % 360
+    if self.image_entry then
+        self.image_entry.rotation = self.rotation_angle
+        if self.plugin and self.plugin.image_manager and self.plugin.book_data and self.image_entry.id then
+            self.plugin.image_manager:setImageRotation(self.plugin.book_data, self.image_entry.id, self.rotation_angle)
+        end
+    end
+    if self.plugin and self.plugin.cache_manager and self.plugin.ui and self.plugin.ui.document and self.plugin.ui.document.file and self.plugin.book_data then
+        self.plugin.cache_manager:asyncSaveCache(self.plugin.ui.document.file, self.plugin.book_data)
+    end
+    -- Reset zoom to fit the image in the new orientation
+    self.zoom_level = self:getFitZoom()
     self.pan_x = 0
     self.pan_y = 0
     self:clampPan()
@@ -446,8 +528,11 @@ function ImageViewer:onPan(arg, ges)
         self.pan_y = (self.pan_y or 0) + dy
         self:clampPan()
         if self.canvas_container then
-            self.canvas_container.pan_x = self.pan_x
-            self.canvas_container.pan_y = self.pan_y
+            -- Add stored centering offset so the live-pan matches buildUI's layout
+            local bx = self._base_x or 0
+            local by = self._base_y or 0
+            self.canvas_container.pan_x = bx + self.pan_x
+            self.canvas_container.pan_y = by + self.pan_y
         end
         UIManager:setDirty(self, "ui")
         return true
@@ -521,10 +606,10 @@ function ImageViewer:buildUI()
     }
 
     local menu_btn = createIconButton{
-        text_icon = "⋮",
-        text_size = 18,
-        width = btn_frame_w,
-        height = btn_frame_w,
+        icon = "more-vertical.svg",
+        size = btn_size,
+        padding = btn_pad,
+        padding_h = btn_pad,
         callback = function()
             if p and p.showImageActions then
                 p:showImageActions(img)
@@ -582,14 +667,15 @@ function ImageViewer:buildUI()
     local viewport_h = sh - toolbar_h
     self.viewport_h = viewport_h
 
+    local row_w = sw - sc(20)
     local top_bar_row = OverlapGroup:new{
-        dimen = Geom:new{ w = sw - sc(20), h = sc(34) },
+        dimen = Geom:new{ w = row_w, h = sc(34) },
         LeftContainer:new{
             dimen = Geom:new{ w = title_max_w, h = sc(34) },
             title_label,
         },
         RightContainer:new{
-            dimen = Geom:new{ w = actions_total_w, h = sc(34) },
+            dimen = Geom:new{ w = row_w, h = sc(34) },
             header_actions,
         },
     }
@@ -607,17 +693,25 @@ function ImageViewer:buildUI()
     }
 
     -- ── 2. Full-Screen Image Viewport with Custom CanvasContainer ─────────────
-    local is_sideways = (self.rotation_angle == 90 or self.rotation_angle == 270)
-    local target_w = is_sideways and viewport_h or sw
-    local target_h = is_sideways and sw or viewport_h
+    -- Viewport size
+    local vp_w = sw
+    local vp_h = viewport_h
 
-    local base_w = math.floor(target_w * self.zoom_level)
-    local base_h = math.floor(target_h * self.zoom_level)
+    -- Box given to ImageWidget (always matches viewport scaled by zoom_level).
+    -- KOReader rotates the bitmap and scales it to fit within width/height, centering it.
+    local img_box_w = math.floor(vp_w * self.zoom_level)
+    local img_box_h = math.floor(vp_h * self.zoom_level)
+
+    -- Centering offset for zoom > 1.0 (at zoom 1.0, base_x = 0, base_y = 0)
+    local base_x = math.floor((vp_w - img_box_w) / 2)
+    local base_y = math.floor((vp_h - img_box_h) / 2)
+    self._base_x = base_x
+    self._base_y = base_y
 
     local image_widget = ImageWidget:new{
         file = self.file_path,
-        width = base_w,
-        height = base_h,
+        width = img_box_w,
+        height = img_box_h,
         rotation_angle = self.rotation_angle,
         scale_factor = 0,
         invert = self.inverted,
@@ -625,11 +719,11 @@ function ImageViewer:buildUI()
     }
 
     self.canvas_container = CanvasContainer:new{
-        width = sw,
-        height = viewport_h,
+        width = vp_w,
+        height = vp_h,
         rotation_angle = self.rotation_angle,
-        pan_x = self.pan_x,
-        pan_y = self.pan_y,
+        pan_x = base_x + (self.pan_x or 0),
+        pan_y = base_y + (self.pan_y or 0),
         image_widget,
     }
 
@@ -637,8 +731,8 @@ function ImageViewer:buildUI()
         padding = 0,
         bordersize = 0,
         background = self.inverted and Blitbuffer.COLOR_BLACK or Blitbuffer.COLOR_WHITE,
-        width = sw,
-        height = viewport_h,
+        width = vp_w,
+        height = vp_h,
         self.canvas_container,
     }
 

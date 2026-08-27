@@ -477,45 +477,25 @@ msgstr "Tam Kitap Modu"
 msgid "gemini_key_hint"
 msgstr "Google AI Studio'dan ücretsiz Gemini anahtarınızı girin (AQ. veya AIzaSy... ile başlar):"
 
-# en-hash: 782d6b28dce4e5d0b2ac92142c6624ba
-msgid "img_action_favorite"
-msgstr "Favorilere Ekle"
-
-# en-hash: afc4f81fda38554e400945c2e92443a5
-msgid "img_action_goto_page"
-msgstr "Kitaptaki Sayfaya Git"
-
-# en-hash: b0b93c2b610b4e094395ed6b498f4e45
-msgid "img_action_hide"
-msgstr "Görseli Gizle / Yoksay"
-
-# en-hash: 53d7c03bd4c078c7f1ef8e2ef8363095
-msgid "img_action_rename"
-msgstr "Yeniden Adlandır / Etiketle"
-
-# en-hash: c15c3f043dd13716a1500143934e919b
-msgid "img_action_save_series"
-msgstr "Seri Referanslarına Kaydet"
-
-# en-hash: 4f9b5fa08f2ef86fdc5d0ceefc271981
-msgid "img_action_unfavorite"
-msgstr "Favorilerden Çıkar"
-
-# en-hash: 3a98d08bfbe19be2cf6b914aba5acc75
-msgid "img_action_unhide"
-msgstr "Görseli Göster"
-
-# en-hash: 2a3132bad0e9c327e1ad645d21aa0997
-msgid "img_action_view"
-msgstr "Tam Ekran Görüntüle (Yakınlaştır ve Kaydır)"
-
 # en-hash: fe63191987f62b9e4806e376671ed335
 msgid "img_extract_failed"
 msgstr "Görsel dosyası ayıklanamadı."
 
+# en-hash: 30936c8b483b8b104a4ad7821ce2262b
+msgid "img_no_favorites"
+msgstr "Henüz favori yok.\n\nFavorilerinize eklemek için herhangi bir görselde ⋮ menüsünü kullanın."
+
+# en-hash: c3e4c8dd2122260b0c4e14d6509e62ca
+msgid "img_no_hidden"
+msgstr "Gizlenmiş görsel yok.\n\nDekoratif illüstrasyonları veya süslü başharfleri gizlemek için galerideki herhangi bir görselde ⋮ menüsünü kullanın."
+
 # en-hash: 95407637295cd7c30378be19be6e36cb
 msgid "img_no_images"
 msgstr "Bu sekme/filtre için resim bulunamadı.\n\nKitaptan resimler çıkarılıyor veya taranıyor..."
+
+# en-hash: 74ab2b6d760dc64ea26012a4fca84490
+msgid "img_no_series"
+msgstr "Kaydedilmiş seri referansı yok.\n\nSeri referanslarınıza kaydetmek için herhangi bir haritada ⋮ menüsünü kullanın."
 
 # en-hash: 2bea7b6d66811b50767c7b22f81fb2c2
 msgid "img_rename_title"
@@ -525,17 +505,13 @@ msgstr "Görsel Etiketini Yeniden Adlandır"
 msgid "img_reveal"
 msgstr "Göster"
 
-# en-hash: b76c4051f659ad5db0a10e311842b43d
-msgid "img_saved_to_series"
-msgstr "Seri haritalarına kaydedildi."
-
 # en-hash: 646ef4f9024779f1a04ee945deffb8d5
 msgid "img_spoiler_confirm"
 msgstr "Bu görsel %d. sayfada yer alıyor (mevcut okuma ilerlemenizin ötesinde). Görsel gösterilsin mi?"
 
-# en-hash: 4d6cd14fe65f452c65f7feae90b8467d
+# en-hash: d0f2e5376298c880665077b565ffd7dd
 msgid "img_spoiler_locked"
-msgstr "Spoiler Korumalı"
+msgstr "Kilitli"
 
 # en-hash: b1c94ca2fbc3e78fc30069c8d0f01680
 msgid "img_tab_all"
@@ -549,9 +525,9 @@ msgstr "Favoriler"
 msgid "img_tab_series"
 msgstr "Seriler"
 
-# en-hash: 911af7aa209e00b49f3d6fd2afa92564
+# en-hash: be53a0541a6d36f6ecb879fa2c584b08
 msgid "img_untitled"
-msgstr "Başlıksız"
+msgstr "Görsel"
 
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"

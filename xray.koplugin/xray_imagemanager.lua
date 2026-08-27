@@ -239,7 +239,7 @@ end
 function ImageManager:toggleFavorite(book_data, image_id)
     if not book_data or not book_data.images or not image_id then return false end
     for _, img in ipairs(book_data.images) do
-        if img.id == image_id then
+        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
             img.is_favorite = not (img.is_favorite == true)
             return img.is_favorite
         end
@@ -251,9 +251,21 @@ end
 function ImageManager:renameImage(book_data, image_id, new_title)
     if not book_data or not book_data.images or not image_id or not new_title then return false end
     for _, img in ipairs(book_data.images) do
-        if img.id == image_id then
+        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
             img.title = new_title
             img.custom_title = true
+            return true
+        end
+    end
+    return false
+end
+
+-- Set rotation angle for an image
+function ImageManager:setImageRotation(book_data, image_id, rotation)
+    if not book_data or not book_data.images or not image_id then return false end
+    for _, img in ipairs(book_data.images) do
+        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
+            img.rotation = rotation
             return true
         end
     end
@@ -264,7 +276,7 @@ end
 function ImageManager:toggleHideImage(book_data, image_id)
     if not book_data or not book_data.images or not image_id then return false end
     for _, img in ipairs(book_data.images) do
-        if img.id == image_id then
+        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
             img.is_hidden = not (img.is_hidden == true)
             return img.is_hidden
         end

@@ -477,45 +477,25 @@ msgstr "整本书模式"
 msgid "gemini_key_hint"
 msgstr "输入 Google AI Studio 免费获取的 Gemini 密钥（以 AQ. 或 AIzaSy... 开头）："
 
-# en-hash: 782d6b28dce4e5d0b2ac92142c6624ba
-msgid "img_action_favorite"
-msgstr "添加至收藏"
-
-# en-hash: afc4f81fda38554e400945c2e92443a5
-msgid "img_action_goto_page"
-msgstr "跳转至书籍对应页"
-
-# en-hash: b0b93c2b610b4e094395ed6b498f4e45
-msgid "img_action_hide"
-msgstr "隐藏 / 忽略图片"
-
-# en-hash: 53d7c03bd4c078c7f1ef8e2ef8363095
-msgid "img_action_rename"
-msgstr "重命名 / 标签"
-
-# en-hash: c15c3f043dd13716a1500143934e919b
-msgid "img_action_save_series"
-msgstr "保存至系列参考资料"
-
-# en-hash: 4f9b5fa08f2ef86fdc5d0ceefc271981
-msgid "img_action_unfavorite"
-msgstr "取消收藏"
-
-# en-hash: 3a98d08bfbe19be2cf6b914aba5acc75
-msgid "img_action_unhide"
-msgstr "取消隐藏图片"
-
-# en-hash: 2a3132bad0e9c327e1ad645d21aa0997
-msgid "img_action_view"
-msgstr "全屏查看（缩放与平移）"
-
 # en-hash: fe63191987f62b9e4806e376671ed335
 msgid "img_extract_failed"
 msgstr "无法提取图片文件。"
 
+# en-hash: 30936c8b483b8b104a4ad7821ce2262b
+msgid "img_no_favorites"
+msgstr "暂无收藏。\n\n在任何图片上使用 ⋮ 菜单即可将其添加到收藏。"
+
+# en-hash: c3e4c8dd2122260b0c4e14d6509e62ca
+msgid "img_no_hidden"
+msgstr "没有隐藏的图片。\n\n在图库中的任何图片上使用 ⋮ 菜单即可隐藏装饰性插图或首字下沉。"
+
 # en-hash: 95407637295cd7c30378be19be6e36cb
 msgid "img_no_images"
 msgstr "未找到此标签/过滤器的图片。\n\n正在从书籍中提取或扫描图片..."
+
+# en-hash: 74ab2b6d760dc64ea26012a4fca84490
+msgid "img_no_series"
+msgstr "未保存系列参考资料。\n\n在任何地图上使用 ⋮ 菜单即可将其保存到系列参考资料中。"
 
 # en-hash: 2bea7b6d66811b50767c7b22f81fb2c2
 msgid "img_rename_title"
@@ -525,17 +505,13 @@ msgstr "重命名图片标签"
 msgid "img_reveal"
 msgstr "显示"
 
-# en-hash: b76c4051f659ad5db0a10e311842b43d
-msgid "img_saved_to_series"
-msgstr "已保存至系列地图。"
-
 # en-hash: 646ef4f9024779f1a04ee945deffb8d5
 msgid "img_spoiler_confirm"
 msgstr "该图片位于第 %d 页（超出您当前的阅读进度）。是否显示图片？"
 
-# en-hash: 4d6cd14fe65f452c65f7feae90b8467d
+# en-hash: d0f2e5376298c880665077b565ffd7dd
 msgid "img_spoiler_locked"
-msgstr "防剧透保护"
+msgstr "已锁定"
 
 # en-hash: b1c94ca2fbc3e78fc30069c8d0f01680
 msgid "img_tab_all"
@@ -549,9 +525,9 @@ msgstr "收藏"
 msgid "img_tab_series"
 msgstr "系列"
 
-# en-hash: 911af7aa209e00b49f3d6fd2afa92564
+# en-hash: be53a0541a6d36f6ecb879fa2c584b08
 msgid "img_untitled"
-msgstr "未命名"
+msgstr "图片"
 
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"

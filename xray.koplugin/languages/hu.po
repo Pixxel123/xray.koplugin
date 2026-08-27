@@ -477,45 +477,25 @@ msgstr "Teljes könyv mód"
 msgid "gemini_key_hint"
 msgstr "Adja meg ingyenes Gemini kulcsát a Google AI Studio-ból (AQ. vagy AIzaSy... kezdetű):"
 
-# en-hash: 782d6b28dce4e5d0b2ac92142c6624ba
-msgid "img_action_favorite"
-msgstr "Hozzáadás a kedvencekhez"
-
-# en-hash: afc4f81fda38554e400945c2e92443a5
-msgid "img_action_goto_page"
-msgstr "Ugrás az oldalra a könyvben"
-
-# en-hash: b0b93c2b610b4e094395ed6b498f4e45
-msgid "img_action_hide"
-msgstr "Kép elrejtése / mellőzése"
-
-# en-hash: 53d7c03bd4c078c7f1ef8e2ef8363095
-msgid "img_action_rename"
-msgstr "Átnevezés / Címkézés"
-
-# en-hash: c15c3f043dd13716a1500143934e919b
-msgid "img_action_save_series"
-msgstr "Mentés a sorozat hivatkozásai közé"
-
-# en-hash: 4f9b5fa08f2ef86fdc5d0ceefc271981
-msgid "img_action_unfavorite"
-msgstr "Eltávolítás a kedvencek közül"
-
-# en-hash: 3a98d08bfbe19be2cf6b914aba5acc75
-msgid "img_action_unhide"
-msgstr "Kép megjelenítése"
-
-# en-hash: 2a3132bad0e9c327e1ad645d21aa0997
-msgid "img_action_view"
-msgstr "Megtekintés teljes képernyőn (nagyítás és eltolás)"
-
 # en-hash: fe63191987f62b9e4806e376671ed335
 msgid "img_extract_failed"
 msgstr "Nem sikerült kinyerni a képfájlt."
 
+# en-hash: 30936c8b483b8b104a4ad7821ce2262b
+msgid "img_no_favorites"
+msgstr "Még nincsenek kedvencek.\n\nHasználd a ⋮ menüt bármelyik képen a kedvencekhez adáshoz."
+
+# en-hash: c3e4c8dd2122260b0c4e14d6509e62ca
+msgid "img_no_hidden"
+msgstr "Nincsenek rejtett képek.\n\nHasználd a képek ⋮ menüjét a galériában a díszítő illusztrációk vagy iniciálék elrejtéséhez."
+
 # en-hash: 95407637295cd7c30378be19be6e36cb
 msgid "img_no_images"
 msgstr "Nem található kép ehhez a laphoz/szűrőhöz.\n\nKépek kinyerése vagy beolvasása a könyvből..."
+
+# en-hash: 74ab2b6d760dc64ea26012a4fca84490
+msgid "img_no_series"
+msgstr "Nincsenek mentett sorozathivatkozások.\n\nHasználd a ⋮ menüt bármely térképen a sorozathivatkozások közé mentéshez."
 
 # en-hash: 2bea7b6d66811b50767c7b22f81fb2c2
 msgid "img_rename_title"
@@ -525,17 +505,13 @@ msgstr "Képcímke átnevezése"
 msgid "img_reveal"
 msgstr "Megjelenítés"
 
-# en-hash: b76c4051f659ad5db0a10e311842b43d
-msgid "img_saved_to_series"
-msgstr "Elmentve a sorozattérképek közé."
-
 # en-hash: 646ef4f9024779f1a04ee945deffb8d5
 msgid "img_spoiler_confirm"
 msgstr "Ez a kép a(z) %d. oldalon található (a jelenlegi olvasási helyed után). Megjeleníted a képet?"
 
-# en-hash: 4d6cd14fe65f452c65f7feae90b8467d
+# en-hash: d0f2e5376298c880665077b565ffd7dd
 msgid "img_spoiler_locked"
-msgstr "SPOILER-védelem"
+msgstr "Zárolva"
 
 # en-hash: b1c94ca2fbc3e78fc30069c8d0f01680
 msgid "img_tab_all"
@@ -549,9 +525,9 @@ msgstr "Kedvencek"
 msgid "img_tab_series"
 msgstr "Sorozatok"
 
-# en-hash: 911af7aa209e00b49f3d6fd2afa92564
+# en-hash: be53a0541a6d36f6ecb879fa2c584b08
 msgid "img_untitled"
-msgstr "Névtelen"
+msgstr "Kép"
 
 # en-hash: 57519cae872270f11151178ce007fd53
 msgid "import_file_not_found"

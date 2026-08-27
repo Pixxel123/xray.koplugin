@@ -5766,11 +5766,55 @@ function M:showImages(opts)
         self.image_manager = ImageManager:new(self)
     end
 
-    -- Auto-scan if no images exist yet
+    -- Load images: prefer book_data.images from cache (preserves user customizations & rotations),
+    -- fall back to scan only if no cached images exist.
+    if (not self.book_data or not self.book_data.images) and self.cache_manager and self.ui and self.ui.document and self.ui.document.file then
+        local loaded = self.cache_manager:loadCache(self.ui.document.file)
+        if loaded and type(loaded) == "table" then
+            self.book_data = loaded
+        end
+    end
+
     if not self.images or #self.images == 0 then
-        if self.ui and self.ui.document then
-            self.images = self.image_manager:scanDocumentImages(self.ui)
+        if self.book_data and self.book_data.images and #self.book_data.images > 0 then
+            self.images = self.book_data.images
+        elseif self.ui and self.ui.document then
+            -- No cached images — scan fresh
+            local scanned = self.image_manager:scanDocumentImages(self.ui)
             self.book_data = self.book_data or {}
+            -- Merge all custom user fields from existing book_data.images
+            if self.book_data.images and #self.book_data.images > 0 then
+                local user_data = {}
+                for _, img in ipairs(self.book_data.images) do
+                    local entry = {
+                        title = img.title,
+                        custom_title = img.custom_title,
+                        rotation = img.rotation,
+                        is_favorite = img.is_favorite,
+                        is_hidden = img.is_hidden,
+                        is_series = img.is_series,
+                        cached_file = img.cached_file,
+                    }
+                    if img.id then user_data[img.id] = entry end
+                    if img.href then user_data[img.href] = entry end
+                    if img.src then user_data[img.src] = entry end
+                end
+                for _, img in ipairs(scanned) do
+                    local saved = (img.id and user_data[img.id]) or (img.href and user_data[img.href]) or (img.src and user_data[img.src])
+                    if saved then
+                        if saved.custom_title and saved.title then
+                            img.title = saved.title
+                            img.custom_title = true
+                        end
+                        if saved.rotation then img.rotation = saved.rotation end
+                        if saved.is_favorite ~= nil then img.is_favorite = saved.is_favorite end
+                        if saved.is_hidden ~= nil then img.is_hidden = saved.is_hidden end
+                        if saved.is_series ~= nil then img.is_series = saved.is_series end
+                        if saved.cached_file then img.cached_file = saved.cached_file end
+                    end
+                end
+            end
+            self.images = scanned
             self.book_data.images = self.images
             if self.cache_manager and self.ui.document.file then
                 self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
@@ -5996,19 +6040,16 @@ function M:showImageActions(image_entry)
     end
 
     -- ── 3. Build Action List ───────────────────────────────────────────────────
-    -- View Fullscreen
-    table.insert(content_items, makeActionRow("zoom-in.svg", "View Fullscreen", "Interactive zoom, 2D pan & 360° rotate", function()
-        self:openImageViewer(image_entry)
-    end))
 
     -- Favorite Toggle
-    addDivider()
     local is_fav = (image_entry.is_favorite == true)
     local fav_title = is_fav and "Remove from Favorites" or "Add to Favorites"
     local fav_desc = is_fav and "Unpin from the favorites tab" or "Pin this image to the favorites tab"
     table.insert(content_items, makeActionRow("star.svg", fav_title, fav_desc, function()
         if self.image_manager and self.book_data then
-            self.image_manager:toggleFavorite(self.book_data, image_entry.id)
+            local cur_id = image_entry.id or image_entry.href or image_entry.src
+            local new_fav = self.image_manager:toggleFavorite(self.book_data, cur_id)
+            image_entry.is_favorite = new_fav
             if self.cache_manager and self.ui.document and self.ui.document.file then
                 self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
             end
@@ -6016,70 +6057,27 @@ function M:showImageActions(image_entry)
         end
     end))
 
-    -- Rename Label
-    addDivider()
-    table.insert(content_items, makeActionRow("edit-3.svg", "Rename Label", "Edit custom image title and description", function()
-        local rename_dialog
-        rename_dialog = InputDialog:new{
-            title = self.loc:t("img_rename_title") or "Rename Image Label",
-            input = image_entry.title or "",
-            buttons = {
-                {
-                    {
-                        text = self.loc:t("cancel") or "Cancel",
-                        callback = function() UIManager:close(rename_dialog) end,
-                    },
-                    {
-                        text = self.loc:t("save") or "Save",
-                        is_enter_default = true,
-                        callback = function()
-                            local new_val = rename_dialog:getInputText()
-                            UIManager:close(rename_dialog)
-                            if new_val and #new_val > 0 and self.image_manager and self.book_data then
-                                self.image_manager:renameImage(self.book_data, image_entry.id, new_val)
-                                if self.cache_manager and self.ui.document and self.ui.document.file then
-                                    self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
-                                end
-                                refreshActiveContext()
-                            end
-                        end,
-                    },
-                },
-            },
-        }
-        UIManager:show(rename_dialog)
-        rename_dialog:onShowKeyboard()
-    end))
-
-    -- Jump to Page in Book
-    if image_entry.page and tonumber(image_entry.page) then
-        addDivider()
-        table.insert(content_items, makeActionRow("external-link.svg", "Jump to Page " .. tostring(image_entry.page), "Navigate directly to this illustration in reader", function()
-            self:jumpToImagePage(tonumber(image_entry.page))
-        end))
-    end
-
-    -- Save to Series References (Always Available)
+    -- Save to Series References
     addDivider()
     local series_slug = (self.book_data and self.book_data.series_slug) or (self.book_data and self.book_data.series and self.series_manager and self.series_manager:makeSlug(self.book_data.series)) or (self.book_data and self.book_data.title and self.series_manager and self.series_manager:makeSlug(self.book_data.title)) or "series"
-    
+
     local is_in_series = false
     if self.series_manager then
         local s_imgs = self.series_manager:getSeriesImages(series_slug, 999) or {}
-        local cur_id = image_entry.id or image_entry.href
+        local cur_id = image_entry.id or image_entry.href or image_entry.src
         for _, s_item in ipairs(s_imgs) do
-            if (s_item.id and cur_id and s_item.id == cur_id) or (s_item.href and image_entry.href and s_item.href == image_entry.href) then
+            if (s_item.id and cur_id and s_item.id == cur_id) or (s_item.href and image_entry.href and s_item.href == image_entry.href) or (s_item.src and image_entry.src and s_item.src == image_entry.src) then
                 is_in_series = true
                 break
             end
         end
     end
 
-    local series_title = is_in_series and "Remove from Series References" or "Save to Series References"
+    local series_title = is_in_series and "Remove from Series References" or "Add to Series References"
     local series_desc = is_in_series and "Remove this map from the series-wide collection" or "Keep map accessible across all series volumes"
-    table.insert(content_items, makeActionRow("layers.svg", series_title, series_desc, function()
+    table.insert(content_items, makeActionRow("book-open.svg", series_title, series_desc, function()
         if self.series_manager then
-            local cur_id = image_entry.id or image_entry.href
+            local cur_id = image_entry.id or image_entry.href or image_entry.src
             if is_in_series then
                 self.series_manager:removeSeriesImage(series_slug, cur_id)
                 image_entry.is_series = false
@@ -6105,14 +6103,62 @@ function M:showImageActions(image_entry)
         end
     end))
 
-    -- Hide / Ignore Image
+    -- Rename Label
+    addDivider()
+    table.insert(content_items, makeActionRow("edit.svg", "Rename Label", "Edit custom image title and description", function()
+        local rename_dialog
+        rename_dialog = InputDialog:new{
+            title = self.loc:t("img_rename_title") or "Rename Image Label",
+            input = image_entry.title or "",
+            buttons = {
+                {
+                    {
+                        text = self.loc:t("cancel") or "Cancel",
+                        callback = function() UIManager:close(rename_dialog) end,
+                    },
+                    {
+                        text = self.loc:t("save") or "Save",
+                        is_enter_default = true,
+                        callback = function()
+                            local new_val = rename_dialog:getInputText()
+                            UIManager:close(rename_dialog)
+                            if new_val and #new_val > 0 and self.image_manager and self.book_data then
+                                image_entry.title = new_val
+                                image_entry.custom_title = true
+                                local cur_id = image_entry.id or image_entry.href or image_entry.src
+                                self.image_manager:renameImage(self.book_data, cur_id, new_val)
+                                if self.cache_manager and self.ui.document and self.ui.document.file then
+                                    self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
+                                end
+                                refreshActiveContext()
+                            end
+                        end,
+                    },
+                },
+            },
+        }
+        UIManager:show(rename_dialog)
+        rename_dialog:onShowKeyboard()
+    end))
+
+    -- Jump to Page in Book
+    if image_entry.page and tonumber(image_entry.page) then
+        addDivider()
+        table.insert(content_items, makeActionRow("external-link.svg", "Jump to Page " .. tostring(image_entry.page), "Navigate directly to this illustration in reader", function()
+            self:jumpToImagePage(tonumber(image_entry.page))
+        end))
+    end
+
+    -- Hide / Unhide Image
     addDivider()
     local is_hid = (image_entry.is_hidden == true)
     local hide_title = is_hid and "Unhide Image" or "Hide Image"
     local hide_desc = is_hid and "Restore image to main gallery" or "Remove decorative image from gallery"
-    table.insert(content_items, makeActionRow("x.svg", hide_title, hide_desc, function()
+    table.insert(content_items, makeActionRow(is_hid and "eye.svg" or "eye-off.svg", hide_title, hide_desc, function()
         if self.image_manager and self.book_data then
-            self.image_manager:toggleHideImage(self.book_data, image_entry.id)
+            local cur_id = image_entry.id or image_entry.href or image_entry.src
+            local new_hid = self.image_manager:toggleHideImage(self.book_data, cur_id)
+            image_entry.is_hidden = new_hid
             if self.cache_manager and self.ui.document and self.ui.document.file then
                 self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
             end
@@ -6234,7 +6280,7 @@ function M:_launchImageViewer(image_entry)
         plugin = self,
         image_entry = image_entry,
         file_path = file_path,
-        rotation_angle = 0,
+        rotation_angle = image_entry.rotation,
         zoom_level = 1.0,
     }
     self.active_image_viewer = viewer

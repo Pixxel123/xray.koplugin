@@ -193,24 +193,27 @@ local function createIconButton(opts)
     return makeTapItem(frame, opts.callback)
 end
 
--- Sharp square 3-dot vertical ellipsis badge (100% vector, pitch black, never blurry)
+-- Inverted high-contrast action menu badge (pitch black background, pure white vertical dots)
 local function createDotMenuBadge(size)
-    local badge_sz = size or sc(24)
+    local badge_sz = size or sc(32)
+    local icon_sz = sc(20)
     return FrameContainer:new{
         width = badge_sz,
         height = badge_sz,
         padding = 0,
         bordersize = sc(1),
-        color = Blitbuffer.COLOR_DARK_GRAY,
-        background = Blitbuffer.COLOR_WHITE,
+        color = Blitbuffer.COLOR_BLACK,
+        background = Blitbuffer.COLOR_BLACK,
         radius = sc(4),
         CenterContainer:new{
             dimen = Geom:new{ w = badge_sz, h = badge_sz },
-            TextWidget:new{
-                text = "⋮",
-                face = Font:getFace("cfont", 16),
-                bold = true,
-                fgcolor = Blitbuffer.COLOR_BLACK,
+            ImageWidget:new{
+                file = getAssetPath("more-vertical-white.svg"),
+                width = icon_sz,
+                height = icon_sz,
+                scale_factor = 0,
+                is_icon = true,
+                alpha = true,
             }
         }
     }
@@ -278,7 +281,7 @@ end
 local function createButton(opts)
     opts = opts or {}
     local is_primary = (opts.is_primary == true) or (opts.primary == true)
-    local border_sz = opts.bordersize or (theme.border_btn or sc(1))
+    local border_sz = opts.bordersize or sc(1)
     local radius = opts.radius or (theme.radius_btn or sc(4))
 
     local btn_opts = {
@@ -334,24 +337,58 @@ function ImageGallery:init()
         }
     }
 
+    self.key_events = {
+        NextPage = {
+            { "NextPage" },
+            { "Right" },
+            { "Down" },
+            { "PageDown" },
+            { "Space" },
+        },
+        PrevPage = {
+            { "PrevPage" },
+            { "Left" },
+            { "Up" },
+            { "PageUp" },
+        },
+        Close = {
+            { "Escape" },
+            { "Back" },
+            { "q" },
+        },
+    }
+
     self:buildUI()
+end
+
+function ImageGallery:onNextPage()
+    if self.current_page < self.total_pages then
+        self.current_page = self.current_page + 1
+        self:buildUI()
+        UIManager:setDirty(self, "ui")
+    end
+    return true
+end
+
+function ImageGallery:onPrevPage()
+    if self.current_page > 1 then
+        self.current_page = self.current_page - 1
+        self:buildUI()
+        UIManager:setDirty(self, "ui")
+    end
+    return true
+end
+
+function ImageGallery:onClose()
+    self:close()
+    return true
 end
 
 function ImageGallery:onSwipe(arg, ges)
     if ges.direction == "west" or ges.direction == "left" then
-        if self.current_page < self.total_pages then
-            self.current_page = self.current_page + 1
-            self:buildUI()
-            UIManager:setDirty(self, "ui")
-        end
-        return true
+        return self:onNextPage()
     elseif ges.direction == "east" or ges.direction == "right" then
-        if self.current_page > 1 then
-            self.current_page = self.current_page - 1
-            self:buildUI()
-            UIManager:setDirty(self, "ui")
-        end
-        return true
+        return self:onPrevPage()
     end
 end
 
@@ -499,36 +536,85 @@ function ImageGallery:buildUI()
     }
 
     -- ── 2. Segmented Tab Bar ───────────────────────────────────────────────────
-    local tab_h = sc(32)
-    local tab_w = math.floor((sw - sc(32) - sc(16)) / 3)
+    local fav_count = 0
+    local hidden_count = 0
+    for _, img in ipairs(p.images or {}) do
+        if img.is_favorite then fav_count = fav_count + 1 end
+        if img.is_hidden then hidden_count = hidden_count + 1 end
+    end
 
-    local function createTabBtn(label, tab_key, count, icon_file)
+    local all_tab_items = p.image_manager:getFilteredImages(p.images or {}, "all", current_book_page, self.filter_mode, series_images)
+    local all_filtered_count = #all_tab_items
+
+    local tab_h = sc(32)
+    local tab_gap = sc(6)
+    local hidden_tab_w = (hidden_count > 0) and sc(46) or sc(36)
+    local total_gaps = tab_gap * 3
+    local main_tab_w = math.floor((sw - sc(32) - total_gaps - hidden_tab_w) / 3)
+
+    local function createTabBtn(label, tab_key, count, icon_file, custom_w)
         local is_active = (self.tab == tab_key)
-        local display_label = label .. " (" .. tostring(count) .. ")"
-        local txt = TextWidget:new{
-            text = display_label,
-            face = Font:getFace("cfont", 14),
-            bold = is_active,
-            fgcolor = is_active and Blitbuffer.COLOR_WHITE or Blitbuffer.COLOR_BLACK,
-        }
-        local content_widget = txt
-        if icon_file then
+        local btn_w = custom_w or main_tab_w
+        local content_widget
+
+        local effective_icon_file = icon_file
+        if is_active and icon_file then
+            effective_icon_file = icon_file:gsub("%.svg$", "-white.svg")
+        end
+
+        if tab_key == "hidden" then
+            local hidden_icon = is_active and "eye-off-white.svg" or (icon_file or "eye-off.svg")
             local icon_w = ImageWidget:new{
-                file = getAssetPath(icon_file),
-                width = sc(15),
-                height = sc(15),
+                file = getAssetPath(hidden_icon),
+                width = sc(16),
+                height = sc(16),
                 scale_factor = 0,
                 is_icon = true,
                 alpha = true,
+            }
+            if count and count > 0 then
+                local count_txt = TextWidget:new{
+                    text = tostring(count),
+                    face = Font:getFace("cfont", 13),
+                    bold = is_active,
+                    fgcolor = is_active and Blitbuffer.COLOR_WHITE or Blitbuffer.COLOR_BLACK,
+                }
+                content_widget = HorizontalGroup:new{
+                    align = "center",
+                    icon_w,
+                    HorizontalSpan:new{ width = sc(3) },
+                    count_txt,
+                }
+            else
+                content_widget = icon_w
+            end
+        else
+            local display_label = (label or "") .. " (" .. tostring(count) .. ")"
+            local txt = TextWidget:new{
+                text = display_label,
+                face = Font:getFace("cfont", 14),
+                bold = is_active,
                 fgcolor = is_active and Blitbuffer.COLOR_WHITE or Blitbuffer.COLOR_BLACK,
             }
-            content_widget = HorizontalGroup:new{
-                align = "center",
-                icon_w,
-                HorizontalSpan:new{ width = sc(4) },
-                txt,
-            }
+            content_widget = txt
+            if icon_file then
+                local icon_w = ImageWidget:new{
+                    file = getAssetPath(effective_icon_file),
+                    width = sc(15),
+                    height = sc(15),
+                    scale_factor = 0,
+                    is_icon = true,
+                    alpha = true,
+                }
+                content_widget = HorizontalGroup:new{
+                    align = "center",
+                    icon_w,
+                    HorizontalSpan:new{ width = sc(4) },
+                    txt,
+                }
+            end
         end
+
         local frame = FrameContainer:new{
             padding = sc(3),
             bordersize = sc(1),
@@ -536,7 +622,7 @@ function ImageGallery:buildUI()
             background = is_active and Blitbuffer.COLOR_BLACK or Blitbuffer.COLOR_WHITE,
             radius = sc(4),
             CenterContainer:new{
-                dimen = Geom:new{ w = tab_w - sc(8), h = tab_h - sc(8) },
+                dimen = Geom:new{ w = btn_w - sc(8), h = tab_h - sc(8) },
                 content_widget,
             }
         }
@@ -549,21 +635,15 @@ function ImageGallery:buildUI()
         end)
     end
 
-    local fav_count = 0
-    for _, img in ipairs(p.images or {}) do
-        if img.is_favorite then fav_count = fav_count + 1 end
-    end
-
-    local all_tab_items = p.image_manager:getFilteredImages(p.images or {}, "all", current_book_page, self.filter_mode, series_images)
-    local all_filtered_count = #all_tab_items
-
     local tab_bar = HorizontalGroup:new{
         align = "center",
         createTabBtn(p.loc:t("img_tab_all") or "All", "all", all_filtered_count),
-        HorizontalSpan:new{ width = sc(8) },
+        HorizontalSpan:new{ width = tab_gap },
         createTabBtn(p.loc:t("img_tab_favorites") or "Favorites", "favorites", fav_count, "star.svg"),
-        HorizontalSpan:new{ width = sc(8) },
-        createTabBtn(p.loc:t("img_tab_series") or "Series", "series", #series_images, "layers.svg"),
+        HorizontalSpan:new{ width = tab_gap },
+        createTabBtn(p.loc:t("img_tab_series") or "Series", "series", #series_images, "book-open.svg"),
+        HorizontalSpan:new{ width = tab_gap },
+        createTabBtn(nil, "hidden", hidden_count, "eye-off.svg", hidden_tab_w),
     }
 
     local header_vg = VerticalGroup:new{
@@ -588,10 +668,10 @@ function ImageGallery:buildUI()
     }
 
     local header_h = header_frame:getSize().h
-    local footer_h = sc(54)
-    local avail_content_h = sh - header_h - footer_h - sc(12)
+    local footer_h = sc(48)
+    local avail_content_h = sh - header_h - footer_h - sc(8)
     self.avail_content_h = avail_content_h
-    self.max_mosaic_thumb_h = math.floor(avail_content_h * 0.50)
+    self.max_mosaic_thumb_h = math.floor(avail_content_h * 0.46)
 
     -- ── 3. Page Layout Budgeting ───────────────────────────────────────────────
     local margin_h = sc(12)
@@ -606,8 +686,9 @@ function ImageGallery:buildUI()
     local cur_page_items = {}
 
     if self.view_mode == "list" then
-        local row_h = sc(86)
-        local items_per_page = math.max(1, math.min(5, math.floor(avail_content_h / (row_h + sc(8)))))
+        local row_h = sc(82)
+        local row_gap = sc(6)
+        local items_per_page = math.max(1, math.floor((avail_content_h + row_gap) / (row_h + row_gap)))
         for idx, img in ipairs(filtered) do
             table.insert(cur_page_items, img)
             if #cur_page_items == items_per_page or idx == #filtered then
@@ -640,21 +721,28 @@ function ImageGallery:buildUI()
                     img.aspect_ratio = aspect_ratio
                 end
             end
-            aspect_ratio = math.max(0.35, math.min(1.5, aspect_ratio))
-            local thumb_h = math.min(self.max_mosaic_thumb_h, math.floor(cell_w * aspect_ratio))
+            aspect_ratio = math.max(0.35, math.min(1.85, aspect_ratio))
+            local thumb_h = math.floor(cell_w * aspect_ratio)
             local est_h = thumb_h + grid_gap_v
 
-            local target_col_h = (col1_h <= col2_h) and col1_h or col2_h
-            if (target_col_h + est_h > avail_content_h) and (#cur_page_items > 0) then
-                table.insert(pages, cur_page_items)
-                cur_page_items = { img }
-                col1_h = est_h
-                col2_h = 0
-            else
-                table.insert(cur_page_items, img)
-                if col1_h <= col2_h then
-                    col1_h = col1_h + est_h
+            if col1_h <= col2_h then
+                if (col1_h + est_h > avail_content_h) and (#cur_page_items > 0) then
+                    table.insert(pages, cur_page_items)
+                    cur_page_items = { img }
+                    col1_h = est_h
+                    col2_h = 0
                 else
+                    table.insert(cur_page_items, img)
+                    col1_h = col1_h + est_h
+                end
+            else
+                if (col2_h + est_h > avail_content_h) and (#cur_page_items > 0) then
+                    table.insert(pages, cur_page_items)
+                    cur_page_items = { img }
+                    col1_h = est_h
+                    col2_h = 0
+                else
+                    table.insert(cur_page_items, img)
                     col2_h = col2_h + est_h
                 end
             end
@@ -665,10 +753,10 @@ function ImageGallery:buildUI()
             end
         end
     else
-        -- Uniform Grid (Storefront Screensaver Style): 2 rows of COLS per page
-        local inner_w = cell_w - sc(12)
-        local card_h = math.floor(inner_w * 0.70) + sc(46)
-        local rows_can_fit = math.max(1, math.floor(avail_content_h / (card_h + grid_gap_v)))
+        -- Uniform Grid with 1:1 Square Thumbnails
+        local inner_w = cell_w
+        local card_h = inner_w + sc(36)
+        local rows_can_fit = math.max(1, math.floor((avail_content_h + grid_gap_v) / (card_h + grid_gap_v)))
         local items_per_page = rows_can_fit * COLS
         for idx, img in ipairs(filtered) do
             table.insert(cur_page_items, img)
@@ -688,8 +776,16 @@ function ImageGallery:buildUI()
     local page_content_vg = VerticalGroup:new{ align = "left" }
 
     if #filtered == 0 then
+        local empty_msg = p.loc:t("img_no_images") or "No images found for this tab/filter.\n\nExtracting or scanning images from book..."
+        if self.tab == "hidden" then
+            empty_msg = p.loc:t("img_no_hidden") or "No hidden images.\n\nUse the ⋮ menu on any image in the gallery to hide decorative illustrations or drop caps."
+        elseif self.tab == "favorites" then
+            empty_msg = p.loc:t("img_no_favorites") or "No favorites yet.\n\nUse the ⋮ menu on any image to add it to your favorites."
+        elseif self.tab == "series" then
+            empty_msg = p.loc:t("img_no_series") or "No series references saved.\n\nUse the ⋮ menu on any map to save it to your series references."
+        end
         local empty_text = TextBoxWidget:new{
-            text = (p.loc:t("img_no_images") or "No images found for this tab/filter.\n\nExtracting or scanning images from book..."),
+            text = empty_msg,
             face = Font:getFace("cfont", 16),
             fgcolor = Blitbuffer.COLOR_BLACK,
             width = sw - sc(40),
@@ -827,7 +923,7 @@ function ImageGallery:buildUI()
         footer_row,
     }
 
-    -- ── 5. Assemble Full-Screen Window ────────────────────────────────────────
+    -- ── 5. Assemble Full-Screen Window (Fixed Bottom Footer) ─────────────────
     local content_area = FrameContainer:new{
         padding = 0,
         bordersize = 0,
@@ -836,20 +932,18 @@ function ImageGallery:buildUI()
         page_content_vg,
     }
 
-    local top_content_vg = VerticalGroup:new{
-        align = "left",
-        header_frame,
-        content_area,
-    }
-
     local main_surface = FrameContainer:new{
         padding = 0,
-        bordersize = theme.border_window or sc(2),
+        bordersize = theme.border_window or sc(1),
         color = Blitbuffer.COLOR_BLACK,
         background = Blitbuffer.COLOR_WHITE,
         width = sw,
         height = sh,
-        top_content_vg,
+        VerticalGroup:new{
+            align = "left",
+            header_frame,
+            content_area,
+        }
     }
 
     local bottom_pinned_footer = BottomContainer:new{
@@ -948,8 +1042,7 @@ function ImageGallery:renderMosaicCard(img, cell_w)
 
     local image_frame = FrameContainer:new{
         padding = 0,
-        bordersize = sc(1),
-        color = Blitbuffer.COLOR_DARK_GRAY,
+        bordersize = 0,
         background = Blitbuffer.COLOR_WHITE,
         radius = sc(4),
         width = thumb_w,
@@ -957,7 +1050,7 @@ function ImageGallery:renderMosaicCard(img, cell_w)
         image_widget,
     }
 
-    local dot_badge = createDotMenuBadge(sc(24))
+    local dot_badge = createDotMenuBadge(sc(32))
 
     local star_badge = nil
     if img.is_favorite then
@@ -1051,7 +1144,8 @@ function ImageGallery:renderGridCard(img, cell_w)
     local book_path = p.ui and p.ui.document and p.ui.document.file
 
     local inner_w = cell_w
-    local img_h = math.floor(inner_w * 0.70)
+    local img_h = inner_w
+    local card_h = img_h + sc(36)
 
     local local_file = img.cached_file
     if not local_file and book_path and not img.is_spoiler then
@@ -1066,8 +1160,8 @@ function ImageGallery:renderGridCard(img, cell_w)
                 align = "center",
                 ImageWidget:new{
                     file = getAssetPath("lock.svg"),
-                    width = sc(22),
-                    height = sc(22),
+                    width = sc(24),
+                    height = sc(24),
                     scale_factor = 0,
                     is_icon = true,
                     alpha = true,
@@ -1112,8 +1206,9 @@ function ImageGallery:renderGridCard(img, cell_w)
 
     local display_title = img.title or (p.loc:t("img_untitled") or "Untitled")
     local page_str = img.page and ("Page " .. tostring(img.page)) or ""
-    if img.category then page_str = page_str .. " · [" .. img.category:upper() .. "]" end
-    if img.is_series then page_str = "[Series]" end
+    if (not page_str or page_str == "") and img.source_book_title then
+        page_str = tostring(img.source_book_title)
+    end
 
     local btn_w = sc(24)
     local label_w = inner_w - btn_w - sc(6)
@@ -1126,37 +1221,41 @@ function ImageGallery:renderGridCard(img, cell_w)
         max_width = label_w,
     }
 
-    local meta_w = TextWidget:new{
-        text = page_str,
-        face = Font:getFace("cfont", 11),
-        fgcolor = Blitbuffer.Color8(110),
-        max_width = label_w,
-    }
+    local meta_items = { title_w }
+    if page_str and page_str ~= "" then
+        local meta_w = TextWidget:new{
+            text = page_str,
+            face = Font:getFace("cfont", 11),
+            fgcolor = Blitbuffer.COLOR_BLACK,
+            max_width = label_w,
+        }
+        table.insert(meta_items, VerticalSpan:new{ width = sc(1) })
+        table.insert(meta_items, meta_w)
+    end
 
-    local meta_vg = VerticalGroup:new{
-        align = "left",
-        title_w,
-        VerticalSpan:new{ width = sc(1) },
-        meta_w,
-    }
+    local meta_vg = VerticalGroup:new(meta_items)
+    meta_vg.align = "left"
 
-    local dot_badge = createDotMenuBadge(sc(24))
+    local dot_badge = createDotMenuBadge(sc(30))
 
-    local footer_row = HorizontalGroup:new{
-        align = "center",
-        meta_vg,
-        HorizontalSpan:new{ width = math.max(sc(2), inner_w - title_w:getSize().w - btn_w) },
-        dot_badge,
+    local footer_row = OverlapGroup:new{
+        dimen = Geom:new{ w = inner_w, h = sc(32) },
+        LeftContainer:new{
+            dimen = Geom:new{ w = label_w, h = sc(32) },
+            meta_vg,
+        },
+        RightContainer:new{
+            dimen = Geom:new{ w = inner_w, h = sc(32) },
+            dot_badge,
+        },
     }
 
     local card_content = VerticalGroup:new{
         align = "left",
         thumb_frame,
-        VerticalSpan:new{ width = sc(5) },
+        VerticalSpan:new{ width = sc(4) },
         footer_row,
     }
-
-    local card_h = img_h + sc(42)
 
     local card_frame = FrameContainer:new{
         bordersize = 0,
@@ -1267,7 +1366,6 @@ function ImageGallery:renderListRow(img, content_w)
 
     local display_title = img.title or (p.loc:t("img_untitled") or "Untitled")
     local prefix = img.is_favorite and "★ " or ""
-    if img.is_series then prefix = "[Series] " end
 
     local btn_w = sc(32)
     local text_avail_w = inner_w - thumb_w - btn_w - sc(20)
@@ -1281,22 +1379,28 @@ function ImageGallery:renderListRow(img, content_w)
     }
 
     local sub_str = img.page and ("Page " .. tostring(img.page)) or ""
-    if img.category then sub_str = sub_str .. "  ·  [" .. img.category:upper() .. "]" end
-    if img.source_book_title then sub_str = sub_str .. "  ·  (" .. tostring(img.source_book_title) .. ")" end
+    if img.source_book_title then
+        if sub_str ~= "" then
+            sub_str = sub_str .. "  ·  " .. tostring(img.source_book_title)
+        else
+            sub_str = tostring(img.source_book_title)
+        end
+    end
 
-    local sub_w = TextWidget:new{
-        text = sub_str,
-        face = Font:getFace("cfont", 13),
-        fgcolor = theme.color_label_dim or Blitbuffer.Color8(70),
-        max_width = text_avail_w,
-    }
+    local info_items = { title_w }
+    if sub_str and sub_str ~= "" then
+        local sub_w = TextWidget:new{
+            text = sub_str,
+            face = Font:getFace("cfont", 13),
+            fgcolor = Blitbuffer.COLOR_BLACK,
+            max_width = text_avail_w,
+        }
+        table.insert(info_items, VerticalSpan:new{ width = sc(4) })
+        table.insert(info_items, sub_w)
+    end
 
-    local info_vg = VerticalGroup:new{
-        align = "left",
-        title_w,
-        VerticalSpan:new{ width = sc(4) },
-        sub_w,
-    }
+    local info_vg = VerticalGroup:new(info_items)
+    info_vg.align = "left"
 
     local left_group = HorizontalGroup:new{
         align = "center",
@@ -1305,7 +1409,7 @@ function ImageGallery:renderListRow(img, content_w)
         info_vg,
     }
 
-    local dot_badge = createDotMenuBadge(sc(26))
+    local dot_badge = createDotMenuBadge(sc(32))
 
     local row_overlap = OverlapGroup:new{
         dimen = Geom:new{ w = inner_w, h = thumb_h },

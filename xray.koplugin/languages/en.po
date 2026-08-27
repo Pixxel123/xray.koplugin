@@ -359,35 +359,20 @@ msgstr "Full Book Mode"
 msgid "gemini_key_hint"
 msgstr "Enter your free Gemini key from Google AI Studio (starts with AQ. or AIzaSy...):"
 
-msgid "img_action_favorite"
-msgstr "Add to Favorites"
-
-msgid "img_action_goto_page"
-msgstr "Jump to Page in Book"
-
-msgid "img_action_hide"
-msgstr "Hide / Ignore Image"
-
-msgid "img_action_rename"
-msgstr "Rename / Label"
-
-msgid "img_action_save_series"
-msgstr "Save to Series References"
-
-msgid "img_action_unfavorite"
-msgstr "Remove from Favorites"
-
-msgid "img_action_unhide"
-msgstr "Unhide Image"
-
-msgid "img_action_view"
-msgstr "View Fullscreen (Zoom & Pan)"
-
 msgid "img_extract_failed"
 msgstr "Could not extract image file."
 
+msgid "img_no_favorites"
+msgstr "No favorites yet.\n\nUse the ⋮ menu on any image to add it to your favorites."
+
+msgid "img_no_hidden"
+msgstr "No hidden images.\n\nUse the ⋮ menu on any image in the gallery to hide decorative illustrations or drop caps."
+
 msgid "img_no_images"
 msgstr "No images found for this tab/filter.\n\nExtracting or scanning images from book..."
+
+msgid "img_no_series"
+msgstr "No series references saved.\n\nUse the ⋮ menu on any map to save it to your series references."
 
 msgid "img_rename_title"
 msgstr "Rename Image Label"
@@ -395,14 +380,11 @@ msgstr "Rename Image Label"
 msgid "img_reveal"
 msgstr "Reveal"
 
-msgid "img_saved_to_series"
-msgstr "Saved to series maps."
-
 msgid "img_spoiler_confirm"
 msgstr "This image appears on page %d (past your current reading progress). Reveal image?"
 
 msgid "img_spoiler_locked"
-msgstr "Spoiler Protected"
+msgstr "Locked"
 
 msgid "img_tab_all"
 msgstr "All"
@@ -414,7 +396,7 @@ msgid "img_tab_series"
 msgstr "Series"
 
 msgid "img_untitled"
-msgstr "Untitled"
+msgstr "Image"
 
 msgid "import_file_not_found"
 msgstr "No xray_key.txt file found in storage root or settings directory."

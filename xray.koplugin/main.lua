@@ -246,11 +246,12 @@ end
 function XRayPlugin:destroy()
     if self.destroyed then return end
     self:log("XRayPlugin: destroy called, marking as destroyed")
-    self.destroyed = true
-    
-    if self.ai_helper then
+    if self.cancelActiveAIRequest then
+        self:cancelActiveAIRequest("Plugin destroyed")
+    elseif self.ai_helper then
         self.ai_helper:cancelAsyncChild()
     end
+    self.destroyed = true
     
     if self.active_mention_scan and self.active_mention_scan.cancel_handle then
         self.active_mention_scan.cancel_handle:cancel()
@@ -298,8 +299,13 @@ function XRayPlugin:onExit()
     self:destroy()
 end
 
-
-
+function XRayPlugin:onSuspend()
+    if self.cancelActiveAIRequest then
+        self:cancelActiveAIRequest("Fetch cancelled because the device suspended")
+    elseif self.ai_helper then
+        self.ai_helper:cancelAsyncChild()
+    end
+end
 
 -- Builds the X-Ray button spec for the dict popup.
 -- Used by both the new addToDictButtons API and the legacy onDictButtonsReady hook.
@@ -660,6 +666,14 @@ function XRayPlugin:triggerBackgroundMergeFetch(chapter_title)
     if NetworkMgr:isConnected() and NetworkMgr:isOnline() then
         -- Safety Check: Ensure API keys are configured before background activity
         if not self.ai_helper:hasApiKey() then
+            return
+        end
+
+        -- Foreground requests own the single async child slot and its global
+        -- cancel handler. Do not consume the background cooldown or disturb
+        -- that ownership while one is active.
+        if self._active_ai_cancel or (self.ai_helper and self.ai_helper._async_child_pid) then
+            self:log("XRayPlugin: Skipping background fetch because another AI request is active")
             return
         end
 
@@ -1796,6 +1810,7 @@ end
 function XRayPlugin:openReaderMenuToPath(target_key)
     local UIManager = require("ui/uimanager")
     UIManager:scheduleIn(0.1, function()
+        if self.destroyed or not self.ui or not self.ui.document then return end
         if self.ui and self.ui.menu then
             if not self.ui.menu.menu_container then
                 self.ui.menu:onShowMenu()
@@ -2143,6 +2158,7 @@ function XRayPlugin:showUnitConverterNewFeatureCard()
                     self.ai_helper:saveSettings({ unit_converter_enabled = true })
                     
                     UIManager:scheduleIn(0.1, function()
+                        if self.destroyed or not self.ui or not self.ui.document then return end
                         if self.ui and self.ui.menu then
                             if not self.ui.menu.menu_container then
                                 self.ui.menu:onShowMenu()
@@ -2312,7 +2328,10 @@ function XRayPlugin:getEffectiveBookType()
 end
 
 function XRayPlugin:triggerBookTypeDetection()
-    if not self.ui or not self.ui.document then return true end
+    if self.destroyed or not self.ui or not self.ui.document then return true end
+    local doc_file = self.ui.document.file
+    if not doc_file then return true end
+
     if not self.book_data then
         self.book_data = {}
     end
@@ -2364,7 +2383,7 @@ function XRayPlugin:triggerBookTypeDetection()
         if not cached.book_type_detected_by_ai and self.ai_helper:hasApiKey() then
             -- Trigger AI in background to refine low-confidence or format-fallback guesses
             local result_file = newBookTypeResultFile()
-            local props = self.ui.document:getProps() or {}
+            local props = (self.ui and self.ui.document and self.ui.document.getProps and self.ui.document:getProps()) or {}
             local title = props.title or "Unknown"
             local author = props.authors or "Unknown"
             local series = props.series or props.Series or "None"
@@ -2379,7 +2398,9 @@ function XRayPlugin:triggerBookTypeDetection()
                     elseif type(res) == "table" and res.book_type_label then
                         cached.book_type_label = res.book_type_label
                         cached.book_type_detected_by_ai = true
-                        self.cache_manager:asyncSaveCache(self.ui.document.file, cached)
+                        if self.cache_manager and doc_file then
+                            self.cache_manager:asyncSaveCache(doc_file, cached)
+                        end
                     end
                 end
                 UIManager:scheduleIn(1, pollResult)
@@ -2394,13 +2415,17 @@ function XRayPlugin:triggerBookTypeDetection()
         cached.book_type_label = heur
         if is_confident then
             cached.book_type_detected_by_ai = false -- high confidence heuristic, no AI needed
-            self.cache_manager:asyncSaveCache(self.ui.document.file, cached)
+            if self.cache_manager and doc_file then
+                self.cache_manager:asyncSaveCache(doc_file, cached)
+            end
             checkAndTriggerScan()
             return true
         else
             -- Low confidence heuristic, we save it as a starting point and scan
             cached.book_type_detected_by_ai = false
-            self.cache_manager:asyncSaveCache(self.ui.document.file, cached)
+            if self.cache_manager and doc_file then
+                self.cache_manager:asyncSaveCache(doc_file, cached)
+            end
             checkAndTriggerScan()
             
             -- Run Layer 3 AI background refinement since confidence is low
@@ -2409,7 +2434,7 @@ function XRayPlugin:triggerBookTypeDetection()
             end
             self:log("XRayPlugin: Starting Layer 3 AI book type refinement in background...")
             local result_file = newBookTypeResultFile()
-            local props = self.ui.document:getProps() or {}
+            local props = (self.ui and self.ui.document and self.ui.document.getProps and self.ui.document:getProps()) or {}
             local title = props.title or "Unknown"
             local author = props.authors or "Unknown"
             local series = props.series or props.Series or "None"
@@ -2425,7 +2450,9 @@ function XRayPlugin:triggerBookTypeDetection()
                         self:log("XRayPlugin: Book type AI refinement complete! Result: " .. tostring(res.book_type_label))
                         cached.book_type_label = res.book_type_label
                         cached.book_type_detected_by_ai = true
-                        self.cache_manager:asyncSaveCache(self.ui.document.file, cached)
+                        if self.cache_manager and doc_file then
+                            self.cache_manager:asyncSaveCache(doc_file, cached)
+                        end
                     end
                 end
                 UIManager:scheduleIn(1, pollResult)
@@ -2443,7 +2470,7 @@ function XRayPlugin:triggerBookTypeDetection()
     self:log("XRayPlugin: Starting Layer 3 AI book type detection in background...")
     local result_file = newBookTypeResultFile()
     
-    local props = self.ui.document:getProps() or {}
+    local props = (self.ui and self.ui.document and self.ui.document.getProps and self.ui.document:getProps()) or {}
     local title = props.title or "Unknown"
     local author = props.authors or "Unknown"
     local series = props.series or props.Series or "None"
@@ -2465,7 +2492,9 @@ function XRayPlugin:triggerBookTypeDetection()
             self:log("XRayPlugin: Book type AI detection complete! Result: " .. tostring(res.book_type_label))
             cached.book_type_label = res.book_type_label
             cached.book_type_detected_by_ai = true
-            self.cache_manager:asyncSaveCache(self.ui.document.file, cached)
+            if self.cache_manager and doc_file then
+                self.cache_manager:asyncSaveCache(doc_file, cached)
+            end
             -- Check scan triggers again now that AI classification finished
             local has_unit_cache_now = false
             if self.loadUnitCache then
@@ -2504,11 +2533,17 @@ end
 -- --- Book Type Filter Dynamic Sub-Menus ---
 
 function XRayPlugin:handleBookTypeOverride(val)
+    if self.destroyed or not self.ui or not self.ui.document then return end
+    local doc_file = self.ui.document.file
+    if not doc_file then return end
+
     if not self.book_data then
         self.book_data = {}
     end
     self.book_data.book_type_label_override = val
-    self.cache_manager:asyncSaveCache(self.ui.document.file, self.book_data)
+    if self.cache_manager then
+        self.cache_manager:asyncSaveCache(doc_file, self.book_data)
+    end
 
     local cache_loaded = false
     if self.loadUnitCache then
@@ -2680,4 +2715,3 @@ end
 -- Extracted functions are now loaded via mixins (xray_data, xray_ui, xray_fetch, xray_mentions)
 
 return XRayPlugin
-

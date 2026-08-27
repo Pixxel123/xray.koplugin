@@ -5,7 +5,6 @@
 
 local UIManager   = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
-local ConfirmBox  = require("ui/widget/confirmbox")
 local logger      = require("logger")
 
 -- ---------------------------------------------------------------------------
@@ -469,11 +468,28 @@ local function _applyUpdate(download_url, new_version)
         end
         _clearCache(true)
         _clearCache(false)
-        UIManager:show(ConfirmBox:new{            text = t("updater_success_restart", new_version),
-            ok_text     = t("updater_btn_restart"),
-            cancel_text = t("updater_btn_later"),
-            ok_callback = function() UIManager:restartKOReader() end,
-        })
+        local ButtonDialog = require("ui/widget/buttondialog")
+        local success_dlg
+        success_dlg = ButtonDialog:new{
+            title = t("updater_success_restart", new_version),
+            buttons = {{
+                {
+                    text = t("updater_btn_later"),
+                    callback = function()
+                        UIManager:close(success_dlg)
+                    end,
+                },
+                {
+                    text = t("updater_btn_restart"),
+                    is_enter_default = true,
+                    callback = function()
+                        UIManager:close(success_dlg)
+                        UIManager:restartKOReader()
+                    end,
+                },
+            }},
+        }
+        UIManager:show(success_dlg)
     end
 
     if ok_tr and Trapper and Trapper.dismissableRunInSubprocess then
@@ -519,28 +535,59 @@ local function _showUpdateDialog(release, current)
         and ("\n\n" .. t("updater_whats_new") .. "\n" .. notes)
         or  ""
 
+    local ButtonDialog = require("ui/widget/buttondialog")
     if not download_url then
-        UIManager:show(ConfirmBox:new{            text        = header .. notes_block .. "\n\n" .. t("updater_no_asset"),
-            ok_text     = t("updater_btn_open_browser"),
-            cancel_text = t("updater_btn_cancel"),
-            ok_callback = function()
-                local Device = require("device")
-                if Device:canOpenLink() then
-                    Device:openLink(string.format(
-                        "https://github.com/%s/%s/releases/latest",
-                        GITHUB_OWNER, GITHUB_REPO
-                    ))
-                end
-            end,
-        })
+        local no_asset_dlg
+        no_asset_dlg = ButtonDialog:new{
+            title = header .. notes_block .. "\n\n" .. t("updater_no_asset"),
+            buttons = {{
+                {
+                    text = t("updater_btn_cancel"),
+                    callback = function()
+                        UIManager:close(no_asset_dlg)
+                    end,
+                },
+                {
+                    text = t("updater_btn_open_browser"),
+                    is_enter_default = true,
+                    callback = function()
+                        UIManager:close(no_asset_dlg)
+                        local Device = require("device")
+                        if Device:canOpenLink() then
+                            Device:openLink(string.format(
+                                "https://github.com/%s/%s/releases/latest",
+                                GITHUB_OWNER, GITHUB_REPO
+                            ))
+                        end
+                    end,
+                },
+            }},
+        }
+        UIManager:show(no_asset_dlg)
         return
     end
 
-    UIManager:show(ConfirmBox:new{        text        = header .. notes_block .. footer,
-        ok_text     = t("updater_btn_download"),
-        cancel_text = t("updater_btn_cancel"),
-        ok_callback = function() _applyUpdate(download_url, latest) end,
-    })
+    local update_dlg
+    update_dlg = ButtonDialog:new{
+        title = header .. notes_block .. footer,
+        buttons = {{
+            {
+                text = t("updater_btn_cancel"),
+                callback = function()
+                    UIManager:close(update_dlg)
+                end,
+            },
+            {
+                text = t("updater_btn_download"),
+                is_enter_default = true,
+                callback = function()
+                    UIManager:close(update_dlg)
+                    _applyUpdate(download_url, latest)
+                end,
+            },
+        }},
+    }
+    UIManager:show(update_dlg)
 end
 
 local function _doFetch(use_beta)

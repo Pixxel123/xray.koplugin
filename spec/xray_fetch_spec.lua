@@ -18,6 +18,85 @@ describe("xray_fetch", function()
         }
     end)
 
+    describe("request deadlines", function()
+        it("uses elapsed wall time so suspend cannot extend a timeout", function()
+            local old_time = os.time
+            os.time = function() return 1601 end
+
+            local ok, timed_out = pcall(function()
+                return plugin:isRequestTimedOut(1000, 600)
+            end)
+
+            os.time = old_time
+            if not ok then error(timed_out) end
+            assert.is_true(timed_out)
+        end)
+
+        it("keeps requests active before their wall-clock deadline", function()
+            local old_time = os.time
+            os.time = function() return 1299 end
+
+            local ok, timed_out = pcall(function()
+                return plugin:isRequestTimedOut(1000, 300)
+            end)
+
+            os.time = old_time
+            if not ok then error(timed_out) end
+            assert.is_false(timed_out)
+        end)
+    end)
+
+    describe("active request cleanup", function()
+        it("cancels the registered operation and clears suspend-sensitive state", function()
+            local cancelled_reason
+            local dialog = { type = "ButtonDialog" }
+            plugin._active_ai_dialog = dialog
+            plugin._active_ai_cancel = function(reason) cancelled_reason = reason end
+            plugin._active_fetch_generation = 4
+            plugin.bg_fetch_active = true
+            plugin.bg_fetch_pending = true
+
+            plugin:cancelActiveAIRequest("device suspended")
+
+            assert.are.equal("device suspended", cancelled_reason)
+            assert.is_nil(plugin._active_ai_dialog)
+            assert.is_nil(plugin._active_ai_cancel)
+            assert.is_nil(plugin._active_fetch_generation)
+            assert.is_false(plugin.bg_fetch_active)
+            assert.is_false(plugin.bg_fetch_pending)
+        end)
+
+        it("kills an unregistered orphan child", function()
+            local cancelled = false
+            plugin.ai_helper = {
+                _async_child_pid = 77,
+                cancelAsyncChild = function() cancelled = true end,
+            }
+
+            plugin:cancelActiveAIRequest("device suspended")
+
+            assert.is_true(cancelled)
+        end)
+
+        it("still kills the helper child when a registered callback is stale", function()
+            local callback_called = false
+            local child_cancelled = false
+            plugin._active_ai_cancel = function() callback_called = true end
+            plugin.ai_helper = {
+                _async_child_pid = 88,
+                cancelAsyncChild = function(self)
+                    child_cancelled = true
+                    self._async_child_pid = nil
+                end,
+            }
+
+            plugin:cancelActiveAIRequest("device suspended")
+
+            assert.is_true(callback_called)
+            assert.is_true(child_cancelled)
+        end)
+    end)
+
     describe("runPostFetchDuplicateCheck reader state", function()
         it("skips safely when the reader document is unavailable", function()
             local analyzer_called = false
@@ -73,6 +152,28 @@ describe("xray_fetch", function()
     end)
 
     describe("continueWithFetch cancellation", function()
+        it("does not let a silent fetch replace another request's cancel handler", function()
+            local original_cancel = function() end
+            local scheduled = false
+            local UIManager = require("ui/uimanager")
+            local old_schedule = UIManager.scheduleIn
+            UIManager.scheduleIn = function()
+                scheduled = true
+            end
+            plugin._active_ai_cancel = original_cancel
+            plugin.bg_fetch_pending = true
+
+            local ok, err = pcall(function()
+                plugin:continueWithFetch(50, true, nil, true)
+                assert.are.equal(original_cancel, plugin._active_ai_cancel)
+                assert.is_false(plugin.bg_fetch_pending)
+                assert.is_false(scheduled)
+            end)
+
+            UIManager.scheduleIn = old_schedule
+            if not ok then error(err) end
+        end)
+
         it("cancels the owned child and allows a new fetch before the old poll runs", function()
             local UIManager = require("ui/uimanager")
             local old_schedule = UIManager.scheduleIn
@@ -136,6 +237,7 @@ describe("xray_fetch", function()
                 assert.are.equal(501, cancelled_pids[1])
                 assert.is_false(plugin.bg_fetch_active)
                 assert.is_true(#removed_files > 0)
+                assert.are.equal(first_dialog, _G.ui_tracker.closed[#_G.ui_tracker.closed])
 
                 -- Start again before the cancelled fetch's queued poll runs.
                 plugin:continueWithFetch(50)
@@ -439,6 +541,80 @@ describe("xray_fetch", function()
             
             plugin:fetchSingleWord("TestTerm", 1, 2)
             assert.is_true(cancelled)
+        end)
+
+        it("shows a Cancel button that terminates the lookup child", function()
+            local UIManager = require("ui/uimanager")
+            local old_schedule = UIManager.scheduleIn
+            local scheduled = {}
+            local cancelled_pid
+
+            UIManager.scheduleIn = function(self, delay, callback)
+                table.insert(scheduled, callback)
+            end
+            plugin.ui.getCurrentPage = function() return 1 end
+            plugin.chapter_analyzer = {
+                getDetailedChapterSamples = function() return {}, {} end,
+                getEndPageForCurrentPage = function() return 1 end,
+                getTextFromPageRange = function() return "book text" end,
+            }
+            plugin.ai_helper = {
+                hasApiKey = function() return true end,
+                lookupSingleWordAsync = function() return 1001 end,
+                cancelAsyncChild = function(_, pid) cancelled_pid = pid; return true end,
+                checkAsyncResult = function() return nil end,
+            }
+
+            local ok, err = pcall(function()
+                plugin:fetchSingleWord("TestTerm", 1, 2)
+                assert.are.equal("ButtonDialog", plugin._active_ai_dialog.type)
+                table.remove(scheduled, 1)()
+                table.remove(scheduled, 1)()
+                plugin._active_ai_dialog.args.buttons[1][1].callback()
+                assert.are.equal(1001, cancelled_pid)
+                assert.is_nil(plugin._active_ai_dialog)
+                assert.is_nil(plugin._active_ai_cancel)
+            end)
+
+            UIManager.scheduleIn = old_schedule
+            if not ok then error(err) end
+        end)
+
+        it("does not spawn a lookup child when cancelled before deferred analysis", function()
+            local UIManager = require("ui/uimanager")
+            local old_schedule = UIManager.scheduleIn
+            local scheduled = {}
+            local spawn_count = 0
+
+            UIManager.scheduleIn = function(self, delay, callback)
+                table.insert(scheduled, callback)
+            end
+            plugin.ui.getCurrentPage = function() return 1 end
+            plugin.chapter_analyzer = {
+                getDetailedChapterSamples = function() return {}, {} end,
+                getEndPageForCurrentPage = function() return 1 end,
+                getTextFromPageRange = function() return "book text" end,
+            }
+            plugin.ai_helper = {
+                hasApiKey = function() return true end,
+                lookupSingleWordAsync = function()
+                    spawn_count = spawn_count + 1
+                    return 1001
+                end,
+                cancelAsyncChild = function() return true end,
+            }
+
+            local ok, err = pcall(function()
+                plugin:fetchSingleWord("TestTerm", 1, 2)
+                plugin._active_ai_dialog.args.buttons[1][1].callback()
+                while #scheduled > 0 do
+                    table.remove(scheduled, 1)()
+                end
+                assert.are.equal(0, spawn_count)
+            end)
+
+            UIManager.scheduleIn = old_schedule
+            if not ok then error(err) end
         end)
 
         it("handles invalid or non-table result in _processSingleWordResult without crashing", function()

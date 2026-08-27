@@ -341,6 +341,14 @@ msgstr "نافذة منبثقة حديثة (في النص فقط)"
 msgid "entity_ui_style_menu"
 msgstr "نافذة منبثقة حديثة (في القائمة فقط)"
 
+# en-hash: 902b0d55fddef6f8d651fe1035b7d4bd
+msgid "error"
+msgstr "خطأ"
+
+# en-hash: fba0f8a108268b90efc2ccf92a27a646
+msgid "error_api"
+msgstr "خطأ في API"
+
 # en-hash: 68007307953d58fd56bdcd07d62f3e3f
 msgid "error_api_key_desc"
 msgstr "تم رفض مفتاح API المقدم. يرجى التحقق من إعداداتك والتأكد من صحة المفتاح."
@@ -369,9 +377,9 @@ msgstr "نموذج الذكاء الاصطناعي المحدد غير متاح 
 msgid "error_model_not_found_title"
 msgstr "النموذج غير موجود"
 
-# en-hash: 623d63b7e802196197989d25dde5e13b
+# en-hash: 52f3d028dbfc9859df0fd3417eb58d75
 msgid "error_no_api_key"
-msgstr "خطأ: لم يتم تعيين مفتاح API للذكاء الاصطناعي."
+msgstr "مفتاح API مطلوب"
 
 # en-hash: e7b0af2be5bf56ed033f222a42ffd884
 msgid "error_parse_desc"
@@ -396,6 +404,10 @@ msgstr "خدمة الذكاء الاصطناعي غير متاحة مؤقتًا 
 # en-hash: c95aec10ba314ea37a33cea18cf8a412
 msgid "error_service_down_title"
 msgstr "الخدمة غير متوفرة"
+
+# en-hash: 2e00df16667de68033b771bf907f0223
+msgid "error_timeout"
+msgstr "انتهت مهلة الطلب"
 
 # en-hash: 41fd6797646e09ef2fb1024cd8a2b134
 msgid "error_timeout_desc"
@@ -433,9 +445,9 @@ msgstr "لم يتم العثور على بيانات X-Ray لـ '%s'. هل تر�
 msgid "fetch_successful"
 msgstr "تم الجلب بنجاح"
 
-# en-hash: cba18edc0f67f3912f12b0e5cff30ad5
+# en-hash: 628671947a82f87c18a98ee9b6ff8b00
 msgid "fetching_ai"
-msgstr "تحليل الكتاب لتوليد بيانات X-Ray..."
+msgstr "جاري جلب X-Ray..."
 
 # en-hash: cfecb2031470d0e28420642fc37ab55f
 msgid "fetching_author"

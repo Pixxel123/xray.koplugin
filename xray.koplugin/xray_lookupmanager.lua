@@ -279,7 +279,7 @@ function LookupManager:handleLookup(text, pos0, pos1)
 
     else
         -- No match found
-        local ConfirmBox = require("ui/widget/confirmbox")
+        local ButtonDialog = require("ui/widget/buttondialog")
         local no_data_dialog
         
         local text_to_show = _truncateSafe(text, 30)
@@ -288,18 +288,26 @@ function LookupManager:handleLookup(text, pos0, pos1)
             prompt_text = string.format("No X-Ray data found for '%s'. Would you like to look it up?", text_to_show)
         end
         
-        no_data_dialog = ConfirmBox:new{            text       = prompt_text,
-            ok_text    = self.plugin.loc:t("fetch_button") or "Fetch",
-            cancel_text = self.plugin.loc:t("close") or "Close",
-            ok_callback = function()
-                UIManager:close(no_data_dialog)
-                if self.plugin and not self.plugin.destroyed then
-                    self.plugin:fetchSingleWord(text, pos0, pos1)
-                end
-            end,
-            cancel_callback = function()
-                UIManager:close(no_data_dialog)
-            end,
+        no_data_dialog = ButtonDialog:new{
+            title = prompt_text,
+            buttons = {{
+                {
+                    text = self.plugin.loc:t("close") or "Close",
+                    callback = function()
+                        UIManager:close(no_data_dialog)
+                    end,
+                },
+                {
+                    text = self.plugin.loc:t("fetch_button") or "Fetch",
+                    is_enter_default = true,
+                    callback = function()
+                        UIManager:close(no_data_dialog)
+                        if self.plugin and not self.plugin.destroyed then
+                            self.plugin:fetchSingleWord(text, pos0, pos1)
+                        end
+                    end,
+                },
+            }},
         }
         UIManager:show(no_data_dialog)
     end

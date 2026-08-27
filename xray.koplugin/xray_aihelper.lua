@@ -2043,8 +2043,16 @@ function AIHelper:getMoreCharacters(title, author, provider_name, context)
     return self:getBookDataSection(title, author, provider_name, context, "more_characters")
 end
 
+function AIHelper:fetchMoreCharacters(title, author, provider_name, context)
+    return self:getMoreCharacters(title, author, provider_name, context)
+end
+
 function AIHelper:getMoreTerms(title, author, provider_name, context)
     return self:getBookDataSection(title, author, provider_name, context, "more_terms")
+end
+
+function AIHelper:fetchMoreTerms(title, author, provider_name, context)
+    return self:getMoreTerms(title, author, provider_name, context)
 end
 
 function AIHelper:startAIRequest(title, author, context, section_name, targeted_word)

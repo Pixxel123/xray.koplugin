@@ -2843,6 +2843,18 @@ function M:showAbout()
     UIManager:show(about_dlg)
 end
 
+-- Read a boolean setting, falling back to default when it is unset.
+--
+-- Menus reach this from checked_func while the plugin may still be starting up.
+-- touchmenu.lua calls checked_func without a pcall, so a nil ai_helper there
+-- aborts the whole submenu and every checkmark in it disappears.
+function M:settingEnabled(key, default)
+    local settings = self.ai_helper and self.ai_helper.settings
+    local value = settings and settings[key]
+    if value == nil then return default == true end
+    return value ~= false
+end
+
 function M:clearCache()
     if not self.cache_manager then self.cache_manager = require(plugin_path .. "xray_cachemanager"):new() end
     if self.ui and self.ui.document and self.ui.document.file then

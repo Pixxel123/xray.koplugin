@@ -471,6 +471,33 @@ describe("xray_ui", function()
         end)
     end)
 
+    describe("settingEnabled", function()
+        it("should return the default when the AI helper is missing", function()
+            -- The menu can be rendered while the plugin is still initialising.
+            -- KOReader calls checked_func without a pcall, so one error here
+            -- aborts the whole submenu and every checkmark disappears.
+            plugin.ai_helper = nil
+            assert.is_true(plugin:settingEnabled("unit_cat_length", true))
+            assert.is_false(plugin:settingEnabled("series_context_enabled", false))
+        end)
+
+        it("should return the default when settings are missing", function()
+            plugin.ai_helper = {}
+            assert.is_true(plugin:settingEnabled("unit_cat_length", true))
+            assert.is_false(plugin:settingEnabled("series_context_enabled", false))
+        end)
+
+        it("should return the stored value in preference to the default", function()
+            plugin.ai_helper.settings.series_context_enabled = true
+            assert.is_true(plugin:settingEnabled("series_context_enabled", false))
+        end)
+
+        it("should honour a stored false against a true default", function()
+            plugin.ai_helper.settings.unit_cat_length = false
+            assert.is_false(plugin:settingEnabled("unit_cat_length", true))
+        end)
+    end)
+
     describe("clearCache and clearSeriesCache", function()
         it("should reset all in-memory tables and flags on clearCache", function()
             plugin.characters = { { name = "Vin" } }

@@ -941,31 +941,21 @@ function XRayPlugin:getSubMenuItems()
                 sub_item_table = {
                     {
                         text = self.loc:t("menu_ui_popup_intext") or "Use Footnote Style for In-text Lookups",
-                        checked_func = function()
-                            local val = self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.ui_popup_intext
-                            if val == nil then return true end
-                            return val
-                        end,
+                        checked_func = function() return self:settingEnabled("ui_popup_intext", true) end,
                         callback = function()
-                            if self.ai_helper and self.ai_helper.settings then
-                                local current = self.ai_helper.settings.ui_popup_intext
-                                if current == nil then current = true end
-                                self.ai_helper:saveSettings({ ui_popup_intext = not current })
+                            if self.ai_helper then
+                                self.ai_helper:saveSettings({ ui_popup_intext =
+                                    not self:settingEnabled("ui_popup_intext", true) })
                             end
                         end,
                     },
                     {
                         text = self.loc:t("menu_ui_popup_menu") or "Use Footnote Style for Menu Lookups",
-                        checked_func = function()
-                            local val = self.ai_helper and self.ai_helper.settings and self.ai_helper.settings.ui_popup_menu
-                            if val == nil then return false end
-                            return val
-                        end,
+                        checked_func = function() return self:settingEnabled("ui_popup_menu", false) end,
                         callback = function()
-                            if self.ai_helper and self.ai_helper.settings then
-                                local current = self.ai_helper.settings.ui_popup_menu
-                                if current == nil then current = false end
-                                self.ai_helper:saveSettings({ ui_popup_menu = not current })
+                            if self.ai_helper then
+                                self.ai_helper:saveSettings({ ui_popup_menu =
+                                    not self:settingEnabled("ui_popup_menu", false) })
                             end
                         end,
                     },
@@ -1043,7 +1033,7 @@ function XRayPlugin:getSubMenuItems()
                         sub_item_table = {
                             {
                                 text = self.loc:t("series_context_enabled_toggle") or "Enable Series Context",
-                                checked_func = function() return self.ai_helper.settings.series_context_enabled end,
+                                checked_func = function() return self:settingEnabled("series_context_enabled", false) end,
                                 callback = function() self:toggleSeriesContextEnabled() end,
                             },
                             {
@@ -1077,12 +1067,11 @@ function XRayPlugin:getSubMenuItems()
                 sub_item_table = {
                     {
                         text = self.loc:t("unit_conv_enabled") or "Enable Unit Converter",
-                        checked_func = function()
-                            return self.ai_helper.settings.unit_converter_enabled ~= false
-                        end,
+                        checked_func = function() return self:settingEnabled("unit_converter_enabled", true) end,
                         callback = function()
-                            local current = self.ai_helper.settings.unit_converter_enabled ~= false
-                            self.ai_helper:saveSettings({ unit_converter_enabled = not current })
+                            if not self.ai_helper then return end
+                            self.ai_helper:saveSettings({ unit_converter_enabled =
+                                not self:settingEnabled("unit_converter_enabled", true) })
                             if self.scanBookForUnits then self:scanBookForUnits() end
                         end
                     },
@@ -1135,66 +1124,60 @@ function XRayPlugin:getSubMenuItems()
                         sub_item_table = {
                             {
                                 text = "Length (mile, feet, inch, m, km...)",
-                                checked_func = function()
-                                    return self.ai_helper.settings.unit_cat_length ~= false
-                                end,
+                                checked_func = function() return self:settingEnabled("unit_cat_length", true) end,
                                 callback = function()
-                                    local curr = self.ai_helper.settings.unit_cat_length ~= false
+                                    if not self.ai_helper then return end
+                                    local curr = self:settingEnabled("unit_cat_length", true)
                                     self.ai_helper:saveSettings({ unit_cat_length = not curr })
                                     if self.scanBookForUnits then self:scanBookForUnits() end
                                 end
                             },
                             {
                                 text = "Weight / Mass (pound, ounce, kg, g...)",
-                                checked_func = function()
-                                    return self.ai_helper.settings.unit_cat_weight ~= false
-                                end,
+                                checked_func = function() return self:settingEnabled("unit_cat_weight", true) end,
                                 callback = function()
-                                    local curr = self.ai_helper.settings.unit_cat_weight ~= false
+                                    if not self.ai_helper then return end
+                                    local curr = self:settingEnabled("unit_cat_weight", true)
                                     self.ai_helper:saveSettings({ unit_cat_weight = not curr })
                                     if self.scanBookForUnits then self:scanBookForUnits() end
                                 end
                             },
                             {
                                 text = "Temperature (fahrenheit, celsius)",
-                                checked_func = function()
-                                    return self.ai_helper.settings.unit_cat_temp ~= false
-                                end,
+                                checked_func = function() return self:settingEnabled("unit_cat_temp", true) end,
                                 callback = function()
-                                    local curr = self.ai_helper.settings.unit_cat_temp ~= false
+                                    if not self.ai_helper then return end
+                                    local curr = self:settingEnabled("unit_cat_temp", true)
                                     self.ai_helper:saveSettings({ unit_cat_temp = not curr })
                                     if self.scanBookForUnits then self:scanBookForUnits() end
                                 end
                             },
                             {
                                 text = "Volume (gallon, cup, liter, ml...)",
-                                checked_func = function()
-                                    return self.ai_helper.settings.unit_cat_volume ~= false
-                                end,
+                                checked_func = function() return self:settingEnabled("unit_cat_volume", true) end,
                                 callback = function()
-                                    local curr = self.ai_helper.settings.unit_cat_volume ~= false
+                                    if not self.ai_helper then return end
+                                    local curr = self:settingEnabled("unit_cat_volume", true)
                                     self.ai_helper:saveSettings({ unit_cat_volume = not curr })
                                     if self.scanBookForUnits then self:scanBookForUnits() end
                                 end
                             },
                             {
                                 text = "Speed (mph, km/h)",
-                                checked_func = function()
-                                    return self.ai_helper.settings.unit_cat_speed ~= false
-                                end,
+                                checked_func = function() return self:settingEnabled("unit_cat_speed", true) end,
                                 callback = function()
-                                    local curr = self.ai_helper.settings.unit_cat_speed ~= false
+                                    if not self.ai_helper then return end
+                                    local curr = self:settingEnabled("unit_cat_speed", true)
                                     self.ai_helper:saveSettings({ unit_cat_speed = not curr })
                                     if self.scanBookForUnits then self:scanBookForUnits() end
                                 end
                             },
                             {
                                 text = "Area (acre, hectare, m², sq ft...)",
-                                checked_func = function()
-                                    return self.ai_helper.settings.unit_cat_area ~= false
-                                end,
+                                checked_func = function() return self:settingEnabled("unit_cat_area", true) end,
                                 callback = function()
-                                    local curr = self.ai_helper.settings.unit_cat_area ~= false
+                                    if not self.ai_helper then return end
+                                    local curr = self:settingEnabled("unit_cat_area", true)
                                     self.ai_helper:saveSettings({ unit_cat_area = not curr })
                                     if self.scanBookForUnits then self:scanBookForUnits() end
                                 end
@@ -2662,7 +2645,9 @@ function XRayPlugin:getBookTypeFilterMenu()
                     table.insert(opts, {
                         text = bt.text,
                         checked_func = function()
-                            local disabled = self.ai_helper.settings.unit_disabled_book_types or { "manga", "graphic_novel", "children", "poetry" }
+                            local settings = self.ai_helper and self.ai_helper.settings
+                            local disabled = (settings and settings.unit_disabled_book_types)
+                                or { "manga", "graphic_novel", "children", "poetry" }
                             local disabled_map = {}
                             for _, k in ipairs(disabled) do disabled_map[k] = true end
                             return not disabled_map[bt.key]

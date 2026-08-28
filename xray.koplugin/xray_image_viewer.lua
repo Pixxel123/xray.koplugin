@@ -177,21 +177,23 @@ end
 
 local function createIconButton(opts)
     opts = opts or {}
-    local icon_size = opts.size or sc(20)
+    local icon_size = opts.size or sc(26)
+    local btn_w = opts.width or (icon_size + sc(12))
+    local btn_h = opts.height or btn_w
     local icon_widget
     if opts.text_icon then
         icon_widget = CenterContainer:new{
-            dimen = Geom:new{ w = opts.width or (icon_size + sc(12)), h = opts.height or (icon_size + sc(12)) },
+            dimen = Geom:new{ w = btn_w, h = btn_h },
             TextWidget:new{
                 text = opts.text_icon,
-                face = Font:getFace("cfont", opts.text_size or 18),
+                face = Font:getFace("cfont", opts.text_size or 20),
                 bold = true,
                 fgcolor = Blitbuffer.COLOR_BLACK,
             }
         }
     else
         icon_widget = CenterContainer:new{
-            dimen = Geom:new{ w = opts.width or (icon_size + sc(12)), h = opts.height or (icon_size + sc(12)) },
+            dimen = Geom:new{ w = btn_w, h = btn_h },
             ImageWidget:new{
                 file = getAssetPath(opts.icon),
                 width = icon_size,
@@ -204,12 +206,12 @@ local function createIconButton(opts)
     end
     local frame = FrameContainer:new{
         padding = 0,
-        bordersize = opts.bordersize or sc(1),
-        color = Blitbuffer.COLOR_DARK_GRAY,
-        background = Blitbuffer.COLOR_WHITE,
-        radius = sc(4),
-        width = opts.width or (icon_size + sc(12)),
-        height = opts.height or (icon_size + sc(12)),
+        bordersize = opts.bordersize or 0,
+        color = opts.color or Blitbuffer.COLOR_DARK_GRAY,
+        background = opts.background,
+        radius = opts.radius or 0,
+        width = btn_w,
+        height = btn_h,
         icon_widget,
     }
     return makeTapItem(frame, opts.callback)
@@ -265,13 +267,70 @@ function ImageViewer:init()
         Close = { { "Escape" }, { "Back" }, { "q" } },
     }
 
-    -- Ensure zoom starts at fit-to-viewport for the current rotation
-    -- (important when opening an already-rotated image)
-    self.zoom_level = self:getFitZoom()
-    self.pan_x = 0
-    self.pan_y = 0
+    -- Ensure zoom starts at saved zoom or fit-to-viewport for the current rotation
+    if self.image_entry and self.image_entry.zoom_level ~= nil then
+        self.zoom_level = self.image_entry.zoom_level
+        self.pan_x = self.image_entry.pan_x or 0
+        self.pan_y = self.image_entry.pan_y or 0
+    else
+        self.zoom_level = self:getFitZoom()
+        self.pan_x = self.pan_x or 0
+        self.pan_y = self.pan_y or 0
+    end
 
     self:buildUI()
+end
+
+function ImageViewer:saveRotation()
+    if self.image_entry then
+        self.image_entry.rotation = self.rotation_angle
+    end
+    local p = self.plugin
+    if p and self.image_entry then
+        if not p.book_data and p.cache_manager and p.ui and p.ui.document and p.ui.document.file then
+            p.book_data = p.cache_manager:loadCache(p.ui.document.file) or {}
+        end
+        if not p.image_manager then
+            local ImageManager = require(plugin_path .. "xray_imagemanager")
+            p.image_manager = ImageManager:new(p)
+        end
+        if p.image_manager and p.book_data then
+            local cur_id = self.image_entry.id or self.image_entry.href or self.image_entry.src or self.image_entry.title
+            if cur_id then
+                p.image_manager:setImageRotation(p.book_data, cur_id, self.rotation_angle)
+            end
+        end
+        if p.cache_manager and p.ui and p.ui.document and p.ui.document.file and p.book_data then
+            p.cache_manager:asyncSaveCache(p.ui.document.file, p.book_data)
+        end
+    end
+end
+
+function ImageViewer:saveZoomAndPan()
+    if self.image_entry then
+        self.image_entry.zoom_level = self.zoom_level
+        self.image_entry.pan_x = self.pan_x
+        self.image_entry.pan_y = self.pan_y
+    end
+    local p = self.plugin
+    if p and self.image_entry then
+        if not p.book_data and p.cache_manager and p.ui and p.ui.document and p.ui.document.file then
+            p.book_data = p.cache_manager:loadCache(p.ui.document.file) or {}
+        end
+        if not p.image_manager then
+            local ImageManager = require(plugin_path .. "xray_imagemanager")
+            p.image_manager = ImageManager:new(p)
+        end
+        if p.image_manager and p.book_data then
+            local cur_id = self.image_entry.id or self.image_entry.href or self.image_entry.src or self.image_entry.title
+            if cur_id then
+                p.image_manager:setImageZoom(p.book_data, cur_id, self.zoom_level, self.pan_x, self.pan_y)
+            end
+        end
+        if p.cache_manager and p.ui and p.ui.document and p.ui.document.file and p.book_data then
+            p.cache_manager:asyncSaveCache(p.ui.document.file, p.book_data)
+        end
+    end
 end
 
 function ImageViewer:paintTo(bb, x, y)
@@ -343,6 +402,7 @@ function ImageViewer:onDoubleTap(arg, ges)
         self.zoom_level = 2.0
     end
     self:clampPan()
+    self:saveZoomAndPan()
     self:buildUI()
     UIManager:setDirty(self, "ui")
     return true
@@ -350,19 +410,14 @@ end
 
 function ImageViewer:onPinch(arg, ges)
     self._last_pan_pos = nil
-    if ges and ges.relative_scale then
-        local fit_zoom = self:getFitZoom()
-        local new_zoom = self.zoom_level * ges.relative_scale
-        self.zoom_level = math.max(fit_zoom, math.min(4.5, new_zoom))
-        self:clampPan()
-        self:buildUI()
-        UIManager:setDirty(self, "ui")
-        return true
-    end
+    self:onZoomOut()
+    return true
 end
 
 function ImageViewer:onSpread(arg, ges)
-    return self:onPinch(arg, ges)
+    self._last_pan_pos = nil
+    self:onZoomIn()
+    return true
 end
 
 function ImageViewer:onZoomIn()
@@ -390,6 +445,7 @@ function ImageViewer:onZoomIn()
     if current_idx < #steps then
         self.zoom_level = steps[current_idx + 1]
         self:clampPan()
+        self:saveZoomAndPan()
         self:buildUI()
         UIManager:setDirty(self, "ui")
     end
@@ -420,6 +476,7 @@ function ImageViewer:onZoomOut()
     if current_idx > 1 then
         self.zoom_level = steps[current_idx - 1]
         self:clampPan()
+        self:saveZoomAndPan()
         self:buildUI()
         UIManager:setDirty(self, "ui")
     end
@@ -429,6 +486,7 @@ function ImageViewer:onPanLeft()
     self.pan_x = self.pan_x + sc(50)
     self:clampPan()
     if self.canvas_container then self.canvas_container.pan_x = (self._base_x or 0) + self.pan_x end
+    self:saveZoomAndPan()
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -437,6 +495,7 @@ function ImageViewer:onPanRight()
     self.pan_x = self.pan_x - sc(50)
     self:clampPan()
     if self.canvas_container then self.canvas_container.pan_x = (self._base_x or 0) + self.pan_x end
+    self:saveZoomAndPan()
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -445,6 +504,7 @@ function ImageViewer:onPanUp()
     self.pan_y = self.pan_y + sc(50)
     self:clampPan()
     if self.canvas_container then self.canvas_container.pan_y = (self._base_y or 0) + self.pan_y end
+    self:saveZoomAndPan()
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -453,6 +513,7 @@ function ImageViewer:onPanDown()
     self.pan_y = self.pan_y - sc(50)
     self:clampPan()
     if self.canvas_container then self.canvas_container.pan_y = (self._base_y or 0) + self.pan_y end
+    self:saveZoomAndPan()
     UIManager:setDirty(self, "ui")
     return true
 end
@@ -461,20 +522,13 @@ function ImageViewer:onRotate()
     self._last_pan_pos = nil
     -- Clockwise 90° rotation (matches rotate-cw.svg icon direction)
     self.rotation_angle = ((self.rotation_angle or 0) + 270) % 360
-    if self.image_entry then
-        self.image_entry.rotation = self.rotation_angle
-        if self.plugin and self.plugin.image_manager and self.plugin.book_data and self.image_entry.id then
-            self.plugin.image_manager:setImageRotation(self.plugin.book_data, self.image_entry.id, self.rotation_angle)
-        end
-    end
-    if self.plugin and self.plugin.cache_manager and self.plugin.ui and self.plugin.ui.document and self.plugin.ui.document.file and self.plugin.book_data then
-        self.plugin.cache_manager:asyncSaveCache(self.plugin.ui.document.file, self.plugin.book_data)
-    end
+    self:saveRotation()
     -- Reset zoom to fit the image in the new orientation
     self.zoom_level = self:getFitZoom()
     self.pan_x = 0
     self.pan_y = 0
     self:clampPan()
+    self:saveZoomAndPan()
     self:buildUI()
     UIManager:setDirty(self, "ui")
     return true
@@ -541,11 +595,13 @@ end
 
 function ImageViewer:onHoldRelease(arg, ges)
     self._last_pan_pos = nil
+    self:saveZoomAndPan()
     return true
 end
 
 function ImageViewer:onPanRelease(arg, ges)
     self._last_pan_pos = nil
+    self:saveZoomAndPan()
     return true
 end
 
@@ -556,18 +612,19 @@ function ImageViewer:buildUI()
     local img = self.image_entry or {}
 
     -- ── 1. Top Controls Toolbar (Right-Aligned, Fixed Height) ─────────────────
-    local btn_size = sc(20)
-    local btn_pad = sc(4)
-    local btn_gap = sc(6)
-    local num_btns = 6
+    local toolbar_h = sc(54)
+    local bar_content_h = sc(40)
+    local btn_size = sc(22)
     local btn_frame_w = sc(32)
+    local btn_gap = sc(10)
+    local num_btns = 7
     local actions_total_w = (btn_frame_w * num_btns) + (btn_gap * (num_btns - 1))
 
     local rotate_btn = createIconButton{
         icon = "rotate-cw.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_frame_w,
+        height = bar_content_h,
         callback = function()
             self:onRotate()
         end,
@@ -576,8 +633,8 @@ function ImageViewer:buildUI()
     local zoom_in_btn = createIconButton{
         icon = "zoom-in.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_frame_w,
+        height = bar_content_h,
         callback = function()
             self:onZoomIn()
         end,
@@ -586,8 +643,8 @@ function ImageViewer:buildUI()
     local zoom_out_btn = createIconButton{
         icon = "zoom-out.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_frame_w,
+        height = bar_content_h,
         callback = function()
             self:onZoomOut()
         end,
@@ -596,8 +653,8 @@ function ImageViewer:buildUI()
     local night_btn = createIconButton{
         icon = "moon.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_frame_w,
+        height = bar_content_h,
         callback = function()
             self.inverted = not self.inverted
             self:buildUI()
@@ -605,11 +662,21 @@ function ImageViewer:buildUI()
         end,
     }
 
+    local minimize_btn = createIconButton{
+        icon = "minus.svg",
+        size = btn_size,
+        width = btn_frame_w,
+        height = bar_content_h,
+        callback = function()
+            self:minimize()
+        end,
+    }
+
     local menu_btn = createIconButton{
         icon = "more-vertical.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_frame_w,
+        height = bar_content_h,
         callback = function()
             if p and p.showImageActions then
                 p:showImageActions(img)
@@ -620,8 +687,8 @@ function ImageViewer:buildUI()
     local close_btn = createIconButton{
         icon = "x.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_frame_w,
+        height = bar_content_h,
         callback = function()
             self:close()
         end,
@@ -639,50 +706,42 @@ function ImageViewer:buildUI()
         HorizontalSpan:new{ width = btn_gap },
         menu_btn,
         HorizontalSpan:new{ width = btn_gap },
+        minimize_btn,
+        HorizontalSpan:new{ width = btn_gap },
         close_btn,
     }
 
-    local title_max_w = sw - sc(28) - actions_total_w - sc(12)
+    local title_max_w = sw - sc(28) - actions_total_w - sc(16)
 
     local display_title = (img.title or "Image")
-    if img.page then
-        display_title = display_title .. " · p. " .. tostring(img.page)
-    end
-    if self.rotation_angle > 0 then
-        display_title = display_title .. " (" .. tostring(self.rotation_angle) .. "°)"
-    end
-    if self.zoom_level > 1.05 then
-        display_title = display_title .. " [" .. string.format("%.1fx", self.zoom_level) .. "]"
-    end
 
     local title_label = TextWidget:new{
         text = (img.is_favorite and "★ " or "") .. display_title,
-        face = Font:getFace("cfont", 16),
+        face = Font:getFace("cfont", 18),
         bold = true,
         fgcolor = Blitbuffer.COLOR_BLACK,
         max_width = title_max_w,
     }
 
-    local toolbar_h = sc(48)
     local viewport_h = sh - toolbar_h
     self.viewport_h = viewport_h
 
-    local row_w = sw - sc(20)
+    local row_w = sw - sc(24)
     local top_bar_row = OverlapGroup:new{
-        dimen = Geom:new{ w = row_w, h = sc(34) },
+        dimen = Geom:new{ w = row_w, h = bar_content_h },
         LeftContainer:new{
-            dimen = Geom:new{ w = title_max_w, h = sc(34) },
+            dimen = Geom:new{ w = title_max_w, h = bar_content_h },
             title_label,
         },
         RightContainer:new{
-            dimen = Geom:new{ w = row_w, h = sc(34) },
+            dimen = Geom:new{ w = row_w, h = bar_content_h },
             header_actions,
         },
     }
 
     local toolbar_widget = FrameContainer:new{
-        padding = sc(6),
-        padding_h = sc(10),
+        padding = sc(8),
+        padding_h = sc(12),
         bordersize = sc(1),
         color = Blitbuffer.COLOR_BLACK,
         background = Blitbuffer.COLOR_WHITE,
@@ -763,11 +822,63 @@ function ImageViewer:buildUI()
     }
 end
 
-function ImageViewer:close()
+function ImageViewer:minimize()
+    self:saveRotation()
+    self:saveZoomAndPan()
+    local p = self.plugin
+    local state = {
+        image_entry = self.image_entry,
+        file_path = self.file_path,
+        rotation_angle = self.rotation_angle,
+        zoom_level = self.zoom_level,
+        pan_x = self.pan_x,
+        pan_y = self.pan_y,
+        inverted = self.inverted,
+    }
+    if p then
+        p.last_minimized_state = state
+        if p.book_data then
+            p.book_data.last_minimized_state = state
+            if p.cache_manager and p.ui and p.ui.document and p.ui.document.file then
+                p.cache_manager:asyncSaveCache(p.ui.document.file, p.book_data)
+            end
+        end
+    end
+    self:close(true)
+    if p and p.image_gallery_overlay then
+        local ov = p.image_gallery_overlay
+        p.image_gallery_overlay = nil
+        UIManager:close(ov, "ui")
+    end
+    local title = (self.image_entry and self.image_entry.title) or "Image"
+    UIManager:show(InfoMessage:new{
+        text = string.format((p and p.loc and p.loc:t("img_minimized_hint")) or "Minimized '%s'. Reopen 'Images & Maps' to resume.", title),
+        timeout = 2,
+    })
+end
+
+function ImageViewer:close(is_minimizing)
+    self:saveRotation()
+    self:saveZoomAndPan()
+    local was_resumed = self.is_resumed or (self.plugin and self.plugin.last_minimized_state ~= nil)
+    if not is_minimizing and self.plugin then
+        self.plugin.last_minimized_state = nil
+        if self.plugin.book_data then
+            self.plugin.book_data.last_minimized_state = nil
+            if self.plugin.cache_manager and self.plugin.ui and self.plugin.ui.document and self.plugin.ui.document.file then
+                self.plugin.cache_manager:asyncSaveCache(self.plugin.ui.document.file, self.plugin.book_data)
+            end
+        end
+    end
     if self.plugin and self.plugin.active_image_viewer == self then
         self.plugin.active_image_viewer = nil
     end
     UIManager:close(self, "ui")
+
+    if not is_minimizing and was_resumed and self.plugin and self.plugin.showImages then
+        self.plugin:showImages{ force_gallery = true }
+    end
 end
 
 return ImageViewer
+

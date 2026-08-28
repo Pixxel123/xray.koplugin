@@ -481,6 +481,10 @@ msgstr "أدخل مفتاح Gemini المجاني من Google AI Studio (يبد�
 msgid "img_extract_failed"
 msgstr "تعذر استخراج ملف الصورة."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "تلميح صورة مصغرة"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "لا توجد مفضلات بعد.\n\nاستخدم القائمة ⋮ على أي صورة لإضافتها إلى المفضلات."

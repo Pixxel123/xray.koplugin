@@ -481,6 +481,10 @@ msgstr "Adja meg ingyenes Gemini kulcsát a Google AI Studio-ból (AQ. vagy AIza
 msgid "img_extract_failed"
 msgstr "Nem sikerült kinyerni a képfájlt."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Kicsinyített kép tippe"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Még nincsenek kedvencek.\n\nHasználd a ⋮ menüt bármelyik képen a kedvencekhez adáshoz."

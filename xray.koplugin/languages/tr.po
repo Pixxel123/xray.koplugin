@@ -481,6 +481,10 @@ msgstr "Google AI Studio'dan ücretsiz Gemini anahtarınızı girin (AQ. veya AI
 msgid "img_extract_failed"
 msgstr "Görsel dosyası ayıklanamadı."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Küçültülmüş görsel ipucu"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Henüz favori yok.\n\nFavorilerinize eklemek için herhangi bir görselde ⋮ menüsünü kullanın."

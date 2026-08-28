@@ -481,6 +481,10 @@ msgstr "Ingrese su clave gratuita de Gemini desde Google AI Studio (comienza con
 msgid "img_extract_failed"
 msgstr "No se pudo extraer el archivo de imagen."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Indicación de imagen minimizada"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Aún no hay favoritos.\n\nUsa el menú ⋮ en cualquier imagen para añadirla a tus favoritos."

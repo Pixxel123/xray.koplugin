@@ -5761,11 +5761,6 @@ function M:showImages(opts)
     self.image_view_mode = opts.view_mode or self.image_view_mode or "mosaic"
     self.image_filter_mode = opts.filter_mode or self.image_filter_mode or "standard"
 
-    if not self.image_manager then
-        local ImageManager = require(plugin_path .. "xray_imagemanager")
-        self.image_manager = ImageManager:new(self)
-    end
-
     -- Load images: prefer book_data.images from cache (preserves user customizations & rotations),
     -- fall back to scan only if no cached images exist.
     if (not self.book_data or not self.book_data.images) and self.cache_manager and self.ui and self.ui.document and self.ui.document.file then
@@ -5773,6 +5768,19 @@ function M:showImages(opts)
         if loaded and type(loaded) == "table" then
             self.book_data = loaded
         end
+    end
+
+    -- If the user minimized an image and is reopening via normal menu, seamlessly resume that image!
+    if not opts.force_gallery then
+        local min_state = self.last_minimized_state or (self.book_data and self.book_data.last_minimized_state)
+        if min_state and min_state.image_entry then
+            return self:resumeMinimizedImage()
+        end
+    end
+
+    if not self.image_manager then
+        local ImageManager = require(plugin_path .. "xray_imagemanager")
+        self.image_manager = ImageManager:new(self)
     end
 
     if not self.images or #self.images == 0 then
@@ -5790,6 +5798,9 @@ function M:showImages(opts)
                         title = img.title,
                         custom_title = img.custom_title,
                         rotation = img.rotation,
+                        zoom_level = img.zoom_level,
+                        pan_x = img.pan_x,
+                        pan_y = img.pan_y,
                         is_favorite = img.is_favorite,
                         is_hidden = img.is_hidden,
                         is_series = img.is_series,
@@ -5807,6 +5818,9 @@ function M:showImages(opts)
                             img.custom_title = true
                         end
                         if saved.rotation then img.rotation = saved.rotation end
+                        if saved.zoom_level then img.zoom_level = saved.zoom_level end
+                        if saved.pan_x then img.pan_x = saved.pan_x end
+                        if saved.pan_y then img.pan_y = saved.pan_y end
                         if saved.is_favorite ~= nil then img.is_favorite = saved.is_favorite end
                         if saved.is_hidden ~= nil then img.is_hidden = saved.is_hidden end
                         if saved.is_series ~= nil then img.is_series = saved.is_series end
@@ -5845,6 +5859,9 @@ function M:showImageActions(image_entry)
     local InputContainer = require("ui/widget/container/inputcontainer")
     local FrameContainer = require("ui/widget/container/framecontainer")
     local CenterContainer = require("ui/widget/container/centercontainer")
+    local LeftContainer = require("ui/widget/container/leftcontainer")
+    local RightContainer = require("ui/widget/container/rightcontainer")
+    local OverlapGroup = require("ui/widget/overlapgroup")
     local VerticalGroup = require("ui/widget/verticalgroup")
     local HorizontalGroup = require("ui/widget/horizontalgroup")
     local VerticalSpan = require("ui/widget/verticalspan")
@@ -5949,29 +5966,30 @@ function M:showImageActions(image_entry)
 
     -- ── 2. Action Row Helper with Visual Separation ────────────────────────────
     local function addDivider()
-        table.insert(content_items, VerticalSpan:new{ width = sc(3) })
+        table.insert(content_items, VerticalSpan:new{ width = sc(5) })
         table.insert(content_items, LineWidget:new{
             dimen = Geom:new{ w = inner_w, h = sc(1) },
-            background = Blitbuffer.Color8(230),
+            background = Blitbuffer.Color8(175),
         })
-        table.insert(content_items, VerticalSpan:new{ width = sc(3) })
+        table.insert(content_items, VerticalSpan:new{ width = sc(5) })
     end
 
     local function makeActionRow(icon_name, title, desc, callback)
+        local icon_sz = sc(26)
         local icon_widget = ImageWidget:new{
             file = getAssetPath(icon_name),
-            width = sc(20),
-            height = sc(20),
+            width = icon_sz,
+            height = icon_sz,
             scale_factor = 0,
             is_icon = true,
             alpha = true,
         }
 
-        local max_text_w = inner_w - sc(54)
+        local max_text_w = inner_w - icon_sz - sc(40)
 
         local t_label = TextWidget:new{
             text = title,
-            face = Font:getFace("cfont", 15),
+            face = Font:getFace("cfont", 16),
             bold = true,
             fgcolor = Blitbuffer.COLOR_BLACK,
             max_width = max_text_w,
@@ -5979,10 +5997,11 @@ function M:showImageActions(image_entry)
 
         local text_vg = VerticalGroup:new{ align = "left", t_label }
         if desc and desc ~= "" then
+            table.insert(text_vg, VerticalSpan:new{ width = sc(2) })
             local d_label = TextWidget:new{
                 text = desc,
                 face = Font:getFace("cfont", 12),
-                fgcolor = Blitbuffer.Color8(70),
+                fgcolor = Blitbuffer.Color8(75),
                 max_width = max_text_w,
             }
             table.insert(text_vg, d_label)
@@ -5990,23 +6009,34 @@ function M:showImageActions(image_entry)
 
         local chevron = TextWidget:new{
             text = "›",
-            face = Font:getFace("cfont", 17),
+            face = Font:getFace("cfont", 19),
             bold = true,
-            fgcolor = Blitbuffer.Color8(100),
+            fgcolor = Blitbuffer.Color8(110),
         }
 
-        local row_elements = HorizontalGroup:new{
+        local left_content = HorizontalGroup:new{
             align = "center",
             icon_widget,
-            HorizontalSpan:new{ width = sc(10) },
+            HorizontalSpan:new{ width = sc(14) },
             text_vg,
-            HorizontalSpan:new{ width = math.max(sc(4), inner_w - sc(30) - (text_vg:getSize().w or max_text_w) - sc(14)) },
-            chevron,
+        }
+
+        local row_w = inner_w - sc(16)
+        local row_elements = OverlapGroup:new{
+            dimen = Geom:new{ w = row_w, h = sc(38) },
+            LeftContainer:new{
+                dimen = Geom:new{ w = row_w - sc(24), h = sc(38) },
+                left_content,
+            },
+            RightContainer:new{
+                dimen = Geom:new{ w = row_w, h = sc(38) },
+                chevron,
+            },
         }
 
         local row_frame = FrameContainer:new{
             padding = sc(8),
-            padding_h = sc(10),
+            padding_h = sc(8),
             bordersize = 0,
             background = Blitbuffer.COLOR_WHITE,
             radius = sc(4),
@@ -6026,7 +6056,7 @@ function M:showImageActions(image_entry)
                             x = dim.x or 0,
                             y = dim.y or 0,
                             w = (dim.w and dim.w > 0 and dim.w) or inner_w,
-                            h = (dim.h and dim.h > 0 and dim.h) or sc(42),
+                            h = (dim.h and dim.h > 0 and dim.h) or sc(48),
                         }
                     end
                 }
@@ -6166,6 +6196,14 @@ function M:showImageActions(image_entry)
         end
     end))
 
+    -- Open Image Gallery (when accessed from within the active image viewer)
+    if self.active_image_viewer then
+        addDivider()
+        table.insert(content_items, makeActionRow("grid.svg", "Open Image Gallery", "Browse all illustrations and maps in book", function()
+            self:showImages{ force_gallery = true }
+        end))
+    end
+
     -- ── 4. Card Close Footer ───────────────────────────────────────────────────
     table.insert(content_items, VerticalSpan:new{ width = sc(8) })
     local close_btn = Button:new{
@@ -6181,6 +6219,9 @@ function M:showImageActions(image_entry)
     table.insert(content_items, close_btn)
 
     -- ── 5. Assemble Dialog Card ────────────────────────────────────────────────
+    local content_vg = VerticalGroup:new(content_items)
+    content_vg.align = "left"
+
     local card = FrameContainer:new{
         padding = card_padding,
         radius = sc(4),
@@ -6188,10 +6229,7 @@ function M:showImageActions(image_entry)
         color = Blitbuffer.COLOR_BLACK,
         background = Blitbuffer.COLOR_WHITE,
         width = dialog_w,
-        VerticalGroup:new{
-            align = "left",
-            unpack(content_items)
-        }
+        content_vg,
     }
 
     overlay = InputContainer:new{
@@ -6243,7 +6281,7 @@ function M:openImageViewer(image_entry)
     self:_launchImageViewer(image_entry)
 end
 
-function M:_launchImageViewer(image_entry)
+function M:_launchImageViewer(image_entry, custom_state)
     if not image_entry then return end
 
     local file_path = image_entry.cached_file or image_entry.local_file or image_entry.file_path
@@ -6275,16 +6313,48 @@ function M:_launchImageViewer(image_entry)
         return
     end
 
+    if not self.book_data and self.cache_manager and self.ui and self.ui.document and self.ui.document.file then
+        self.book_data = self.cache_manager:loadCache(self.ui.document.file) or {}
+    end
+    if self.book_data and self.book_data.images then
+        for _, b_img in ipairs(self.book_data.images) do
+            if (image_entry.id and b_img.id == image_entry.id)
+                or (image_entry.href and b_img.href == image_entry.href)
+                or (image_entry.src and b_img.src == image_entry.src)
+                or (image_entry.title and b_img.title == image_entry.title)
+                or (image_entry.cached_file and b_img.cached_file == image_entry.cached_file) then
+                if b_img.rotation ~= nil then image_entry.rotation = b_img.rotation end
+                if b_img.zoom_level ~= nil then image_entry.zoom_level = b_img.zoom_level end
+                if b_img.pan_x ~= nil then image_entry.pan_x = b_img.pan_x end
+                if b_img.pan_y ~= nil then image_entry.pan_y = b_img.pan_y end
+                break
+            end
+        end
+    end
+
     local ImageViewer = require(plugin_path .. "xray_image_viewer")
     local viewer = ImageViewer:new{
         plugin = self,
         image_entry = image_entry,
         file_path = file_path,
-        rotation_angle = image_entry.rotation,
-        zoom_level = 1.0,
+        rotation_angle = (custom_state and custom_state.rotation_angle) or image_entry.rotation,
+        zoom_level = (custom_state and custom_state.zoom_level) or image_entry.zoom_level,
+        pan_x = (custom_state and custom_state.pan_x) or image_entry.pan_x,
+        pan_y = (custom_state and custom_state.pan_y) or image_entry.pan_y,
+        inverted = (custom_state and custom_state.inverted ~= nil and custom_state.inverted) or image_entry.inverted,
+        is_resumed = (custom_state and custom_state.is_resumed) or false,
     }
     self.active_image_viewer = viewer
     UIManager:show(viewer, "ui")
+end
+
+function M:resumeMinimizedImage()
+    local state = self.last_minimized_state or (self.book_data and self.book_data.last_minimized_state)
+    if not state or not state.image_entry then
+        return self:showImages()
+    end
+    state.is_resumed = true
+    self:_launchImageViewer(state.image_entry, state)
 end
 
 function M:jumpToImagePage(page)

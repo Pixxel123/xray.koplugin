@@ -481,6 +481,10 @@ msgstr "输入 Google AI Studio 免费获取的 Gemini 密钥（以 AQ. 或 AIza
 msgid "img_extract_failed"
 msgstr "无法提取图片文件。"
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "最小化图片提示"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "暂无收藏。\n\n在任何图片上使用 ⋮ 菜单即可将其添加到收藏。"

@@ -481,6 +481,10 @@ msgstr "Voer uw gratis Gemini-sleutel van Google AI Studio in (begint met AQ. of
 msgid "img_extract_failed"
 msgstr "Kan afbeeldingsbestand niet uitpakken."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Tip voor geminimaliseerde afbeelding"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Nog geen favorieten.\n\nGebruik het menu ⋮ bij een afbeelding om deze aan je favorieten toe te voegen."

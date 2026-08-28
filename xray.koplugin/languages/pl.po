@@ -481,6 +481,10 @@ msgstr "Wprowadź darmowy klucz Gemini z Google AI Studio (zaczyna się od AQ. l
 msgid "img_extract_failed"
 msgstr "Nie udało się wyodrębnić pliku obrazu."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Wskazówka dotycząca zminimalizowanego obrazu"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Brak ulubionych.\n\nUżyj menu ⋮ na dowolnym obrazie, aby dodać go do ulubionych."

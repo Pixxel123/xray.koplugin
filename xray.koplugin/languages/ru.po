@@ -481,6 +481,10 @@ msgstr "Введите бесплатный ключ Gemini из Google AI Studi
 msgid "img_extract_failed"
 msgstr "Не удалось извлечь файл изображения."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Подсказка о свернутом изображении"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Избранных изображений пока нет.\n\nИспользуйте меню ⋮ на любом изображении, чтобы добавить его в избранное."

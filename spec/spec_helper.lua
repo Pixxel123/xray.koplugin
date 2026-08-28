@@ -261,10 +261,14 @@ package.loaded["ui/widget/verticalspan"] = {
     new = function(a, b) return { type = "VerticalSpan", args = b or a } end
 }
 package.loaded["ui/widget/horizontalgroup"] = {
-    new = function(a, b) return { type = "HorizontalGroup", args = b or a } end
+    new = function(a, b)
+        local hg = { type = "HorizontalGroup", args = b or a }
+        hg.getSize = function() return { w = 200, h = 30 } end
+        return hg
+    end
 }
 package.loaded["ui/widget/horizontalspan"] = {
-    new = function(a, b) return { type = "HorizontalSpan", args = b or a } end
+    new = function(a, b) return { type = "HorizontalSpan", args = b or a, getSize = function() return { w = (b or a or {}).width or 0, h = 0 } end } end
 }
 package.loaded["ui/size"] = {
     line = { thick = 2 },
@@ -272,9 +276,6 @@ package.loaded["ui/size"] = {
 }
 package.loaded["ui/geometry"] = {
     new = function(a, b) return b or a end
-}
-package.loaded["ui/widget/horizontalgroup"] = {
-    new = function(a, b) return { type = "HorizontalGroup", args = b or a } end
 }
 package.loaded["ui/widget/table"] = {
     new = function(a, b) return { type = "Table", args = b or a } end

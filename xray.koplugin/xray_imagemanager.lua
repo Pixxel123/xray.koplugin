@@ -235,11 +235,21 @@ function ImageManager:getFilteredImages(images, tab, current_page, filter_mode, 
     return results
 end
 
+local function matchesImageKey(img, key)
+    if not img or not key then return false end
+    return (img.id and img.id == key)
+        or (img.href and img.href == key)
+        or (img.src and img.src == key)
+        or (img.title and img.title == key)
+        or (img.cached_file and img.cached_file == key)
+        or (img.local_file and img.local_file == key)
+end
+
 -- Toggle favorite status for an image
 function ImageManager:toggleFavorite(book_data, image_id)
     if not book_data or not book_data.images or not image_id then return false end
     for _, img in ipairs(book_data.images) do
-        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
+        if matchesImageKey(img, image_id) then
             img.is_favorite = not (img.is_favorite == true)
             return img.is_favorite
         end
@@ -251,7 +261,7 @@ end
 function ImageManager:renameImage(book_data, image_id, new_title)
     if not book_data or not book_data.images or not image_id or not new_title then return false end
     for _, img in ipairs(book_data.images) do
-        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
+        if matchesImageKey(img, image_id) then
             img.title = new_title
             img.custom_title = true
             return true
@@ -264,8 +274,22 @@ end
 function ImageManager:setImageRotation(book_data, image_id, rotation)
     if not book_data or not book_data.images or not image_id then return false end
     for _, img in ipairs(book_data.images) do
-        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
+        if matchesImageKey(img, image_id) then
             img.rotation = rotation
+            return true
+        end
+    end
+    return false
+end
+
+-- Set zoom level and pan position for an image
+function ImageManager:setImageZoom(book_data, image_id, zoom_level, pan_x, pan_y)
+    if not book_data or not book_data.images or not image_id then return false end
+    for _, img in ipairs(book_data.images) do
+        if matchesImageKey(img, image_id) then
+            img.zoom_level = zoom_level
+            img.pan_x = pan_x
+            img.pan_y = pan_y
             return true
         end
     end
@@ -276,7 +300,7 @@ end
 function ImageManager:toggleHideImage(book_data, image_id)
     if not book_data or not book_data.images or not image_id then return false end
     for _, img in ipairs(book_data.images) do
-        if img.id == image_id or img.href == image_id or (img.src and img.src == image_id) then
+        if matchesImageKey(img, image_id) then
             img.is_hidden = not (img.is_hidden == true)
             return img.is_hidden
         end

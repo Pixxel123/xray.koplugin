@@ -481,6 +481,10 @@ msgstr "Введіть безкоштовний ключ Gemini з Google AI Stu
 msgid "img_extract_failed"
 msgstr "Не вдалося витягти файл зображення."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Підказка про згорнуте зображення"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Ще немає обраних.\n\nВикористовуйте меню ⋮ на будь-якому зображенні, щоб додати його до обраного."

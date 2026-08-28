@@ -362,6 +362,9 @@ msgstr "Enter your free Gemini key from Google AI Studio (starts with AQ. or AIz
 msgid "img_extract_failed"
 msgstr "Could not extract image file."
 
+msgid "img_minimized_hint"
+msgstr "img_minimized_hint"
+
 msgid "img_no_favorites"
 msgstr "No favorites yet.\n\nUse the ⋮ menu on any image to add it to your favorites."
 

@@ -481,6 +481,10 @@ msgstr "Masukkan kunci Gemini gratis dari Google AI Studio (dimulai dengan AQ. a
 msgid "img_extract_failed"
 msgstr "Gagal mengekstrak file gambar."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Petunjuk gambar diminimalkan"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Belum ada favorit.\n\nGunakan menu ⋮ pada gambar apa pun untuk menambahkannya ke favorit Anda."

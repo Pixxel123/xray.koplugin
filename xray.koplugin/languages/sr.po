@@ -481,6 +481,10 @@ msgstr "Унесите свој бесплатни Gemini кључ из Google A
 msgid "img_extract_failed"
 msgstr "Izvlačenje datoteke slike nije uspelo."
 
+# en-hash: 0e05d094e359443c73ada4c2e852ccae
+msgid "img_minimized_hint"
+msgstr "Савет за умањену слику"
+
 # en-hash: 30936c8b483b8b104a4ad7821ce2262b
 msgid "img_no_favorites"
 msgstr "Još nema omiljenih.\n\nKoristite meni ⋮ na bilo kojoj slici da biste je dodali u omiljene."

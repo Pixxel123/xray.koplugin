@@ -182,6 +182,8 @@ local function createIconButton(opts)
         }
     end
     local frame = FrameContainer:new{
+        width = opts.width,
+        height = opts.height,
         padding = opts.padding or sc(4),
         padding_h = opts.padding_h or sc(6),
         bordersize = opts.bordersize or sc(1),
@@ -193,10 +195,29 @@ local function createIconButton(opts)
     return makeTapItem(frame, opts.callback)
 end
 
--- Inverted high-contrast action menu badge (pitch black background, pure white vertical dots)
-local function createDotMenuBadge(size)
-    local badge_sz = size or sc(32)
-    local icon_sz = sc(20)
+-- Action menu badge (supports plain black dots or inverted white-on-black badge)
+local function createDotMenuBadge(size, is_plain)
+    local badge_sz = size or sc(34)
+    local icon_sz = sc(22)
+    if is_plain then
+        return FrameContainer:new{
+            width = badge_sz,
+            height = badge_sz,
+            padding = 0,
+            bordersize = 0,
+            CenterContainer:new{
+                dimen = Geom:new{ w = badge_sz, h = badge_sz },
+                ImageWidget:new{
+                    file = getAssetPath("more-vertical.svg"),
+                    width = icon_sz,
+                    height = icon_sz,
+                    scale_factor = 0,
+                    is_icon = true,
+                    alpha = true,
+                }
+            }
+        }
+    end
     return FrameContainer:new{
         width = badge_sz,
         height = badge_sz,
@@ -412,18 +433,22 @@ function ImageGallery:buildUI()
     local filtered = p.image_manager:getFilteredImages(p.images or {}, self.tab, current_book_page, self.filter_mode, series_images)
 
     -- ── 1. Top Header Bar ────────────────────────────────────────────────────────
-    local btn_size = sc(22)
-    local btn_pad = sc(4)
-    local btn_gap = sc(6)
+    local btn_size = sc(32)
+    local btn_w = sc(38)
+    local btn_gap = sc(18)
     local num_header_btns = 3
-    local actions_total_w = (sc(34) * num_header_btns) + (btn_gap * (num_header_btns - 1))
+    local actions_total_w = (btn_w * num_header_btns) + (btn_gap * (num_header_btns - 1))
 
     local mode_icon = (self.view_mode == "mosaic" and "trello.svg") or (self.view_mode == "grid" and "grid.svg" or "list.svg")
     local view_mode_btn = createIconButton{
         icon = mode_icon,
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_w,
+        height = btn_w,
+        bordersize = 0,
+        background = nil,
+        padding = 0,
+        padding_h = 0,
         callback = function()
             if self.view_mode == "mosaic" then
                 self.view_mode = "grid"
@@ -442,8 +467,12 @@ function ImageGallery:buildUI()
     local filter_btn = createIconButton{
         icon = "filter.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_w,
+        height = btn_w,
+        bordersize = 0,
+        background = nil,
+        padding = 0,
+        padding_h = 0,
         callback = function()
             if self.filter_mode == "maps_only" or self.filter_mode == "large_only" then
                 self.filter_mode = "all"
@@ -460,8 +489,12 @@ function ImageGallery:buildUI()
     local close_btn = createIconButton{
         icon = "x.svg",
         size = btn_size,
-        padding = btn_pad,
-        padding_h = btn_pad,
+        width = btn_w,
+        height = btn_w,
+        bordersize = 0,
+        background = nil,
+        padding = 0,
+        padding_h = 0,
         callback = function()
             self:close()
         end,
@@ -528,11 +561,17 @@ function ImageGallery:buildUI()
         header_title_vg,
     }
 
-    local header_top_row = HorizontalGroup:new{
-        align = "center",
-        header_title_left,
-        HorizontalSpan:new{ width = math.max(sc(8), sw - sc(32) - header_title_left:getSize().w - actions_total_w) },
-        header_actions,
+    local row_w = sw - sc(24)
+    local header_top_row = OverlapGroup:new{
+        dimen = Geom:new{ w = row_w, h = sc(40) },
+        LeftContainer:new{
+            dimen = Geom:new{ w = row_w - actions_total_w - sc(12), h = sc(40) },
+            header_title_left,
+        },
+        RightContainer:new{
+            dimen = Geom:new{ w = row_w, h = sc(40) },
+            header_actions,
+        },
     }
 
     -- ── 2. Segmented Tab Bar ───────────────────────────────────────────────────
@@ -1236,7 +1275,7 @@ function ImageGallery:renderGridCard(img, cell_w)
     local meta_vg = VerticalGroup:new(meta_items)
     meta_vg.align = "left"
 
-    local dot_badge = createDotMenuBadge(sc(30))
+    local dot_badge = createDotMenuBadge(sc(34), true)
 
     local footer_row = OverlapGroup:new{
         dimen = Geom:new{ w = inner_w, h = sc(32) },
@@ -1409,7 +1448,7 @@ function ImageGallery:renderListRow(img, content_w)
         info_vg,
     }
 
-    local dot_badge = createDotMenuBadge(sc(32))
+    local dot_badge = createDotMenuBadge(sc(36), true)
 
     local row_overlap = OverlapGroup:new{
         dimen = Geom:new{ w = inner_w, h = thumb_h },

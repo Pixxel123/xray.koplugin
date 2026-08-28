@@ -940,6 +940,19 @@ function XRayPlugin:getSubMenuItems()
                 keep_menu_open = true,
                 sub_item_table = {
                     {
+                        text = self.loc:t("menu_timeline_presence_map") or "Use Presence Map in Timeline",
+                        checked_func = function() return self:presenceMapEnabled() end,
+                        callback = function()
+                            if self.ai_helper and self.ai_helper.settings then
+                                self.ai_helper:saveSettings({
+                                    timeline_presence_map = not self:presenceMapEnabled() })
+                                -- Rebuild if the Timeline is open behind this menu.
+                                if self.timeline_view then self:showTimeline() end
+                            end
+                        end,
+                        separator = true,
+                    },
+                    {
                         text = self.loc:t("menu_ui_popup_intext") or "Use Footnote Style for In-text Lookups",
                         checked_func = function() return self:settingEnabled("ui_popup_intext", true) end,
                         callback = function()

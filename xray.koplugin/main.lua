@@ -734,7 +734,13 @@ function XRayPlugin:onDispatcherRegisterActions()
         Dispatcher:registerAction("xray_open_image_gallery", {
             category = "none",
             event = "ShowXRayImageGallery",
-            title = "X-Ray: Open Image Gallery",
+            title = _t(self, "menu_images", "X-Ray: Images & Maps"),
+            general = true,
+        })
+        Dispatcher:registerAction("xray_images", {
+            category = "none",
+            event = "ShowXRayImages",
+            title = _t(self, "menu_images", "X-Ray: Images & Maps"),
             general = true,
         })
     end)
@@ -759,7 +765,10 @@ function XRayPlugin:onShowXRayImageGallery()
 end
 
 function XRayPlugin:onShowXRayImages()
-    self:showImages()
+    local UIManager = require("ui/uimanager")
+    UIManager:nextTick(function()
+        self:showImages()
+    end)
     return true
 end
 

@@ -843,12 +843,18 @@ function ImageViewer:minimize()
                 p.cache_manager:asyncSaveCache(p.ui.document.file, p.book_data)
             end
         end
+        if p.closeAllMenus then
+            p:closeAllMenus()
+        end
     end
     self:close(true)
     if p and p.image_gallery_overlay then
         local ov = p.image_gallery_overlay
         p.image_gallery_overlay = nil
         UIManager:close(ov, "ui")
+    end
+    if p and p.closeAllMenus then
+        p:closeAllMenus()
     end
     local title = (self.image_entry and self.image_entry.title) or "Image"
     UIManager:show(InfoMessage:new{

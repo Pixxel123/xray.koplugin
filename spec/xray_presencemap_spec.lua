@@ -104,6 +104,36 @@ describe("xray_presencemap", function()
             assert.same({ "Justine", "Ernest" }, presence.coverageOrder(matrix, chars))
         end)
 
+        it("keeps everyone with any coverage when no minimum is given", function()
+            -- Walton appears once and must survive the default call.
+            assert.same({ "Victor", "Creature", "Walton" },
+                        presence.coverageOrder(sampleMatrix(), sampleChars))
+        end)
+
+        it("drops characters below the minimum coverage", function()
+            -- Four characters, three of them in two or more chapters.
+            local matrix = {
+                [1] = { Ann = true, Bob = true, Cal = true },
+                [2] = { Ann = true, Bob = true, Cal = true },
+                [3] = { Ann = true, Dot = true },
+            }
+            local chars = { { name = "Ann" }, { name = "Bob" }, { name = "Cal" }, { name = "Dot" } }
+            assert.same({ "Ann", "Bob", "Cal" }, presence.coverageOrder(matrix, chars, 2))
+        end)
+
+        it("ignores the minimum when too few characters would survive it", function()
+            -- Only Ann clears a minimum of 2. Filtering to one row would leave a
+            -- book early in its reading with an almost empty map, so the whole
+            -- order is kept instead.
+            local matrix = {
+                [1] = { Ann = true },
+                [2] = { Ann = true, Bob = true },
+                [3] = { Cal = true },
+            }
+            local chars = { { name = "Ann" }, { name = "Bob" }, { name = "Cal" } }
+            assert.same({ "Ann", "Bob", "Cal" }, presence.coverageOrder(matrix, chars, 2))
+        end)
+
     end)
 
     describe("matchingChapters", function()

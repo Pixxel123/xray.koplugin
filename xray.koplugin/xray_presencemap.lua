@@ -84,11 +84,19 @@ function M.buildPresenceMatrix(events, characters)
     return matrix
 end
 
+-- Below this many characters, min_coverage is ignored. See coverageOrder.
+local MIN_FILTERED_ROWS = 3
+
 -- Characters that appear at all, most-present first. Shared by the filter
 -- buttons, name gutter and grid rows, so a position always means the same
 -- character. Ties break by first appearance then name, so the order does not
 -- shuffle between rebuilds.
-function M.coverageOrder(matrix, characters)
+--
+-- min_coverage drops walk-ons named in fewer than that many chapters, and
+-- defaults to 1, which keeps everyone. It is ignored when fewer than
+-- MIN_FILTERED_ROWS characters would survive: early in a book almost everyone
+-- appears once, and an empty map is worse than a crowded one.
+function M.coverageOrder(matrix, characters, min_coverage)
     local stats = {}
     for _, character in ipairs(characters or {}) do
         local name = character.name
@@ -110,8 +118,12 @@ function M.coverageOrder(matrix, characters)
         return a.name < b.name
     end)
 
-    local order = {}
-    for i, entry in ipairs(stats) do order[i] = entry.name end
+    local order, kept = {}, {}
+    for i, entry in ipairs(stats) do
+        order[i] = entry.name
+        if entry.coverage >= (min_coverage or 1) then kept[#kept + 1] = entry.name end
+    end
+    if #kept >= MIN_FILTERED_ROWS then return kept end
     return order
 end
 

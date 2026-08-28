@@ -897,6 +897,14 @@ msgstr "接続テスト"
 msgid "menu_timeline"
 msgstr "出来事"
 
+# en-hash: b1c94ca2fbc3e78fc30069c8d0f01680
+msgid "menu_timeline_all"
+msgstr "All"
+
+# en-hash: 8b77f6081efcbe80501acb1411ddb510
+msgid "menu_timeline_presence_map"
+msgstr "Use Presence Map in Timeline"
+
 # en-hash: 3c1fa918adf3e65fbff595ee1fd50d26
 msgid "menu_ui_popup_intext"
 msgstr "本文検索に脚注スタイルを使用"
@@ -1256,6 +1264,10 @@ msgstr "この章"
 # en-hash: d2c24d59e0baff4d0155fbdf62590867
 msgid "this_page"
 msgstr "セクション"
+
+# en-hash: 53468fd13ec60ce6e3944bab23cf96f7
+msgid "timeline_no_shared_chapters"
+msgstr "%s never share a chapter.\n\nTap %s to see the whole book."
 
 # en-hash: f61824b403008733ff955da48052ee04
 msgid "unit_action_configure"
@@ -1696,4 +1708,3 @@ msgstr "辞書および選択メニューに「X-Ray」ボタンを追加し、�
 # en-hash: 93cba07454f06a4a960172bbd6e2a435
 msgid "yes"
 msgstr "はい"
-

@@ -674,6 +674,12 @@ msgstr "Re-test"
 msgid "menu_timeline"
 msgstr "Timeline"
 
+msgid "menu_timeline_all"
+msgstr "All"
+
+msgid "menu_timeline_presence_map"
+msgstr "Use Presence Map in Timeline"
+
 msgid "menu_ui_popup_intext"
 msgstr "Use Footnote Style for In-text Lookups"
 
@@ -943,6 +949,9 @@ msgstr "This Chapter"
 
 msgid "this_page"
 msgstr "Section"
+
+msgid "timeline_no_shared_chapters"
+msgstr "%s never share a chapter.\n\nTap %s to see the whole book."
 
 msgid "unit_action_configure"
 msgstr "Configure Settings..."
@@ -1273,4 +1282,3 @@ msgstr "Adds an 'X-Ray' button to dictionary and selection menus for instant loo
 
 msgid "yes"
 msgstr "Yes"
-

@@ -3386,6 +3386,7 @@ local HEADER_IGNORED_GESTURES = {
 local STRIP_VISIBLE_ROWS = 3   -- character rows in the presence chart
 local BUTTON_VISIBLE_ROWS = 2  -- rows of filter buttons (3 buttons per row)
 local PRIOR_VISIBLE_ROWS = 2   -- earlier books shown before the recap block scrolls
+local MIN_CHAPTER_COVERAGE = 2 -- a character in fewer chapters is a walk-on
 
 -- Restore a scroll position across a rebuild.
 -- A filter change can leave less to scroll, so the saved offset is clamped to
@@ -3498,7 +3499,7 @@ local function _buildTimelineHeader(self, ctx)
     table.insert(components, VerticalSpan:new{ width = pad })
 
     local ncols = #ctx.chapters
-    if ncols > 0 and ctx.show_map then
+    if ncols > 0 and ctx.show_map and #presence.shownNames(ctx.order, ctx.selected) > 0 then
         local RenderImage = require("ui/renderimage")
         local ImageWidget = require("ui/widget/imagewidget")
 
@@ -3919,7 +3920,7 @@ local function _timelineData(self)
         chapter_titles = chapter_titles,
         prior_events = prior_events,
         matrix = matrix,
-        order = presence.coverageOrder(matrix, characters),
+        order = presence.coverageOrder(matrix, characters, MIN_CHAPTER_COVERAGE),
     }
     self._timeline_cache = cache
     return cache

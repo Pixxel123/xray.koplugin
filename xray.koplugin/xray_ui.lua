@@ -3872,13 +3872,31 @@ end
 -- expensive. assignTimelinePages runs full-document findText scans for chapter
 -- titles that miss the TOC, which would cost seconds on every filter tap.
 -- Identity alone is not enough: merges and "fetch more characters" mutate
--- self.characters in place, so the name list is compared as well.
+-- self.characters in place, so every field the map reads is compared as well.
+-- That is the name and aliases, which decide presence, and the role, which
+-- decides whether coverageOrder keeps a lead below the minimum. Aliases only
+-- ever grow and a role change today arrives with a fresh self.timeline, so this
+-- guards an invariant rather than a live staleness bug -- but the invariant is
+-- then local to this function instead of resting on what the callers happen to
+-- do.
+--
+-- Length-prefixed, so no name or alias can spell out a separator and pass
+-- itself off as a different field boundary.
+local function _field(parts, value)
+    local text = tostring(value)
+    parts[#parts + 1] = #text .. ":" .. text
+end
+
 local function _charactersSignature(characters)
-    local names = {}
-    for i, c in ipairs(characters or {}) do
-        names[i] = tostring(c.name) .. "/" .. tostring(#(c.aliases or {}))
+    local parts = {}
+    for _, c in ipairs(characters or {}) do
+        _field(parts, c.name)
+        _field(parts, c.role)
+        local aliases = c.aliases or {}
+        _field(parts, #aliases)
+        for _, alias in ipairs(aliases) do _field(parts, alias) end
     end
-    return table.concat(names, "\30")
+    return table.concat(parts, "\30")
 end
 
 local function _timelineData(self)

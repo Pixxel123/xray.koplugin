@@ -60,6 +60,16 @@ describe("xray_presencemap", function()
             assert.is_true(matrix[1]["Victor"])
         end)
 
+        it("still matches when an alias repeats the name", function()
+            -- The AI often lists the canonical name among the aliases. The
+            -- duplicate needle is dropped, so the match must come from the one
+            -- that is kept.
+            local timeline = { { chapter = "Chapter 1", event = "Victor walks." } }
+            local characters = { { name = "Victor", aliases = { "Victor", "victor" } } }
+            local matrix = presence.buildPresenceMatrix(timeline, characters)
+            assert.is_true(matrix[1]["Victor"])
+        end)
+
         it("matches regardless of letter case", function()
             -- The plugin's other matchers are case-insensitive; a presence map
             -- that disagreed with Mentions about the same chapter would be worse
@@ -68,6 +78,37 @@ describe("xray_presencemap", function()
             local characters = { { name = "The Creature", aliases = {} } }
             local matrix = presence.buildPresenceMatrix(timeline, characters)
             assert.is_true(matrix[1]["The Creature"])
+        end)
+
+        it("matches a character by surname when the text omits the first name", function()
+            -- Prose says "Holden's crew", never "James Holden", and the AI's
+            -- alias list does not always include the surname.
+            local timeline = { { chapter = "Chapter 1", event = "Holden and the crew agree." } }
+            local characters = { { name = "James Holden", aliases = { "Jim" } } }
+            local matrix = presence.buildPresenceMatrix(timeline, characters)
+            assert.is_true(matrix[1]["James Holden"])
+        end)
+
+        it("does not use a surname two characters share", function()
+            -- A surname both siblings answer to identifies neither. Guessing
+            -- would put one in every chapter that names the other.
+            local timeline = { { chapter = "Chapter 1", event = "Holden waited." } }
+            local characters = {
+                { name = "James Holden", aliases = {} },
+                { name = "Elise Holden", aliases = {} },
+            }
+            local matrix = presence.buildPresenceMatrix(timeline, characters)
+            assert.is_nil(matrix[1]["James Holden"])
+            assert.is_nil(matrix[1]["Elise Holden"])
+        end)
+
+        it("does not treat a short surname as a needle", function()
+            -- "Poe" would fire on "poem"; the boundary check saves that one, but
+            -- short surnames collide too readily to be worth guessing.
+            local timeline = { { chapter = "Chapter 1", event = "Roe waited." } }
+            local characters = { { name = "Alan Roe", aliases = {} } }
+            local matrix = presence.buildPresenceMatrix(timeline, characters)
+            assert.is_nil(matrix[1]["Alan Roe"])
         end)
 
     end)
@@ -132,6 +173,66 @@ describe("xray_presencemap", function()
             }
             local chars = { { name = "Ann" }, { name = "Bob" }, { name = "Cal" } }
             assert.same({ "Ann", "Bob", "Cal" }, presence.coverageOrder(matrix, chars, 2))
+        end)
+
+        it("skips a nameless character rather than ranking them", function()
+            -- buildPresenceMatrix tolerates a nameless AI entry, so this must
+            -- too. Such an entry has no matrix key and so no coverage; it must
+            -- not reach the sort, where it would be compared by name.
+            local matrix = { [1] = { Victor = true } }
+            local chars = { { aliases = { "Victor" } }, { name = "Victor" } }
+            assert.same({ "Victor" }, presence.coverageOrder(matrix, chars))
+        end)
+
+        it("keeps a lead when only the second entry for that name carries the role", function()
+            -- Two entries can share a name, and the role sits on whichever one
+            -- the AI wrote it on. Reading only the first would drop a
+            -- protagonist the minimum-coverage rule is meant to keep.
+            local matrix = {
+                [1] = { Lead = true, Ann = true, Bob = true, Cal = true },
+                [2] = { Ann = true, Bob = true, Cal = true },
+                [3] = { Ann = true, Bob = true, Cal = true },
+            }
+            local chars = {
+                { name = "Lead" }, { name = "Lead", role = "Protagonist" },
+                { name = "Ann" }, { name = "Bob" }, { name = "Cal" },
+            }
+            assert.same({ "Ann", "Bob", "Cal", "Lead" },
+                        presence.coverageOrder(matrix, chars, 2))
+        end)
+
+        it("gives one row to a name held by two character entries", function()
+            -- The matrix is keyed by name, so duplicates share a single key.
+            -- Listing the name twice would draw two identical rows against one
+            -- set of markers.
+            local matrix = { [1] = { Victor = true } }
+            local chars = { { name = "Victor" }, { name = "Victor" } }
+            assert.same({ "Victor" }, presence.coverageOrder(matrix, chars))
+        end)
+
+        it("ignores a matrix key with no character behind it", function()
+            -- Only the characters handed in get a row, so a stale key cannot
+            -- add one the name gutter would not draw.
+            local matrix = { [1] = { Victor = true, Stranger = true } }
+            assert.same({ "Victor" }, presence.coverageOrder(matrix, { { name = "Victor" } }))
+        end)
+
+        it("keeps a protagonist below the minimum coverage", function()
+            -- A lead who happens to appear in one chapter of what has been
+            -- fetched so far is not a walk-on.
+            -- Three others clear the minimum, so the MIN_FILTERED_ROWS floor
+            -- does not fire and the lead is kept by the role rule alone.
+            local matrix = {
+                [1] = { Lead = true, Ann = true, Bob = true, Cal = true },
+                [2] = { Ann = true, Bob = true, Cal = true },
+                [3] = { Ann = true, Bob = true, Cal = true },
+            }
+            local chars = {
+                { name = "Lead", role = "Protagonist" },
+                { name = "Ann" }, { name = "Bob" }, { name = "Cal" },
+            }
+            assert.same({ "Ann", "Bob", "Cal", "Lead" },
+                        presence.coverageOrder(matrix, chars, 2))
         end)
 
     end)
@@ -316,6 +417,16 @@ describe("xray_presencemap", function()
             assert.is_true(buckets[1].Ann)
             assert.is_true(buckets[1].Bob)
             assert.same({}, matches)
+        end)
+
+        it("returns no columns at all for a book with no chapters", function()
+            -- A timeline holding only prior-book events leaves an empty matrix.
+            -- The column count is floored at one, which would otherwise hand
+            -- back a bucket spanning a chapter that does not exist.
+            local buckets, matches, ranges = presence.bucketMatrix({}, {}, 5)
+            assert.same({}, buckets)
+            assert.same({}, matches)
+            assert.same({}, ranges)
         end)
 
         it("passes a short book through one chapter per column", function()

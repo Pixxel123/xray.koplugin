@@ -20,12 +20,32 @@ local function isWordByte(b)
         b == BYTE_UNDERSCORE)
 end
 
--- Lower-cased once per call rather than per chapter.
-local function needlesFor(character)
-    local needles = {}
+-- Whether the AI labelled this character a lead. The role field is free text,
+-- so this is a hint, never a ranking.
+local function isLead(role)
+    return type(role) == "string" and role:lower():find("protagonist", 1, true) ~= nil
+end
+
+-- The last word of a multi-word name. Prose leans on surnames ("Holden's crew")
+-- and the AI's alias list often omits them. Short ones collide too often to
+-- guess from, so they are skipped, as in xray_data's frequency scorer.
+local function surnameOf(name)
+    if type(name) ~= "string" then return nil end
+    local last = name:match("(%S+)$")
+    if last and #last > 3 and last ~= name then return last end
+    return nil
+end
+
+-- Lower-cased once per call rather than per chapter. Duplicates are dropped:
+-- an alias that repeats the canonical name or the surname would otherwise buy a
+-- second scan of every chapter for an answer the first scan already gave.
+local function needlesFor(character, own_surname)
+    local needles, seen = {}, {}
     local function add(text)
         if type(text) ~= "string" or text == "" then return end
         local lowered = text:lower()
+        if seen[lowered] then return end
+        seen[lowered] = true
         needles[#needles + 1] = {
             text = lowered,
             starts_word = isWordByte(lowered:byte(1)),
@@ -34,6 +54,7 @@ local function needlesFor(character)
     end
     add(character.name)
     for _, alias in ipairs(character.aliases or {}) do add(alias) end
+    add(own_surname)
     return needles
 end
 
@@ -60,10 +81,25 @@ end
 -- Both the chapter title and the summary are searched.
 function M.buildPresenceMatrix(events, characters)
     -- The name is this matrix's key, so a nameless entry is skipped.
+    -- A surname shared by two characters identifies neither, so it is only a
+    -- needle when one character owns it.
+    local surnames, owners = {}, {}
+    for i, character in ipairs(characters or {}) do
+        local surname = surnameOf(character.name)
+        surnames[i] = surname
+        if surname then
+            local key = surname:lower()
+            owners[key] = (owners[key] or 0) + 1
+        end
+    end
+
     local needles = {}
-    for _, character in ipairs(characters or {}) do
+    for i, character in ipairs(characters or {}) do
         if type(character.name) == "string" and character.name ~= "" then
-            needles[#needles + 1] = { name = character.name, list = needlesFor(character) }
+            local surname = surnames[i]
+            if surname and owners[surname:lower()] ~= 1 then surname = nil end
+            needles[#needles + 1] =
+                { name = character.name, list = needlesFor(character, surname) }
         end
     end
 
@@ -95,21 +131,44 @@ local MIN_FILTERED_ROWS = 3
 -- min_coverage drops walk-ons named in fewer than that many chapters, and
 -- defaults to 1, which keeps everyone. It is ignored when fewer than
 -- MIN_FILTERED_ROWS characters would survive: early in a book almost everyone
--- appears once, and an empty map is worse than a crowded one.
+-- appears once, and an empty map is worse than a crowded one. A lead is kept
+-- either way, since appearing in one fetched chapter does not make them minor.
 function M.coverageOrder(matrix, characters, min_coverage)
-    local stats = {}
+    -- Keyed by name, matching the matrix, so two entries sharing one name draw
+    -- one row rather than two identical ones. The same non-empty-string check
+    -- as buildPresenceMatrix, so a nameless AI entry is skipped by both.
+    -- lead is the union across those entries: the role sits on whichever one
+    -- the AI wrote it on, and taking only the first would drop a protagonist
+    -- the rule below is meant to keep.
+    local by_name, entries = {}, {}
     for _, character in ipairs(characters or {}) do
         local name = character.name
-        local coverage, first = 0, nil
-        for row = 1, #matrix do
-            if matrix[row] and matrix[row][name] then
-                coverage = coverage + 1
-                first = first or row
+        if type(name) == "string" and name ~= "" then
+            local entry = by_name[name]
+            if not entry then
+                entry = { name = name, coverage = 0, first = nil, lead = false }
+                by_name[name] = entry
+                entries[#entries + 1] = entry
+            end
+            if isLead(character.role) then entry.lead = true end
+        end
+    end
+
+    -- One pass over the matrix rather than a rescan per character. Rows are
+    -- visited in order, so the first row to name someone is their first.
+    for row = 1, #matrix do
+        for name in pairs(matrix[row] or {}) do
+            local entry = by_name[name]
+            if entry then
+                entry.coverage = entry.coverage + 1
+                entry.first = entry.first or row
             end
         end
-        if coverage > 0 then
-            stats[#stats + 1] = { name = name, coverage = coverage, first = first }
-        end
+    end
+
+    local stats = {}
+    for _, entry in ipairs(entries) do
+        if entry.coverage > 0 then stats[#stats + 1] = entry end
     end
 
     table.sort(stats, function(a, b)
@@ -121,7 +180,9 @@ function M.coverageOrder(matrix, characters, min_coverage)
     local order, kept = {}, {}
     for i, entry in ipairs(stats) do
         order[i] = entry.name
-        if entry.coverage >= (min_coverage or 1) then kept[#kept + 1] = entry.name end
+        if entry.coverage >= (min_coverage or 1) or entry.lead then
+            kept[#kept + 1] = entry.name
+        end
     end
     if #kept >= MIN_FILTERED_ROWS then return kept end
     return order
@@ -156,6 +217,9 @@ end
 -- never happened.
 function M.bucketMatrix(matrix, chapter_matches, n_buckets)
     local nrows = #matrix
+    -- No chapters means no columns. The clamp below floors the count at one,
+    -- which would otherwise invent a bucket spanning a chapter that is not there.
+    if nrows == 0 then return {}, {}, {} end
     n_buckets = math.max(1, math.min(n_buckets or nrows, nrows))
 
     local matched_row = {}

@@ -667,7 +667,7 @@ function M:isRTL()
 end
 
 function M:isXRayUIActive()
-    return self._menu_creating or self.xray_menu or self.char_menu or self.loc_menu or self.timeline_menu 
+    return self._menu_creating or self.xray_menu or self.char_menu or self.loc_menu or self.timeline_view 
         or self.hf_menu or self.terms_menu or self.ldlg or self.active_related_menu or self.length_presets_menu
 end
 
@@ -840,14 +840,14 @@ function M:closeAllMenus()
     -- 1. Close all custom plugin modals instantly
     local menus = {
         self.mentions_menu, self.char_menu, self.loc_menu,
-        self.timeline_menu, self.hf_menu, self.xray_menu,
+        self.timeline_view, self.hf_menu, self.xray_menu,
         self.terms_menu, self.active_details_dialog, self.return_banner
     }
     for i = 1, 9 do
         if menus[i] then pcall(function() UIManager:close(menus[i]) end) end
     end
     self.mentions_menu = nil; self.char_menu = nil; self.loc_menu = nil
-    self.timeline_menu = nil; self.hf_menu = nil; self.xray_menu = nil
+    self.timeline_view = nil; self.hf_menu = nil; self.xray_menu = nil
     self.terms_menu = nil; self.active_details_dialog = nil; self.return_banner = nil
     
     local function executeClear()
@@ -3835,78 +3835,185 @@ end
 -- titles that miss the TOC, which would cost seconds on every filter tap.
 -- Identity alone is not enough: merges and "fetch more characters" mutate
 -- self.characters in place, so the name list is compared as well.
-function M:showTimeline()
-    if not self.timeline or #self.timeline == 0 then UIManager:show(InfoMessage:new{ text = self.loc:t("no_timeline_data"), timeout = 3 }); return end
+local function _charactersSignature(characters)
+    local names = {}
+    for i, c in ipairs(characters or {}) do
+        names[i] = tostring(c.name) .. "/" .. tostring(#(c.aliases or {}))
+    end
+    return table.concat(names, "\30")
+end
+
+local function _timelineData(self)
+    local signature = _charactersSignature(self.characters)
+    local cache = self._timeline_cache
+    if cache and cache.timeline == self.timeline
+            and cache.characters == self.characters
+            and cache.signature == signature then
+        return cache
+    end
+
     local utils = require(plugin_path .. "xray_utils")
+    local presence = require(plugin_path .. "xray_presencemap")
     local toc = utils:flattenTOC(self.ui.document:getToc())
+    -- Both mutate self.timeline in place, so its identity stays stable.
     self:assignTimelinePages(self.timeline, toc, true)
     self:sortTimelineByTOC(self.timeline)
-    
-    local has_prior = false
+
+    -- Matrix rows line up with current-book events only, in the same order, so
+    -- index i means the same in both.
+    local events, chapter_titles = {}, {}
     for _, ev in ipairs(self.timeline) do
-        if ev.source == "series_prior" then
-            has_prior = true
-            break
+        if ev.source ~= "series_prior" then
+            events[#events + 1] = ev
+            chapter_titles[#chapter_titles + 1] = ev.chapter or ""
         end
     end
 
-    if self.series_prior_timeline_collapsed == nil then
-        self.series_prior_timeline_collapsed = true
+    local characters = self.characters or {}
+    local matrix = presence.buildPresenceMatrix(events, characters)
+    cache = {
+        timeline = self.timeline,
+        characters = self.characters,
+        signature = signature,
+        events = events,
+        chapter_titles = chapter_titles,
+        matrix = matrix,
+        order = presence.coverageOrder(matrix, characters),
+    }
+    self._timeline_cache = cache
+    return cache
+end
+
+-- Whether the timeline shows its presence map. Unset means on.
+function M:presenceMapEnabled()
+    return self:settingEnabled("timeline_presence_map", true)
+end
+
+function M:showTimeline()
+    if not self.timeline or #self.timeline == 0 then UIManager:show(InfoMessage:new{ text = self.loc:t("no_timeline_data"), timeout = 3 }); return end
+    local presence = require(plugin_path .. "xray_presencemap")
+    local data = _timelineData(self)
+
+    -- Character filter state lives on the plugin so a rebuild preserves it.
+    local show_map = self:presenceMapEnabled()
+    self.timeline_filter = self.timeline_filter or {}
+    local filtering = #self.timeline_filter > 0
+
+
+    -- The header is rebuilt on every filter tap, so scroll positions are carried
+    -- across. A position is kept even when its scroller disappears: filtering to
+    -- one character collapses the map, and it should reopen where it was.
+    local scroll_state = self._timeline_scroll_state or {}
+    for key, sc in pairs(self._timeline_scrollers or {}) do
+        if sc.getScrolledOffset then scroll_state[key] = sc:getScrolledOffset() end
+    end
+    self._timeline_scroll_state = scroll_state
+    self._timeline_scrollers = {}
+
+    local matches = presence.matchingChapters(data.matrix, self.timeline_filter)
+    local is_match = {}
+    for _, idx in ipairs(matches) do is_match[idx] = true end
+
+    local row_specs = {}
+    for i, ev in ipairs(data.events) do
+        if is_match[i] then
+            row_specs[#row_specs + 1] = { chapter = ev.chapter or "", event = ev.event or "", ev = ev }
+        end
     end
 
-    local items = {}
-    if has_prior then
-        local arrow = self.series_prior_timeline_collapsed and "► " or "▼ "
-        local header_text = arrow .. (self.loc:t("series_prior_books_header") or "── Prior Books ──")
-        table.insert(items, {
-            text = header_text,
-            keep_menu_open = true,
-            callback = function()
-                self.series_prior_timeline_collapsed = not self.series_prior_timeline_collapsed
-                self:showTimeline()
-            end
-        })
-    end
-
-    for _, ev in ipairs(self.timeline) do
-        if ev.source == "series_prior" then
-            if not self.series_prior_timeline_collapsed then
-                table.insert(items, {
-                    text = ev.chapter or "",
-                    keep_menu_open = true,
-                    callback = function()
-                        self:showTimelineEventDetails(ev, { source = "menu" })
-                    end
-                })
-            end
+    -- When a filter matches nothing the list stays empty and the message is
+    -- drawn in the header, where it can be centered and has no row border.
+    local all_label = self.loc:t("menu_timeline_all") or "All"
+    local empty_text = nil
+    if #row_specs == 0 then
+        if filtering then
+            empty_text = self.loc:t("timeline_no_shared_chapters",
+                table.concat(self.timeline_filter, " \u{00B7} "), all_label)
         else
-            table.insert(items, {
-                text = (ev.chapter or "") .. ": " .. (ev.event or ""),
-                keep_menu_open = true,
-                callback = function()
-                    self:showTimelineEventDetails(ev, { source = "menu" })
-                end
-            })
+            -- Not an empty timeline (caught above) but nothing for this book:
+            -- everything held is from earlier books in a series.
+            empty_text = self.loc:t("no_timeline_data")
         end
     end
 
-    if self.timeline_menu then
-        UIManager:close(self.timeline_menu)
-        self.timeline_menu = nil
+    local header_ctx = {
+        title = self.loc:t("menu_timeline"),
+        order = data.order,
+        matrix = data.matrix,
+        chapters = data.chapter_titles,
+        matches = matches,
+        scroll_state = scroll_state,
+        scrollers = self._timeline_scrollers,
+        selected = self.timeline_filter,
+        empty_text = empty_text,
+        all_label = all_label,
+        show_map = show_map,
+        show_parent = nil,
+        on_back = function()
+            if self.timeline_view then UIManager:close(self.timeline_view) end
+        end,
+        on_toggle = function(name)
+            if name == nil then
+                self.timeline_filter = {}
+            else
+                local kept, removed = {}, false
+                for _, n in ipairs(self.timeline_filter) do
+                    if n == name then removed = true else kept[#kept + 1] = n end
+                end
+                if not removed then kept[#kept + 1] = name end
+                self.timeline_filter = kept
+            end
+            self:showTimeline()
+        end,
+    }
+
+    local sw = Screen:getWidth()
+    local pad = Screen:scaleBySize(10)
+    local ScrollableContainer = require("ui/widget/container/scrollablecontainer")
+    local text_w = sw - pad * 2 - ScrollableContainer:getScrollbarWidth()
+    local face = Font:getFace("cfont", 17)
+
+    -- Fixed row height lets the list size itself without laying out 365
+    -- paragraphs. Measuring it needs a throwaway TextBoxWidget, so memoize.
+    local line_h = _timelineLineHeight(face)
+    local text_h = line_h * 3           -- heading plus two lines of summary
+    local row_h = text_h + Screen:scaleBySize(14)
+
+    local function openRow(spec)
+        if spec and spec.ev then
+            self:showTimelineEventDetails(spec.ev, { source = "menu" })
+        end
     end
 
-    self.timeline_menu = self:newMenu("timeline_menu", { 
-        title = self.loc:t("menu_timeline"), 
-        item_table = items, 
-        is_borderless = true, 
-        width = Screen:getWidth(), 
-        height = Screen:getHeight(),
-        on_close_callback = function() 
-            if self.is_cancelled then return end
-            self:showFullXRayMenu() 
-        end,
-    })
-    UIManager:show(self.timeline_menu)
+    -- Both lists render the same kind of row. They differ only in their contents
+    -- and in whether a scrollbar takes width the rows would otherwise use.
+    local function rowList(specs, scrolls)
+        return XRayTimelineRowList:new{
+            specs = specs,
+            width = sw - (scrolls and ScrollableContainer:getScrollbarWidth() or 0),
+            text_width = text_w,
+            row_height = row_h,
+            text_height = text_h,
+            left_pad = pad,
+            face = face,
+            on_hold_row = openRow,
+        }
+    end
+
+    local rows = rowList(row_specs, true)
+
+    if self.timeline_view then
+        self._timeline_rebuilding = true
+        UIManager:close(self.timeline_view)
+        self._timeline_rebuilding = nil
+        self.timeline_view = nil
+    end
+    self.timeline_view = XRayTimelineView:new{
+        ui_instance = self,
+        header_ctx = header_ctx,
+        rows = rows,
+    }
+    UIManager:show(self.timeline_view)
 end
 
 function M:showTimelineEventDetails(ev, opts)

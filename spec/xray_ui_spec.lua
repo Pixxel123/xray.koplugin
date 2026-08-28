@@ -1352,6 +1352,61 @@ describe("xray_ui", function()
             assert.are.equal("InputContainer", last.type)
         end)
     end)
+
+    describe("timelinePriorSpecs", function()
+
+        -- One consolidated recap per earlier book in the series, as
+        -- mergeSeriesContext builds them.
+        local function priors()
+            return {
+                { chapter = "[Book 1: The Fellowship of the Ring]",
+                  event = "Frodo inherits the Ring.", source = "series_prior", source_book = 1 },
+                { chapter = "[Book 2: The Two Towers]",
+                  event = "The Fellowship breaks.", source = "series_prior", source_book = 2 },
+            }
+        end
+
+        it("should give one row per prior book, in the order supplied", function()
+            local specs = plugin:timelinePriorSpecs(priors(), {})
+            assert.are.equal(2, #specs)
+            assert.are.equal("[Book 1: The Fellowship of the Ring]", specs[1].chapter)
+            assert.are.equal("[Book 2: The Two Towers]", specs[2].chapter)
+        end)
+
+        it("should carry the recap text so the row can preview it", function()
+            local specs = plugin:timelinePriorSpecs(priors(), {})
+            assert.are.equal("Frodo inherits the Ring.", specs[1].event)
+        end)
+
+        it("should flatten the recap's paragraph breaks for the preview", function()
+            -- The recap joins a book's events with blank lines. Left alone they
+            -- spend one of the preview's two lines on whitespace.
+            local given = { { chapter = "[Book 1: X]", event = "First thing.\n\nSecond thing.",
+                              source = "series_prior", source_book = 1 } }
+            local specs = plugin:timelinePriorSpecs(given, {})
+            assert.are.equal("First thing. Second thing.", specs[1].event)
+            -- Only the preview copy is flattened; the popup reads the original.
+            assert.are.equal("First thing.\n\nSecond thing.", specs[1].ev.event)
+        end)
+
+        it("should carry the event itself so tapping opens its details", function()
+            local given = priors()
+            local specs = plugin:timelinePriorSpecs(given, {})
+            assert.are.equal(given[1], specs[1].ev)
+        end)
+
+        it("should return nil when the book has no prior-book entries", function()
+            assert.is_nil(plugin:timelinePriorSpecs({}, {}))
+            assert.is_nil(plugin:timelinePriorSpecs(nil, {}))
+        end)
+
+        it("should return nil while a character filter is active", function()
+            -- Prior events are not in the presence matrix, so they cannot match
+            -- a character. Showing them under a filter would imply they had.
+            assert.is_nil(plugin:timelinePriorSpecs(priors(), { "Frodo" }))
+        end)
+
+    end)
 end)
 
 

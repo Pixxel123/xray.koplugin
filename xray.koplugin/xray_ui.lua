@@ -3385,6 +3385,7 @@ local HEADER_IGNORED_GESTURES = {
 
 local STRIP_VISIBLE_ROWS = 3   -- character rows in the presence chart
 local BUTTON_VISIBLE_ROWS = 2  -- rows of filter buttons (3 buttons per row)
+local PRIOR_VISIBLE_ROWS = 2   -- earlier books shown before the recap block scrolls
 
 -- Restore a scroll position across a rebuild.
 -- A filter change can leave less to scroll, so the saved offset is clamped to
@@ -3573,6 +3574,42 @@ local function _buildTimelineHeader(self, ctx)
         else
             self:log("XRayPlugin: Timeline: strip render failed")
         end
+    end
+
+    -- Earlier books in the series, in a scroller of their own so a long series
+    -- cannot push this book's chapters off the screen.
+    -- The caller builds the list only when the block is open, so a list here
+    -- means it is open.
+    if ctx.prior_specs then
+        table.insert(components, HorizontalGroup:new{
+            align = "center",
+            HorizontalSpan:new{ width = pad },
+            Button:new{
+                text = (ctx.prior_list and "▼ " or "► ") .. ctx.prior_label,
+                width = sw - pad * 2,
+                max_width = sw - pad * 2,
+                align = "left",
+                bordersize = 0,
+                background = xray_theme.color_bg,
+                text_font_size = 14,
+                show_parent = ctx.show_parent,
+                callback = ctx.on_prior_toggle,
+            },
+        })
+        if ctx.prior_list then
+            local content_h = ctx.prior_list:getSize().h
+            local prior_block = ScrollableContainer:new{
+                dimen = Geom:new{ w = sw, h = ctx.prior_view_height },
+                ignore_events = HEADER_IGNORED_GESTURES,
+                show_parent = ctx.show_parent,
+                ctx.prior_list,
+            }
+            _restoreScroll(prior_block, ctx.scroll_state.prior,
+                           content_h, ctx.prior_view_height)
+            ctx.scrollers.prior = prior_block
+            table.insert(components, prior_block)
+        end
+        table.insert(components, VerticalSpan:new{ width = pad })
     end
 
     if ctx.empty_text then
@@ -3860,10 +3897,13 @@ local function _timelineData(self)
     self:sortTimelineByTOC(self.timeline)
 
     -- Matrix rows line up with current-book events only, in the same order, so
-    -- index i means the same in both.
-    local events, chapter_titles = {}, {}
+    -- index i means the same in both. Prior-book entries belong to no chapter
+    -- here, so they are set aside for the recap block rather than dropped.
+    local events, chapter_titles, prior_events = {}, {}, {}
     for _, ev in ipairs(self.timeline) do
-        if ev.source ~= "series_prior" then
+        if ev.source == "series_prior" then
+            prior_events[#prior_events + 1] = ev
+        else
             events[#events + 1] = ev
             chapter_titles[#chapter_titles + 1] = ev.chapter or ""
         end
@@ -3877,11 +3917,30 @@ local function _timelineData(self)
         signature = signature,
         events = events,
         chapter_titles = chapter_titles,
+        prior_events = prior_events,
         matrix = matrix,
         order = presence.coverageOrder(matrix, characters),
     }
     self._timeline_cache = cache
     return cache
+end
+
+-- One row per earlier book in the series, or nil when the block is hidden.
+--
+-- A character filter hides them: prior events are not in the presence matrix,
+-- so they can never match. Listing them anyway would suggest they did.
+function M:timelinePriorSpecs(prior_events, selected)
+    if not prior_events or #prior_events == 0 then return nil end
+    if selected and #selected > 0 then return nil end
+    local specs = {}
+    for _, ev in ipairs(prior_events) do
+        -- A recap is a whole book's events joined with blank lines, which would
+        -- waste one of the row's two preview lines. Only this copy is flattened;
+        -- the details popup reads ev itself.
+        local preview = (ev.event or ""):gsub("%s+", " "):match("^ *(.-) *$")
+        specs[#specs + 1] = { chapter = ev.chapter or "", event = preview, ev = ev }
+    end
+    return specs
 end
 
 -- Whether the timeline shows its presence map. Unset means on.
@@ -3899,6 +3958,11 @@ function M:showTimeline()
     self.timeline_filter = self.timeline_filter or {}
     local filtering = #self.timeline_filter > 0
 
+    -- Closed on first open, so the chapter list stays visible.
+    if self.series_prior_timeline_collapsed == nil then
+        self.series_prior_timeline_collapsed = true
+    end
+    local prior_specs = self:timelinePriorSpecs(data.prior_events, self.timeline_filter)
 
     -- The header is rebuilt on every filter tap, so scroll positions are carried
     -- across. A position is kept even when its scroller disappears: filtering to
@@ -3929,9 +3993,9 @@ function M:showTimeline()
         if filtering then
             empty_text = self.loc:t("timeline_no_shared_chapters",
                 table.concat(self.timeline_filter, " \u{00B7} "), all_label)
-        else
-            -- Not an empty timeline (caught above) but nothing for this book:
-            -- everything held is from earlier books in a series.
+        elseif not prior_specs then
+            -- Not an empty timeline (caught above) but nothing for this book.
+            -- If prior recaps exist they are the content, so say nothing.
             empty_text = self.loc:t("no_timeline_data")
         end
     end
@@ -3948,6 +4012,12 @@ function M:showTimeline()
         empty_text = empty_text,
         all_label = all_label,
         show_map = show_map,
+        prior_specs = prior_specs,
+        prior_label = self.loc:t("series_prior_books_header") or "── Prior Books ──",
+        on_prior_toggle = function()
+            self.series_prior_timeline_collapsed = not self.series_prior_timeline_collapsed
+            self:showTimeline()
+        end,
         show_parent = nil,
         on_back = function()
             if self.timeline_view then UIManager:close(self.timeline_view) end
@@ -4001,6 +4071,11 @@ function M:showTimeline()
     end
 
     local rows = rowList(row_specs, true)
+
+    if prior_specs and not self.series_prior_timeline_collapsed then
+        header_ctx.prior_list = rowList(prior_specs, #prior_specs > PRIOR_VISIBLE_ROWS)
+        header_ctx.prior_view_height = row_h * math.min(#prior_specs, PRIOR_VISIBLE_ROWS)
+    end
 
     if self.timeline_view then
         self._timeline_rebuilding = true

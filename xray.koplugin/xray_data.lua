@@ -16,6 +16,19 @@ local word_to_num = {
 
 local roman_map = { i = 1, v = 5, x = 10, l = 50, c = 100, d = 500, m = 1000 }
 
+-- Invisible characters an EPUB can carry inside a chapter title: soft hyphen
+-- (the publisher's line-breaking hint), zero-width space, non-joiner, joiner,
+-- and a byte order mark. They are stripped before anything else, or a title
+-- that picked one up compares as a different chapter from the same title
+-- without it.
+local INVISIBLE_CHARS = {
+    "\xC2\xAD",          -- U+00AD soft hyphen
+    "\xE2\x80\x8B",      -- U+200B zero width space
+    "\xE2\x80\x8C",      -- U+200C zero width non-joiner
+    "\xE2\x80\x8D",      -- U+200D zero width joiner
+    "\xEF\xBB\xBF",      -- U+FEFF byte order mark
+}
+
 local function romanToDecimal(s)
     local res = 0
     local prev = 0
@@ -222,7 +235,9 @@ end
 
 function M:normalizeChapterName(name)
     if not name then return "" end
-    local s = name:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+    local s = name
+    for _, ch in ipairs(INVISIBLE_CHARS) do s = s:gsub(ch, "") end
+    s = s:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
     -- Replace written-out numbers with digits using word boundaries
     for word, num in pairs(word_to_num) do
         s = s:gsub("%f[%a]" .. word .. "%f[%A]", tostring(num))

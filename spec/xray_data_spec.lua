@@ -28,6 +28,21 @@ describe("xray_data", function()
             assert.are.equal("intro", xray_data:normalizeChapterName("Chapter Intro"))
             assert.are.equal("prologue", xray_data:normalizeChapterName("Book Prologue"))
         end)
+
+        it("should ignore soft hyphens carried over from the book's text", function()
+            -- EPUBs put U+00AD inside words so the renderer can break them. A
+            -- title that picks one up is still the same chapter, but the prefix
+            -- strip below cannot match "chap<U+00AD>ter", so it used to survive
+            -- as a separate chapter and the timeline collected duplicates.
+            assert.are.equal("1", xray_data:normalizeChapterName("Chap\xC2\xADter 1"))
+            assert.are.equal(xray_data:normalizeChapterName("Prologue"),
+                             xray_data:normalizeChapterName("Pro\xC2\xADlogue"))
+        end)
+
+        it("should ignore zero-width characters and byte order marks", function()
+            assert.are.equal("1", xray_data:normalizeChapterName("Chapter\xE2\x80\x8B 1"))
+            assert.are.equal("prologue", xray_data:normalizeChapterName("\xEF\xBB\xBFPrologue"))
+        end)
     end)
 
     describe("isNonNarrativeChapter", function()

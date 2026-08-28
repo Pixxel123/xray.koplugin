@@ -3375,6 +3375,466 @@ function M:toggleXRayMode()
     })
 end
 
+-- How much of a large cast the header shows before it scrolls.
+-- These areas ignore pan, so the mouse wheel (which arrives as a pan) scrolls
+-- the chapter list instead. Swipe and the scrollbars still work here.
+local HEADER_IGNORED_GESTURES = {
+    "pan", "pan_release",          -- the mouse wheel arrives as a pan
+    "key_pg_back", "key_pg_fwd",   -- page keys belong to the chapter list
+}
+
+local STRIP_VISIBLE_ROWS = 3   -- character rows in the presence chart
+local BUTTON_VISIBLE_ROWS = 2  -- rows of filter buttons (3 buttons per row)
+
+-- Restore a scroll position across a rebuild.
+-- A filter change can leave less to scroll, so the saved offset is clamped to
+-- what the new content can actually reach.
+local function _restoreScroll(container, saved, content_h, viewport_h)
+    if not saved then return end
+    local max_offset = math.max(0, content_h - viewport_h)
+    container:setScrolledOffset(Geom:new{
+        x = 0,
+        y = math.max(0, math.min(saved.y or 0, max_offset)),
+    })
+end
+
+-- The timeline header: title bar, filter buttons, presence map. Embedded by
+-- XRayTimelineView; the chapter list below it is XRayTimelineRowList.
+local function _buildTimelineHeader(self, ctx)
+    local presence = require(plugin_path .. "xray_presencemap")
+    local xray_theme = require(plugin_path .. "xray_theme")
+    local HorizontalGroup = require("ui/widget/horizontalgroup")
+    local HorizontalSpan  = require("ui/widget/horizontalspan")
+    local ScrollableContainer = require("ui/widget/container/scrollablecontainer")
+    local TitleBar = require("ui/widget/titlebar")
+    local sw = Screen:getWidth()
+    local pad = Screen:scaleBySize(6)
+    local sbw = ScrollableContainer:getScrollbarWidth()
+    local components = { align = "left" }
+
+    -- The real TitleBar: same centering, close icon and RTL handling as every
+    -- other X-Ray screen, rather than hand-building the same thing.
+    table.insert(components, TitleBar:new{
+        width = sw,
+        title = ctx.title,
+        with_bottom_line = false,
+        close_callback = function() if ctx.on_back then ctx.on_back() end end,
+        show_parent = ctx.show_parent,
+    })
+
+    local all_label = ctx.all_label
+    local defs = { { label = all_label, name = nil } }
+    for _, name in ipairs(ctx.order) do
+        defs[#defs + 1] = { label = name, name = name }
+    end
+    local is_selected = {}
+    for _, name in ipairs(ctx.selected) do is_selected[name] = true end
+
+    -- Three per row fits most full names; four truncates to "Victor Frank". Past
+    -- BUTTON_VISIBLE_ROWS the group scrolls, so a large cast cannot crowd out
+    -- the chapters.
+    local per_row = 3
+    local btn_scrolls = math.ceil(#defs / per_row) > BUTTON_VISIBLE_ROWS
+    -- Wider inset than the rest of the header: labels are flush left inside
+    -- borderless buttons, so the first column would sit against the screen edge.
+    local btn_pad = Screen:scaleBySize(18)
+    local btn_w = math.floor((sw - btn_pad * 2 - (btn_scrolls and sbw or 0)) / per_row)
+    -- Rows stay left-aligned so buttons line up in a column. The block itself is
+    -- centered below.
+    local button_group = VerticalGroup:new{ align = "left" }
+    local row_items = nil
+    for i, def in ipairs(defs) do
+        if (i - 1) % per_row == 0 then
+            row_items = { align = "center" }
+            table.insert(button_group, HorizontalGroup:new(row_items))
+        end
+        local is_on = (def.name == nil) and #ctx.selected == 0 or is_selected[def.name] or false
+        -- A borderless Button with a filled/empty square, not CheckButton: the square
+        -- reads better at this density and Button truncates with a real ellipsis.
+        table.insert(row_items, Button:new{
+            text = (is_on and "\u{25A0} " or "\u{25A1} ") .. def.label,
+            width = btn_w,
+            max_width = btn_w,
+            align = "left",
+            bordersize = 0,
+            background = xray_theme.color_bg,
+            text_font_size = 14,
+            show_parent = ctx.show_parent,
+            callback = function() ctx.on_toggle(def.name) end,
+        })
+    end
+    local CenterContainer = require("ui/widget/container/centercontainer")
+    if btn_scrolls then
+        -- Full screen width, so this scrollbar lines up with the ones below it.
+        -- The buttons are centered inside the container instead.
+        local group_w = button_group:getSize().w
+        local inset = math.max(0, math.floor((sw - sbw - group_w) / 2))
+        local button_block = ScrollableContainer:new{
+            dimen = Geom:new{
+                w = sw,
+                h = math.floor(button_group:getSize().h * BUTTON_VISIBLE_ROWS / #button_group),
+            },
+            ignore_events = HEADER_IGNORED_GESTURES,
+            show_parent = ctx.show_parent,
+            HorizontalGroup:new{
+                align = "top",
+                HorizontalSpan:new{ width = inset },
+                button_group,
+            },
+        }
+        -- Tapping a character rebuilds the whole view, so without this the list
+        -- would jump back to the top and lose the button just tapped.
+        _restoreScroll(button_block, ctx.scroll_state.buttons,
+                       button_group:getSize().h, button_block.dimen.h)
+        ctx.scrollers.buttons = button_block
+        table.insert(components, button_block)
+    else
+        table.insert(components, CenterContainer:new{
+            dimen = Geom:new{ w = sw, h = button_group:getSize().h },
+            button_group,
+        })
+    end
+    table.insert(components, VerticalSpan:new{ width = pad })
+
+    local ncols = #ctx.chapters
+    if ncols > 0 and ctx.show_map then
+        local RenderImage = require("ui/renderimage")
+        local ImageWidget = require("ui/widget/imagewidget")
+
+        local shown_rows = #presence.shownNames(ctx.order, ctx.selected)
+        local strip_scrolls = shown_rows > STRIP_VISIBLE_ROWS
+        local name_w = math.floor(sw * 0.22)
+        local viewport_w = sw - pad * 2 - name_w - (strip_scrolls and sbw or 0)
+
+        -- One column per chapter while they stay at least min_col wide.
+        -- Past that, each column covers a span so the whole book still fits.
+        local min_col = Screen:scaleBySize(16)
+        local max_cols = math.max(1, math.floor(viewport_w / min_col))
+        local bucketed_matrix, match_cols, ranges
+        local columns = ctx.chapters
+        if ncols > max_cols then
+            bucketed_matrix, match_cols, ranges =
+                presence.bucketMatrix(ctx.matrix, ctx.matches, max_cols)
+            columns = ranges
+        else
+            match_cols = ctx.matches
+        end
+        ncols = #columns
+
+        local geom = {
+            name_width = name_w,
+            col_width = math.floor(viewport_w / ncols),
+            row_height = Screen:scaleBySize(20),
+            top_padding = Screen:scaleBySize(6),
+            marker = Screen:scaleBySize(9),
+            label_size = Screen:scaleBySize(9),
+        }
+
+        local names_svg, nw, nh = presence.buildStripNamesSVG(ctx.order, ctx.selected, geom)
+        local grid_svg, gw, gh = presence.buildStripGridSVG(
+            bucketed_matrix or ctx.matrix, ctx.order, columns, ctx.selected, geom, match_cols)
+
+        -- Rasterize each at exactly its own dimensions; a mismatch would send
+        -- renderimage.lua down its scaleBlitBuffer path and blur the result.
+        local ok_n, names_bb = pcall(RenderImage.renderImageData, RenderImage,
+            names_svg, #names_svg, false, nw, nh)
+        local ok_g, grid_bb = pcall(RenderImage.renderImageData, RenderImage,
+            grid_svg, #grid_svg, false, gw, gh)
+
+        if ok_n and names_bb and ok_g and grid_bb then
+            -- Columns always fit the viewport, so the grid never scrolls
+            -- sideways. Height is the constraint instead.
+            local strip = HorizontalGroup:new{
+                align = "top",
+                HorizontalSpan:new{ width = pad },
+                ImageWidget:new{ image = names_bb, image_disposable = true },
+                ImageWidget:new{ image = grid_bb, image_disposable = true },
+            }
+            if strip_scrolls then
+                -- Names and grid scroll together, so a row's marks never drift
+                -- away from its name.
+                local strip_block = ScrollableContainer:new{
+                    dimen = Geom:new{
+                        w = sw,
+                        h = presence.stripHeight(STRIP_VISIBLE_ROWS, geom),
+                    },
+                    ignore_events = HEADER_IGNORED_GESTURES,
+                    show_parent = ctx.show_parent,
+                    strip,
+                }
+                _restoreScroll(strip_block, ctx.scroll_state.strip,
+                               gh, strip_block.dimen.h)
+                ctx.scrollers.strip = strip_block
+                table.insert(components, strip_block)
+            else
+                table.insert(components, strip)
+            end
+            table.insert(components, VerticalSpan:new{ width = pad })
+        else
+            self:log("XRayPlugin: Timeline: strip render failed")
+        end
+    end
+
+    if ctx.empty_text then
+        table.insert(components, VerticalSpan:new{ width = pad * 4 })
+        table.insert(components, TextBoxWidget:new{
+            text = ctx.empty_text,
+            face = Font:getFace("cfont", 17),
+            width = sw - pad * 4,
+            alignment = "center",
+        })
+    else
+        table.insert(components, LineWidget:new{
+            dimen = Geom:new{ w = sw, h = (Size.line and Size.line.thick) or 2 },
+            background = xray_theme.color_border,
+        })
+    end
+
+    return FrameContainer:new{
+        bordersize = 0,
+        padding = 0,
+        background = xray_theme.color_bg,
+        VerticalGroup:new(components),
+    }
+end
+
+-- TextBoxWidget renders inline bold when the text opens with PTF_HEADER and the
+-- bold runs are wrapped in PTF_BOLD_START/END. xray_settings_card does the same.
+-- Using the frontend's own constants means an upstream change cannot silently
+-- drop the bold.
+local MARKUP_ON = TextBoxWidget.PTF_HEADER
+local BOLD_ON = TextBoxWidget.PTF_BOLD_START
+local BOLD_OFF = TextBoxWidget.PTF_BOLD_END
+
+-- Full-screen timeline: header on top, then the chapters as headed paragraphs
+-- (a Menu strips newlines, so it cannot put a summary beneath a heading).
+local XRayTimelineView = InputContainer:extend{
+    ui_instance = nil,
+    header_ctx = nil,   -- built in init, once there is a show_parent to give it
+    rows = nil,
+}
+
+function XRayTimelineView:init()
+    local sw, sh = Screen:getWidth(), Screen:getHeight()
+    self.dimen = Geom:new{ x = 0, y = 0, w = sw, h = sh }
+
+    local Device = require("device")
+    if Device.hasKeys and Device:hasKeys() then
+        self.key_events = { Close = { { Device.input.group.Back } } }
+    end
+    -- No swipe-to-dismiss: a swipe the chapter list cannot consume would fall
+    -- through and close the view mid-scroll. Use the close icon or Back key.
+
+    -- Built here, not by the caller, so buttons and scrollers get a real
+    -- show_parent; without one a scroller repaints via setDirty(nil).
+    local xray_theme = require(plugin_path .. "xray_theme")
+    self.header_ctx.show_parent = self
+    self.header = _buildTimelineHeader(self.ui_instance, self.header_ctx)
+
+    local ScrollableContainer = require("ui/widget/container/scrollablecontainer")
+    local header_h = self.header:getSize().h
+    local body_h = sh - header_h
+    if body_h < Screen:scaleBySize(60) then body_h = Screen:scaleBySize(60) end
+
+    local body = ScrollableContainer:new{
+        dimen = Geom:new{ w = sw, h = body_h },
+        show_parent = self,
+        self.rows,
+    }
+    -- UIManager crops repaints to one registered scrollable per screen, and only
+    -- the body is registered. Known consequence: a pan starting in the chapter
+    -- list that crosses into the header band can be claimed by the wrong container.
+    self.cropping_widget = body
+
+    self[1] = FrameContainer:new{
+        bordersize = 0,
+        padding = 0,
+        background = xray_theme.color_bg,
+        VerticalGroup:new{
+            align = "left",
+            self.header,
+            body,
+        },
+    }
+end
+
+function XRayTimelineView:onClose()
+    UIManager:close(self)
+    return true
+end
+
+function XRayTimelineView:onShow()
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function XRayTimelineView:onCloseWidget()
+    local ui = self.ui_instance
+    if ui then
+        ui.timeline_view = nil
+        if not ui._timeline_rebuilding then
+            -- Filter state is per visit: reopening starts on All.
+            ui.timeline_filter = {}
+        end
+        -- Only a real close returns to the X-Ray menu. Every filter tap also
+        -- closes this view so showTimeline can rebuild it, and treating that as
+        -- a close would stack a fresh menu underneath each time.
+        if not ui.is_cancelled and not ui._timeline_rebuilding
+                and ui.showFullXRayMenu then
+            ui:showFullXRayMenu()
+        end
+    end
+    UIManager:setDirty(nil, "ui")
+end
+
+-- The chapter list, built one row at a time as rows come into view.
+--
+-- TextBoxWidget lays out in the constructor, so building every row up front
+-- cost 19MB and 84ms for 365 rows. Rows are a fixed height, so the list can
+-- report its size without laying anything out, and paintTo builds only the
+-- rows on screen.
+-- One chapter: bold heading, then the summary beneath, capped to a fixed height.
+local function _buildTimelineRowText(text_width, text_height, face, chapter, event)
+    local function esc(t)
+        -- The markup control chars must not appear in the content itself.
+        return (tostring(t or ""):gsub("[\xEF][\xBF][\xB1-\xB3]", ""))
+    end
+    local body = esc(event)
+    local text = MARKUP_ON .. BOLD_ON .. esc(chapter) .. BOLD_OFF
+    if #body > 0 then text = text .. "\n" .. body end
+    return TextBoxWidget:new{
+        text = text,
+        face = face,
+        width = text_width,
+        height = text_height,
+        height_overflow_show_ellipsis = true,
+        alignment = "left",
+    }
+end
+
+-- Line height for a face, measured once. Building a TextBoxWidget is the only
+-- way to ask, and too slow to repeat on every rebuild.
+local _line_height_cache = {}
+local function _timelineLineHeight(face)
+    local cached = _line_height_cache[face]
+    if not cached then
+        local probe = TextBoxWidget:new{ text = "X", face = face, width = 200 }
+        cached = probe:getLineHeight()
+        probe:free()
+        _line_height_cache[face] = cached
+    end
+    return cached
+end
+
+-- Rows kept either side of the viewport before eviction.
+local KEEP_MARGIN = 20
+
+local XRayTimelineRowList = InputContainer:extend{
+    specs = nil,        -- { { chapter, event, ev }, ... }
+    width = nil,
+    text_width = nil,
+    row_height = nil,
+    text_height = nil,
+    left_pad = 0,
+    face = nil,
+    on_hold_row = nil,
+}
+
+function XRayTimelineRowList:init()
+    self._cache = {}
+    self.dimen = Geom:new{ x = 0, y = 0, w = self.width, h = self:_totalHeight() }
+    -- Tap opens the chapter's details; hold does the same.
+    self.ges_events = {
+        Tap = {
+            GestureRange:new{ ges = "tap", range = function() return self.dimen end },
+        },
+        Hold = {
+            GestureRange:new{ ges = "hold", range = function() return self.dimen end },
+        },
+    }
+end
+
+function XRayTimelineRowList:_totalHeight()
+    return #self.specs * self.row_height
+end
+
+function XRayTimelineRowList:getSize()
+    return Geom:new{ w = self.width, h = self:_totalHeight() }
+end
+
+function XRayTimelineRowList:_row(i)
+    local widget = self._cache[i]
+    if not widget then
+        local spec = self.specs[i]
+        widget = _buildTimelineRowText(self.text_width, self.text_height,
+                                       self.face, spec.chapter, spec.event)
+        self._cache[i] = widget
+    end
+    return widget
+end
+
+function XRayTimelineRowList:paintTo(bb, x, y)
+    self.dimen.x, self.dimen.y = x, y
+    local n = #self.specs
+    if n == 0 then return end
+
+    -- Rows intersecting the buffer. y is already shifted by the scroll offset.
+    local first = math.max(1, math.floor(-y / self.row_height) + 1)
+    local last = math.min(n, math.ceil((bb:getHeight() - y) / self.row_height))
+
+    local gap = math.floor((self.row_height - self.text_height) / 2)
+    for i = first, last do
+        local top = y + (i - 1) * self.row_height
+        self:_row(i):paintTo(bb, x + self.left_pad, top + gap)
+        if i < n then
+            bb:paintRect(x, top + self.row_height - 1, self.width, 1,
+                         Blitbuffer.COLOR_LIGHT_GRAY)
+        end
+    end
+
+    -- Drop rows well outside the viewport, or scrolling end to end would cache
+    -- every row and defeat the point of the lazy list.
+    local keep_from, keep_to = first - KEEP_MARGIN, last + KEEP_MARGIN
+    for i, widget in pairs(self._cache) do
+        if i < keep_from or i > keep_to then
+            if widget.free then widget:free() end
+            self._cache[i] = nil
+        end
+    end
+end
+
+function XRayTimelineRowList:_openRowAt(ges)
+    if not (ges and ges.pos and self.on_hold_row) then return false end
+    local offset = ges.pos.y - self.dimen.y
+    local i = math.floor(offset / self.row_height) + 1
+    if i >= 1 and i <= #self.specs then
+        self.on_hold_row(self.specs[i])
+        return true
+    end
+    return false
+end
+
+function XRayTimelineRowList:onTap(_, ges)
+    return self:_openRowAt(ges)
+end
+
+function XRayTimelineRowList:onHold(_, ges)
+    return self:_openRowAt(ges)
+end
+
+function XRayTimelineRowList:onCloseWidget()
+    for _, w in pairs(self._cache or {}) do
+        if w.free then w:free() end
+    end
+    self._cache = {}
+end
+
+
+-- None of this depends on which characters are filtered, and some of it is very
+-- expensive. assignTimelinePages runs full-document findText scans for chapter
+-- titles that miss the TOC, which would cost seconds on every filter tap.
+-- Identity alone is not enough: merges and "fetch more characters" mutate
+-- self.characters in place, so the name list is compared as well.
 function M:showTimeline()
     if not self.timeline or #self.timeline == 0 then UIManager:show(InfoMessage:new{ text = self.loc:t("no_timeline_data"), timeout = 3 }); return end
     local utils = require(plugin_path .. "xray_utils")

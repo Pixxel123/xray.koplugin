@@ -737,12 +737,6 @@ function XRayPlugin:onDispatcherRegisterActions()
             title = _t(self, "menu_images", "X-Ray: Images & Maps"),
             general = true,
         })
-        Dispatcher:registerAction("xray_images", {
-            category = "none",
-            event = "ShowXRayImages",
-            title = _t(self, "menu_images", "X-Ray: Images & Maps"),
-            general = true,
-        })
     end)
 end
 

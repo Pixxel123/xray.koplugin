@@ -15,6 +15,6 @@ return {
     },
   },
   cache_version = "6.0",
+  cached_at = 1787946850,
   series_slug = "stormlight_test",
-  cached_at = 1787940269,
 }

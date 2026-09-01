@@ -899,11 +899,11 @@ msgstr "Cronología"
 
 # en-hash: b1c94ca2fbc3e78fc30069c8d0f01680
 msgid "menu_timeline_all"
-msgstr "All"
+msgstr "Todos"
 
 # en-hash: 8b77f6081efcbe80501acb1411ddb510
 msgid "menu_timeline_presence_map"
-msgstr "Use Presence Map in Timeline"
+msgstr "Usar mapa de presencia en la cronología"
 
 # en-hash: 3c1fa918adf3e65fbff595ee1fd50d26
 msgid "menu_ui_popup_intext"
@@ -1267,15 +1267,15 @@ msgstr "Esta página"
 
 # en-hash: 53468fd13ec60ce6e3944bab23cf96f7
 msgid "timeline_no_shared_chapters"
-msgstr "%s never share a chapter.\n\nTap %s to see the whole book."
+msgstr "%s no comparten ningún capítulo.\n\nToca %s para ver todo el libro."
 
 # en-hash: 88241ddd8e6f8ea848409c02dcd7549d
 msgid "timeline_sort_newest"
-msgstr "Newest first"
+msgstr "Más recientes primero"
 
 # en-hash: 799c95af138a2db03bfd6a597bb9fbe7
 msgid "timeline_sort_oldest"
-msgstr "Oldest first"
+msgstr "Más antiguos primero"
 
 # en-hash: f61824b403008733ff955da48052ee04
 msgid "unit_action_configure"

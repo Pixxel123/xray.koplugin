@@ -1269,6 +1269,14 @@ msgstr "Ta strona"
 msgid "timeline_no_shared_chapters"
 msgstr "%s never share a chapter.\n\nTap %s to see the whole book."
 
+# en-hash: 88241ddd8e6f8ea848409c02dcd7549d
+msgid "timeline_sort_newest"
+msgstr "Newest first"
+
+# en-hash: 799c95af138a2db03bfd6a597bb9fbe7
+msgid "timeline_sort_oldest"
+msgstr "Oldest first"
+
 # en-hash: f61824b403008733ff955da48052ee04
 msgid "unit_action_configure"
 msgstr "Configure Settings..."
@@ -1708,3 +1716,4 @@ msgstr "Dodaje przycisk 'X-Ray' do menu słownika i wyboru w celu natychmiastowe
 # en-hash: 93cba07454f06a4a960172bbd6e2a435
 msgid "yes"
 msgstr "Tak"
+

@@ -953,6 +953,12 @@ msgstr "Section"
 msgid "timeline_no_shared_chapters"
 msgstr "%s never share a chapter.\n\nTap %s to see the whole book."
 
+msgid "timeline_sort_newest"
+msgstr "Newest first"
+
+msgid "timeline_sort_oldest"
+msgstr "Oldest first"
+
 msgid "unit_action_configure"
 msgstr "Configure Settings..."
 
@@ -1282,3 +1288,4 @@ msgstr "Adds an 'X-Ray' button to dictionary and selection menus for instant loo
 
 msgid "yes"
 msgstr "Yes"
+

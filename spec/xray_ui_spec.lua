@@ -1353,6 +1353,44 @@ describe("xray_ui", function()
         end)
     end)
 
+    describe("timelineRowSpecs", function()
+
+        local function specs()
+            return {
+                { chapter = "Ch 1", event = "Victor begins." },
+                { chapter = "Ch 2", event = "The creature wakes." },
+                { chapter = "Ch 3", event = "Victor pursues." },
+            }
+        end
+
+        it("keeps book order when ascending", function()
+            local out = plugin:timelineRowSpecs(specs(), false)
+            assert.are.equal("Ch 1", out[1].chapter)
+            assert.are.equal("Ch 3", out[3].chapter)
+        end)
+
+        it("reverses the chapters when descending", function()
+            local out = plugin:timelineRowSpecs(specs(), true)
+            assert.are.equal("Ch 3", out[1].chapter)
+            assert.are.equal("Ch 1", out[3].chapter)
+        end)
+
+        it("does not disturb the list it was given", function()
+            -- The caller's specs are rebuilt from the timeline cache and reused
+            -- across filter taps. Reversing in place would flip them again on
+            -- the next rebuild, so the order would alternate on every redraw.
+            local given = specs()
+            plugin:timelineRowSpecs(given, true)
+            assert.are.equal("Ch 1", given[1].chapter)
+            assert.are.equal("Ch 3", given[3].chapter)
+        end)
+
+        it("holds up on an empty list", function()
+            assert.are.equal(0, #plugin:timelineRowSpecs({}, true))
+        end)
+
+    end)
+
     describe("timelinePriorSpecs", function()
 
         -- One consolidated recap per earlier book in the series, as

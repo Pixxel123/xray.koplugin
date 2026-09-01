@@ -3577,6 +3577,56 @@ local function _buildTimelineHeader(self, ctx)
         end
     end
 
+    -- Sort direction and the two jumps, in a fixed band of their own rather than
+    -- folded into the filter block: that block scrolls away once the cast passes
+    -- BUTTON_VISIBLE_ROWS, which is exactly when the sort state matters most.
+    -- Hidden when the list is empty, so controls are never offered for nothing.
+    if not ctx.empty_text and ctx.on_sort_toggle then
+        -- Capped at a quarter of the usable width so the label between them can
+        -- never be squeezed to nothing, or past it, on a narrow screen.
+        local jump_w = math.min(Screen:scaleBySize(46), math.floor((sw - pad * 2) / 4))
+        local sort_w = sw - pad * 2 - jump_w * 2
+        local icon_px = Screen:scaleBySize(18)
+        -- KOReader's own first/last-page chevrons rather than a glyph: the
+        -- corner arrows that would say this in text sit outside the UI font and
+        -- would render as tofu, while an icon has no font dependency at all.
+        local function jump(icon, callback)
+            return Button:new{
+                icon = icon,
+                icon_width = icon_px,
+                icon_height = icon_px,
+                width = jump_w,
+                bordersize = 0,
+                background = xray_theme.color_bg,
+                show_parent = ctx.show_parent,
+                callback = callback,
+            }
+        end
+        -- The label names the current state, not what a tap would do, so the
+        -- arrow and the words always agree. U+2191/2193 come from the same
+        -- block as the arrows this plugin already draws elsewhere.
+        table.insert(components, HorizontalGroup:new{
+            align = "center",
+            HorizontalSpan:new{ width = pad },
+            jump("chevron.first",
+                 function() if ctx.on_jump then ctx.on_jump("top") end end),
+            Button:new{
+                text = (ctx.sort_desc and "\u{2193} " or "\u{2191} ") .. (ctx.sort_label or ""),
+                width = sort_w,
+                max_width = sort_w,
+                align = "center",
+                bordersize = 0,
+                background = xray_theme.color_bg,
+                text_font_size = 14,
+                show_parent = ctx.show_parent,
+                callback = ctx.on_sort_toggle,
+            },
+            jump("chevron.last",
+                 function() if ctx.on_jump then ctx.on_jump("bottom") end end),
+        })
+        table.insert(components, VerticalSpan:new{ width = pad })
+    end
+
     -- Earlier books in the series, in a scroller of their own so a long series
     -- cannot push this book's chapters off the screen.
     -- The caller builds the list only when the block is open, so a list here
@@ -3679,6 +3729,7 @@ function XRayTimelineView:init()
         show_parent = self,
         self.rows,
     }
+    self.body = body
     -- UIManager crops repaints to one registered scrollable per screen, and only
     -- the body is registered. Known consequence: a pan starting in the chapter
     -- list that crosses into the header band can be claimed by the wrong container.
@@ -3694,6 +3745,22 @@ function XRayTimelineView:init()
             body,
         },
     }
+end
+
+-- Scroll the chapter list to one end. The list holds only the chapters matching
+-- the current filter, so its ends already are the first and last match and no
+-- index mapping is needed. Reversing the sort reverses the list, so "top" keeps
+-- meaning the first row drawn rather than the earliest chapter.
+--
+-- scrollToRatio, not setScrolledOffset: the latter only assigns the offset and
+-- leaves the scrollbar thumb where it was. scrollToRatio finishes with
+-- _scrollBy(0, 0), which clamps against the container's own crop height --
+-- narrower than dimen.h, since the scrollbar takes width -- then updates the
+-- thumb and repaints. It centres on the ratio, so 0 and 1 clamp to exactly the
+-- top and bottom.
+function XRayTimelineView:jumpRowsTo(where)
+    if not self.body or not self.body.scrollToRatio then return end
+    self.body:scrollToRatio(nil, (where == "bottom") and 1 or 0)
 end
 
 function XRayTimelineView:onClose()
@@ -3944,6 +4011,21 @@ local function _timelineData(self)
     return cache
 end
 
+-- The current book's chapter rows in display order.
+--
+-- Returns a copy when reversing: the caller's list comes from the timeline
+-- cache and is reused across filter taps, so reversing it in place would flip
+-- it again on the next rebuild and the order would alternate as you tapped.
+--
+-- Prior-book rows are not passed through here. They belong to earlier books and
+-- stay above the current book whichever way this one is sorted.
+function M:timelineRowSpecs(specs, descending)
+    if not descending then return specs end
+    local out = {}
+    for i = #specs, 1, -1 do out[#out + 1] = specs[i] end
+    return out
+end
+
 -- One row per earlier book in the series, or nil when the block is hidden.
 --
 -- A character filter hides them: prior events are not in the presence matrix,
@@ -3977,6 +4059,12 @@ function M:showTimeline()
     self.timeline_filter = self.timeline_filter or {}
     local filtering = #self.timeline_filter > 0
 
+    -- Sort direction sits beside the filter and deliberately outside the
+    -- _timelineData cache. Reversing is a display concern: the matrix and the
+    -- coverage order the cache holds are the same either way, so keying on it
+    -- would rebuild assignTimelinePages on every tap for no change.
+    if self.timeline_sort_desc == nil then self.timeline_sort_desc = false end
+
     -- Closed on first open, so the chapter list stays visible.
     if self.series_prior_timeline_collapsed == nil then
         self.series_prior_timeline_collapsed = true
@@ -4003,6 +4091,7 @@ function M:showTimeline()
             row_specs[#row_specs + 1] = { chapter = ev.chapter or "", event = ev.event or "", ev = ev }
         end
     end
+    row_specs = self:timelineRowSpecs(row_specs, self.timeline_sort_desc)
 
     -- When a filter matches nothing the list stays empty and the message is
     -- drawn in the header, where it can be centered and has no row border.
@@ -4033,6 +4122,20 @@ function M:showTimeline()
         show_map = show_map,
         prior_specs = prior_specs,
         prior_label = self.loc:t("series_prior_books_header") or "── Prior Books ──",
+        sort_desc = self.timeline_sort_desc,
+        sort_label = self.timeline_sort_desc
+            and (self.loc:t("timeline_sort_newest") or "Newest first")
+            or (self.loc:t("timeline_sort_oldest") or "Oldest first"),
+        on_sort_toggle = function()
+            self.timeline_sort_desc = not self.timeline_sort_desc
+            self:showTimeline()
+        end,
+        -- The chapter list belongs to the view, which does not exist while this
+        -- table is being built. By the time a button can be tapped, it does.
+        on_jump = function(where)
+            local view = self.timeline_view
+            if view and view.jumpRowsTo then view:jumpRowsTo(where) end
+        end,
         on_prior_toggle = function()
             self.series_prior_timeline_collapsed = not self.series_prior_timeline_collapsed
             self:showTimeline()
